@@ -19,7 +19,7 @@ const path = require('path');
 const os = require('os');
 
 // Helper under test — must exist at this path (GREEN phase wires it up)
-const scanPhasePlans = require('../get-shit-done/bin/lib/plan-scan.cjs');
+const scanPhasePlans = require('../get-tasks-done/bin/lib/plan-scan.cjs');
 
 // ---------------------------------------------------------------------------
 // Fixture helpers
@@ -40,7 +40,7 @@ function touch(dir, ...filenames) {
 }
 
 beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-plan-scan-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-plan-scan-'));
 });
 
 afterEach(() => {
@@ -110,7 +110,7 @@ describe('scanPhasePlans — flat layout', () => {
   test('extended-layout root file (5-PLAN-01-setup.md style)', () => {
     // roadmap.cjs isPlanFile explicitly matches any .md with PLAN in name at root
     // (not just ending with -PLAN.md). The canonical helper must too.
-    // e.g. gsd-plan-phase writes "5-PLAN-01-setup.md".
+    // e.g. gtd-plan-phase writes "5-PLAN-01-setup.md".
     const dir = phaseDir();
     // The summary for this file follows the canonical *-SUMMARY.md suffix convention.
     touch(dir, '3-PLAN-01-setup.md', '3-01-SUMMARY.md');

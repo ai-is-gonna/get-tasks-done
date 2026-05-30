@@ -1,9 +1,9 @@
 /**
- * GSD Tools Tests — Bug #2630
+ * GTD Tools Tests — Bug #2630
  *
  * Regression guard: `state milestone-switch` resets STATE.md YAML frontmatter
  * (milestone, milestone_name, status, progress.*) AND the `## Current Position`
- * body in a single atomic write. Prior to the fix, the `/gsd:new-milestone`
+ * body in a single atomic write. Prior to the fix, the `/gtd:new-milestone`
  * workflow rewrote the body but left the frontmatter pointing at the previous
  * milestone, so every downstream reader (state.json, getMilestoneInfo, etc.)
  * reported the stale milestone.
@@ -13,10 +13,10 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const STALE_STATE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v1.0
 milestone_name: Foundation
 status: completed
@@ -71,7 +71,7 @@ describe('state milestone-switch (#2630)', () => {
   });
 
   test('writes new milestone into frontmatter and resets progress + Current Position', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'milestone-switch', '--milestone', 'v1.1', '--name', 'Notifications'],
       tmpDir,
     );
@@ -108,11 +108,11 @@ describe('state milestone-switch (#2630)', () => {
   });
 
   test('rejects missing --milestone', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'milestone-switch', '--name', 'Something'],
       tmpDir,
     );
-    // gsd-tools emits JSON with { error: ... } to stdout even on error paths.
+    // gtd-tools emits JSON with { error: ... } to stdout even on error paths.
     const combined = (result.output || '') + (result.error || '');
     assert.match(combined, /milestone required/i);
   });

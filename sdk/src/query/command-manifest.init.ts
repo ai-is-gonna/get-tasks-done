@@ -4,7 +4,6 @@ import type { CommandManifestEntry } from './command-manifest.types.js';
  * Canonical init.* command manifest.
  */
 export const INIT_COMMAND_MANIFEST: readonly CommandManifestEntry[] = [
-  { family: 'init', canonical: 'init.execute-phase', aliases: ['init execute-phase'], mutation: false, outputMode: 'json' },
   { family: 'init', canonical: 'init.plan-phase', aliases: ['init plan-phase'], mutation: false, outputMode: 'json' },
   { family: 'init', canonical: 'init.new-project', aliases: ['init new-project'], mutation: false, outputMode: 'json' },
   { family: 'init', canonical: 'init.new-milestone', aliases: ['init new-milestone'], mutation: false, outputMode: 'json' },

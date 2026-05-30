@@ -1,5 +1,5 @@
 /**
- * GSD Quick Workflow — Commit Boundary Tests (#1503)
+ * GTD Quick Workflow — Commit Boundary Tests (#1503)
  *
  * Validates that the quick workflow correctly separates executor
  * responsibilities (code commits) from orchestrator responsibilities
@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-shit-done', 'workflows');
+const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-tasks-done', 'workflows');
 
 describe('quick workflow commit boundary (#1503)', () => {
   const quickPath = path.join(WORKFLOWS_DIR, 'quick.md');
@@ -33,7 +33,7 @@ describe('quick workflow commit boundary (#1503)', () => {
   test('Step 8 explicitly stages artifacts with git add before commit', () => {
     assert.ok(
       content.includes('git add ${file_list}'),
-      'Step 8 should explicitly git add the file list before gsd-tools commit'
+      'Step 8 should explicitly git add the file list before gtd-tools commit'
     );
   });
 

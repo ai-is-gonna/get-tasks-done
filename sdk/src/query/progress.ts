@@ -1,7 +1,7 @@
 /**
  * Progress query handlers — milestone progress rendering in JSON format.
  *
- * Ported from get-shit-done/bin/lib/commands.cjs (cmdProgressRender, determinePhaseStatus).
+ * Ported from get-tasks-done/bin/lib/commands.cjs (cmdProgressRender, determinePhaseStatus).
  * Provides progress handler that scans disk for plan/summary counts per phase
  * and determines status via VERIFICATION.md inspection.
  *
@@ -17,7 +17,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { existsSync, readdirSync, readFileSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { comparePhaseNum, normalizePhaseName, planningPaths, toPosixPath } from './helpers.js';
 import { getMilestoneInfo, extractCurrentMilestone, roadmapGetPhase } from './roadmap.js';
 import { getMilestonePhaseFilter } from './state.js';
@@ -360,7 +360,7 @@ export const statsTable: QueryHandler = async (_args, projectDir, workstream) =>
 export const todoMatchPhase: QueryHandler = async (args, projectDir) => {
   const phase = args[0];
   if (!phase) {
-    throw new GSDError('phase required for todo match-phase', ErrorClassification.Validation);
+    throw new GTDError('phase required for todo match-phase', ErrorClassification.Validation);
   }
 
   const pendingDir = join(projectDir, '.planning', 'todos', 'pending');
@@ -542,7 +542,7 @@ export const listTodos: QueryHandler = async (args, projectDir) => {
 export const todoComplete: QueryHandler = async (args, projectDir) => {
   const filename = args[0];
   if (!filename) {
-    throw new GSDError('filename required for todo complete', ErrorClassification.Validation);
+    throw new GTDError('filename required for todo complete', ErrorClassification.Validation);
   }
 
   const pendingDir = join(projectDir, '.planning', 'todos', 'pending');
@@ -550,7 +550,7 @@ export const todoComplete: QueryHandler = async (args, projectDir) => {
   const sourcePath = join(pendingDir, filename);
 
   if (!existsSync(sourcePath)) {
-    throw new GSDError(`Todo not found: ${filename}`, ErrorClassification.Validation);
+    throw new GTDError(`Todo not found: ${filename}`, ErrorClassification.Validation);
   }
 
   mkdirSync(completedDir, { recursive: true });

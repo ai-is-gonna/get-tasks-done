@@ -5,7 +5,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * Tests for gsd-health MILESTONES.md drift detection (#2446).
+ * Tests for gtd-health MILESTONES.md drift detection (#2446).
  */
 
 const { test } = require('node:test');
@@ -14,10 +14,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const { cmdValidateHealth } = require('../get-shit-done/bin/lib/verify.cjs');
+const { cmdValidateHealth } = require('../get-tasks-done/bin/lib/verify.cjs');
 
 function makeTempProject(files = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2446-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2446-'));
   fs.mkdirSync(path.join(dir, '.planning', 'milestones'), { recursive: true });
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(dir, rel);
@@ -96,7 +96,7 @@ test('--backfill synthesizes missing MILESTONES.md entry from snapshot', () => {
 
 test('health.md mentions --backfill flag', () => {
   const healthMd = fs.readFileSync(
-    path.join(__dirname, '../get-shit-done/workflows/health.md'), 'utf-8'
+    path.join(__dirname, '../get-tasks-done/workflows/health.md'), 'utf-8'
   );
   assert.ok(healthMd.includes('--backfill'), 'health.md should document --backfill');
   assert.ok(healthMd.includes('W018'), 'health.md should list W018 error code');

@@ -21,7 +21,7 @@ describe('skill-manifest', () => {
 
   it('resolves legacy import-only skills root through SDK Package Seam Module', () => {
     const manifest = buildSkillManifest('/tmp/project-that-does-not-exist');
-    const legacyRoot = manifest.roots.find(root => root.root === '.claude/get-shit-done/skills');
+    const legacyRoot = manifest.roots.find(root => root.root === '.claude/get-tasks-done/skills');
 
     expect(legacyRoot).toBeDefined();
     expect(legacyRoot?.path).toBe(resolveLegacySkillsDir());
@@ -30,7 +30,7 @@ describe('skill-manifest', () => {
   });
 
   it('discovers skills from explicit --skills-dir without scanning global roots', async () => {
-    const tmpDir = await mkdtemp(join(tmpdir(), 'gsd-skill-manifest-'));
+    const tmpDir = await mkdtemp(join(tmpdir(), 'gtd-skill-manifest-'));
     try {
       const skillsDir = join(tmpDir, 'custom-skills');
       const alphaDir = join(skillsDir, 'alpha-skill');
@@ -56,7 +56,7 @@ describe('skill-manifest', () => {
     }
   });
 
-  it('legacy skills dir helper points at ~/.claude/get-shit-done/skills', () => {
-    expect(resolveLegacySkillsDir()).toBe(join(homedir(), '.claude', 'get-shit-done', 'skills'));
+  it('legacy skills dir helper points at ~/.claude/get-tasks-done/skills', () => {
+    expect(resolveLegacySkillsDir()).toBe(join(homedir(), '.claude', 'get-tasks-done', 'skills'));
   });
 });

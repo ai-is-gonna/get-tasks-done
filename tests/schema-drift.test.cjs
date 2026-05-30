@@ -1,20 +1,20 @@
 /**
- * GSD Tools Tests - Schema Drift Detection
+ * GTD Tools Tests - Schema Drift Detection
  *
  * Tests for schema-relevant file detection (plan-phase injection)
- * and post-execution schema drift gate (execute-phase verification).
+ * and post-execution schema drift gate (task orchestration verification).
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, createTempGitProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, createTempGitProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 // ─── Unit: detectSchemaFiles ─────────────────────────────────────────────────
 
 const { detectSchemaFiles, detectSchemaOrm, checkSchemaDrift } = require(
-  path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'schema-detect.cjs')
+  path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'schema-detect.cjs')
 );
 
 describe('detectSchemaFiles', () => {
@@ -221,7 +221,7 @@ describe('checkSchemaDrift', () => {
     assert.strictEqual(result.blocking, false);
   });
 
-  test('respects GSD_SKIP_SCHEMA_CHECK override', () => {
+  test('respects GTD_SKIP_SCHEMA_CHECK override', () => {
     const changedFiles = ['src/collections/Posts.ts'];
     const executionLog = 'npm run build';
     const result = checkSchemaDrift(changedFiles, executionLog, { skipCheck: true });
@@ -255,7 +255,7 @@ describe('verify schema-drift CLI command', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempGitProject('gsd-schema-drift-');
+    tmpDir = createTempGitProject('gtd-schema-drift-');
   });
 
   afterEach(() => {
@@ -274,7 +274,7 @@ describe('verify schema-drift CLI command', () => {
       'Plan content',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runGtdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, false);
@@ -303,7 +303,7 @@ describe('verify schema-drift CLI command', () => {
       '- npm run test',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runGtdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, true);
@@ -331,7 +331,7 @@ describe('verify schema-drift CLI command', () => {
       '- npm run build',
     ].join('\n'));
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
+    const result = runGtdTools(['verify', 'schema-drift', '01-setup'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.drift_detected, false);
@@ -350,7 +350,7 @@ describe('verify schema-drift CLI command', () => {
     ].join('\n'));
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Summary\n');
 
-    const result = runGsdTools(['verify', 'schema-drift', '01-setup', '--skip'], tmpDir);
+    const result = runGtdTools(['verify', 'schema-drift', '01-setup', '--skip'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.blocking, false);

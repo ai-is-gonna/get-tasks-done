@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generator for get-shit-done/bin/lib/configuration.generated.cjs.
+ * Generator for get-tasks-done/bin/lib/configuration.generated.cjs.
  *
  * Reads the compiled Configuration Module from sdk/dist/configuration/index.js
  * and emits a CJS file that:
@@ -100,7 +100,7 @@ export function buildConfigurationCjs() {
     `// ─── Manifest requires ───────────────────────────────────────────────────────`,
     `function loadConfigurationManifest(fileName) {`,
     `  const candidates = [`,
-    `    // Installed runtime layout: get-shit-done/bin/shared/*.manifest.json`,
+    `    // Installed runtime layout: get-tasks-done/bin/shared/*.manifest.json`,
     `    join(__dirname, '..', 'shared', fileName),`,
     `    // Source-repo dev layout: sdk/shared/*.manifest.json`,
     `    join(__dirname, '..', '..', '..', 'sdk', 'shared', fileName),`,
@@ -176,7 +176,7 @@ export function buildConfigurationCjs() {
 const _thisFile = fileURLToPath(import.meta.url);
 if (process.argv[1] === _thisFile) {
   const cjsOut = buildConfigurationCjs();
-  const outPath = resolve(repoRoot, 'get-shit-done', 'bin', 'lib', 'configuration.generated.cjs');
+  const outPath = resolve(repoRoot, 'get-tasks-done', 'bin', 'lib', 'configuration.generated.cjs');
   writeFileSync(outPath, cjsOut, 'utf-8');
   console.log(`Generated: ${outPath}`);
 }

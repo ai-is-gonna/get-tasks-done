@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2506
  *
- * /gsd-settings presents Quality/Balanced/Budget model profiles without any
+ * /gtd-settings presents Quality/Balanced/Budget model profiles without any
  * warning that on non-Claude runtimes (Codex, Gemini CLI, etc.) these profiles
  * select Claude model tiers and have no effect on actual agent model selection.
  *
@@ -19,7 +19,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const SETTINGS_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'settings.md');
+const SETTINGS_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'settings.md');
 
 describe('bug #2506: settings.md non-Claude runtime warning for model profiles', () => {
   let content;

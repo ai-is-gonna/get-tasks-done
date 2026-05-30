@@ -2,12 +2,12 @@
 /**
  * lint-descriptions.cjs
  *
- * Enforces the 100-char description budget for commands/gsd/*.md files.
+ * Enforces the 100-char description budget for commands/gtd/*.md files.
  *
  * Usage:
  *   node scripts/lint-descriptions.cjs [file.md ...]
  *
- * If no args are given, scans commands/gsd/ automatically.
+ * If no args are given, scans commands/gtd/ automatically.
  * Exits 1 if any description exceeds 100 chars; exits 0 if all pass.
  */
 
@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 const MAX_LENGTH = 100;
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 /**
  * Parse the description field from frontmatter in a .md file.

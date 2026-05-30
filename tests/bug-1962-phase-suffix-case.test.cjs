@@ -12,7 +12,7 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizePhaseName } = require('../get-shit-done/bin/lib/core.cjs');
+const { normalizePhaseName } = require('../get-tasks-done/bin/lib/core.cjs');
 
 describe('bug #1962: normalizePhaseName preserves letter suffix case', () => {
   test('lowercase suffix preserved: 16c → 16c', () => {

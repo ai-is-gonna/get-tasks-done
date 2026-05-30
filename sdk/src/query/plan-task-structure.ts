@@ -3,7 +3,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { parsePlan } from '../plan-parser.js';
 import { resolvePathUnderProject } from './helpers.js';
 import type { QueryHandler } from './utils.js';
@@ -14,15 +14,15 @@ import type { QueryHandler } from './utils.js';
 export const planTaskStructure: QueryHandler = async (args, projectDir) => {
   const rel = args[0];
   if (!rel) {
-    throw new GSDError('PLAN.md path required', ErrorClassification.Validation);
+    throw new GTDError('PLAN.md path required', ErrorClassification.Validation);
   }
 
   let path: string;
   try {
     path = await resolvePathUnderProject(projectDir, rel);
   } catch (err) {
-    if (err instanceof GSDError) {
-      throw new GSDError(`cannot read plan file: ${err.message}`, ErrorClassification.Blocked);
+    if (err instanceof GTDError) {
+      throw new GTDError(`cannot read plan file: ${err.message}`, ErrorClassification.Blocked);
     }
     throw err;
   }
@@ -31,7 +31,7 @@ export const planTaskStructure: QueryHandler = async (args, projectDir) => {
   try {
     content = await readFile(path, 'utf-8');
   } catch {
-    throw new GSDError(`cannot read plan file: ${rel}`, ErrorClassification.Blocked);
+    throw new GTDError(`cannot read plan file: ${rel}`, ErrorClassification.Blocked);
   }
 
   const parsed = parsePlan(content);

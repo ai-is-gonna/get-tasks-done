@@ -4,13 +4,13 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * Regression guard for #1767: gsd-workflow-guard.js must be registered in settings.json
+ * Regression guard for #1767: gtd-workflow-guard.js must be registered in settings.json
  *
  * The hook file is built, copied, and installed — but was never registered as a
  * PreToolUse hook entry in install.js. This test ensures the registration block
  * exists with the correct structure.
  *
- * Also tests the broader anti-pattern: every hook in gsdHooks that is a JS
+ * Also tests the broader anti-pattern: every hook in gtdHooks that is a JS
  * PreToolUse/PostToolUse hook should have a corresponding registration block.
  */
 const { describe, test } = require('node:test');
@@ -21,22 +21,22 @@ const path = require('path');
 const INSTALL_JS = path.join(__dirname, '..', 'bin', 'install.js');
 
 describe('workflow-guard hook registration (#1767)', () => {
-  test('install.js constructs a command path variable for gsd-workflow-guard.js', () => {
+  test('install.js constructs a command path variable for gtd-workflow-guard.js', () => {
     const content = fs.readFileSync(INSTALL_JS, 'utf-8');
     const lines = content.split('\n');
     // Every registered JS hook has a command variable constructed via
     // buildHookCommand() or string concatenation. Filter out references
     // that are only in the cleanup/uninstall arrays.
     const commandConstructionLines = lines.filter(line =>
-      line.includes('gsd-workflow-guard.js') &&
+      line.includes('gtd-workflow-guard.js') &&
       (line.includes('buildHookCommand') || line.includes("'node '"))
     );
     assert.ok(
       commandConstructionLines.length > 0,
       [
-        'install.js must construct a command path for gsd-workflow-guard.js',
+        'install.js must construct a command path for gtd-workflow-guard.js',
         '(e.g. buildHookCommand or node + dirName pattern).',
-        'Currently only referenced in gsdHooks cleanup array.',
+        'Currently only referenced in gtdHooks cleanup array.',
       ].join(' ')
     );
   });
@@ -68,11 +68,11 @@ describe('workflow-guard hook registration (#1767)', () => {
 });
 
 describe('hook registration completeness anti-pattern guard', () => {
-  test('every JS hook in gsdHooks has a command construction in install.js', () => {
+  test('every JS hook in gtdHooks has a command construction in install.js', () => {
     const content = fs.readFileSync(INSTALL_JS, 'utf-8');
-    // Extract gsdHooks array entries
-    const hooksMatch = content.match(/gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(hooksMatch, 'gsdHooks array must exist in install.js');
+    // Extract gtdHooks array entries
+    const hooksMatch = content.match(/gtdHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(hooksMatch, 'gtdHooks array must exist in install.js');
 
     const hookNames = hooksMatch[1]
       .match(/'([^']+)'/g)
@@ -83,7 +83,7 @@ describe('hook registration completeness anti-pattern guard', () => {
     const missing = [];
     for (const hook of jsHooks) {
       // Each JS hook should have a buildHookCommand or 'node ' command construction
-      // that references the hook filename (not just the gsdHooks array or uninstall filter)
+      // that references the hook filename (not just the gtdHooks array or uninstall filter)
       const hookBase = hook.replace('.js', '');
       const lines = content.split('\n').filter(line =>
         line.includes(hook) &&
@@ -97,7 +97,7 @@ describe('hook registration completeness anti-pattern guard', () => {
     assert.strictEqual(
       missing.length, 0,
       [
-        'Every JS hook in gsdHooks must have a command construction in install.js.',
+        'Every JS hook in gtdHooks must have a command construction in install.js.',
         'Missing registration for:',
         ...missing.map(h => `  - ${h}`),
       ].join('\n')

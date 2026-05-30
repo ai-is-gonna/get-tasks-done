@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Regression tests for bug #3566 — Codex installer must emit canonical
@@ -8,25 +8,25 @@ process.env.GSD_TEST_MODE = '1';
  *
  * Codex itself marks `codex_hooks` as a `legacy_key` in
  * codex-rs/features/src/legacy.rs. The canonical current feature flag is
- * `hooks`. The GSD installer was still writing `codex_hooks` on every fresh
+ * `hooks`. The GTD installer was still writing `codex_hooks` on every fresh
  * install / reinstall, leaving deprecated config behind. This file pins:
  *
  *   1. Fresh install writes canonical `[features].hooks = true` and never
  *      emits `codex_hooks` (section, root-dotted, or block-fallback forms).
- *   2. Reinstall over a GSD-owned section-form legacy
+ *   2. Reinstall over a GTD-owned section-form legacy
  *      `[features].codex_hooks = true` migrates forward to
  *      `[features].hooks = true` (legacy line removed); user-owned legacy
  *      entries are preserved per #2760.
- *   3. Reinstall over a GSD-owned root-dotted legacy
+ *   3. Reinstall over a GTD-owned root-dotted legacy
  *      `features.codex_hooks = true` migrates forward to
  *      `features.hooks = true`; user-owned legacy entries are preserved.
- *   4. Reinstall over a user-owned `[features].hooks = true` (no GSD
+ *   4. Reinstall over a user-owned `[features].hooks = true` (no GTD
  *      ownership marker) preserves the user line; no double-write, no
  *      ownership stamp.
  *   5. The `hasEnabledCodexHooksFeature` recognizer treats both canonical
  *      `hooks` AND legacy `codex_hooks` as "enabled" so existing installs
  *      keep working across the migration window.
- *   6. Uninstall removes either GSD-owned `hooks` or GSD-owned legacy
+ *   6. Uninstall removes either GTD-owned `hooks` or GTD-owned legacy
  *      `codex_hooks`; user-owned `hooks` is preserved.
  *
  * All assertions use parseTomlToObject — never substring-match on raw TOML
@@ -78,7 +78,7 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
     if (!fs.existsSync(HOOKS_DIST) || fs.readdirSync(HOOKS_DIST).length === 0) {
       execFileSync(process.execPath, [BUILD_HOOKS_SCRIPT], { stdio: 'pipe' });
     }
-    tmpRoot = createTempDir('gsd-3566-');
+    tmpRoot = createTempDir('gtd-3566-');
     codexHome = path.join(tmpRoot, '.codex');
     fs.mkdirSync(codexHome, { recursive: true });
   });
@@ -106,7 +106,7 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
   test('install over a pre-existing legacy [features].codex_hooks line preserves it (user-owned, #2760 defensive)', () => {
     // A user who hand-wrote `codex_hooks = true` keeps the legacy key.
     // Codex itself maps it via the runtime legacy_key alias, so this is
-    // forward-compatible without GSD rewriting user-authored content.
+    // forward-compatible without GTD rewriting user-authored content.
     const legacy = [
       '[features]',
       'codex_hooks = true',
@@ -138,7 +138,7 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
     );
   });
 
-  test('reinstall preserves user-owned [features].hooks = true (no GSD ownership marker)', () => {
+  test('reinstall preserves user-owned [features].hooks = true (no GTD ownership marker)', () => {
     const userOwned = [
       '[features]',
       'hooks = true',
@@ -156,8 +156,8 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
     );
   });
 
-  test('uninstall removes GSD-owned canonical hooks line but preserves user-owned hooks', () => {
-    // Phase 1: fresh GSD install — writes GSD-owned hooks line.
+  test('uninstall removes GTD-owned canonical hooks line but preserves user-owned hooks', () => {
+    // Phase 1: fresh GTD install — writes GTD-owned hooks line.
     withCodexHome(codexHome, () => install(true, 'codex'));
     const { parsed: afterInstall } = readConfig(codexHome);
     assert.strictEqual(
@@ -178,11 +178,11 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
     assert.notStrictEqual(
       featuresHooks(afterUninstall),
       true,
-      'uninstall must remove GSD-owned canonical hooks line',
+      'uninstall must remove GTD-owned canonical hooks line',
     );
   });
 
-  test('uninstall preserves user-owned hooks=true when GSD never owned it', () => {
+  test('uninstall preserves user-owned hooks=true when GTD never owned it', () => {
     const userOwned = [
       '[features]',
       'hooks = true',
@@ -196,7 +196,7 @@ describe('#3566 — Codex feature flag is canonical "hooks" (not legacy "codex_h
     assert.strictEqual(
       featuresHooks(parsed),
       true,
-      'uninstall must NOT touch a hooks line GSD never claimed ownership of (#2760 defensive principle)',
+      'uninstall must NOT touch a hooks line GTD never claimed ownership of (#2760 defensive principle)',
     );
   });
 });

@@ -1,12 +1,12 @@
 /**
  * Bug #2774 — Worktree cleanup destroys parent workspace .git
  *
- * The cleanup blocks in execute-phase.md and quick.md previously used an
+ * The cleanup blocks in work-task-issue.md and quick.md previously used an
  * EXCLUSION-based filter:
  *
  *   git worktree list --porcelain | grep "^worktree " | grep -v "$(pwd)$" | sed ...
  *
- * That filter only excludes the literal `$(pwd)`. When a GSD project is itself
+ * That filter only excludes the literal `$(pwd)`. When a GTD project is itself
  * a git worktree of an upstream main repo (the multi-workspace case, including
  * the cross-drive Windows case where `git worktree list` reports the registry
  * path as e.g. `E:/...` while `$(pwd)` resolves to `C:/...`), every other
@@ -33,15 +33,15 @@ const os = require('os');
 
 const { cleanup } = require('./helpers.cjs');
 
-// The exact discovery pipeline from get-shit-done/workflows/quick.md and
-// get-shit-done/workflows/execute-phase.md (line: `WORKTREES=$(git worktree
+// The exact discovery pipeline from get-tasks-done/workflows/quick.md and
+// get-tasks-done/workflows/work-task-issue.md (line: `WORKTREES=$(git worktree
 // list --porcelain | grep "^worktree " | grep "\.claude/worktrees/agent-" |
 // sed 's/^worktree //')`). We invoke it as a standalone shell pipeline
 // against either real `git worktree list --porcelain` output (in the
 // end-to-end case) or piped-in fixture text (in the unit case).
 // Note: execSync runs with `shell: '/bin/sh'` by default, which interprets the
 // command string directly — no extra `bash -c '...'` wrapper needed. The
-// pipeline string below is the verbatim shell from quick.md / execute-phase.md
+// pipeline string below is the verbatim shell from quick.md / work-task-issue.md
 // (the RHS of the `WORKTREES=$(...)` substitution).
 const DISCOVERY_PIPELINE =
   'grep "^worktree " | grep "\\.claude/worktrees/agent-" | sed \'s/^worktree //\'';
@@ -81,7 +81,7 @@ describe('bug #2774 — worktree cleanup pipeline must not target the parent wor
       // workspace worktree + agent worktree under workspace's
       // `.claude/worktrees/agent-` namespace.
       const porcelain = [
-        'worktree /Users/dev/upstream/get-shit-done',
+        'worktree /Users/dev/upstream/get-tasks-done',
         'HEAD abc123',
         'branch refs/heads/main',
         '',
@@ -107,7 +107,7 @@ describe('bug #2774 — worktree cleanup pipeline must not target the parent wor
 
     test('selects nothing when no agent worktrees exist', () => {
       const porcelain = [
-        'worktree /Users/dev/upstream/get-shit-done',
+        'worktree /Users/dev/upstream/get-tasks-done',
         'HEAD abc123',
         'branch refs/heads/main',
         '',
@@ -177,7 +177,7 @@ describe('bug #2774 — worktree cleanup pipeline must not target the parent wor
     });
 
     test('while/read loop iterates each whitespace-bearing path exactly once', () => {
-      // Verify the actual consumer pattern from quick.md / execute-phase.md:
+      // Verify the actual consumer pattern from quick.md / work-task-issue.md:
       //   while IFS= read -r WT; do ...; done < <(<pipeline>)
       // Counts the lines yielded to the loop body. With the previous
       // `for WT in $WORKTREES` form, a path containing one space would yield
@@ -233,10 +233,10 @@ done < <(${DISCOVERY_PIPELINE})
       //   upstream/         <- main repo
       //   workspace/        <- worktree of upstream (the "workspace")
       //   workspace/.claude/worktrees/agent-XXXX/  <- agent worktree
-      upstream = makeTempUpstreamRepo('gsd-2774-upstream-');
+      upstream = makeTempUpstreamRepo('gtd-2774-upstream-');
 
       workspacesParent = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'gsd-2774-workspaces-')
+        path.join(os.tmpdir(), 'gtd-2774-workspaces-')
       );
       workspace = path.join(workspacesParent, 'feature-x');
       execSync(`git worktree add -b workspace/feature-x "${workspace}"`, {

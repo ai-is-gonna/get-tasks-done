@@ -1,7 +1,7 @@
 /**
  * UAT query handlers — checkpoint rendering and audit scanning.
  *
- * Ported from get-shit-done/bin/lib/uat.cjs.
+ * Ported from get-tasks-done/bin/lib/uat.cjs.
  * Provides UAT checkpoint rendering for verify-work workflows and
  * audit scanning for UAT/VERIFICATION files across phases.
  *
@@ -20,13 +20,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter } from './frontmatter.js';
 import { planningPaths, resolvePathUnderProject, sanitizeForDisplay, toPosixPath } from './helpers.js';
 import { getMilestonePhaseFilter } from './state.js';
 import type { QueryHandler } from './utils.js';
 
-/** Same string as `buildCheckpoint` in `get-shit-done/bin/lib/uat.cjs`. */
+/** Same string as `buildCheckpoint` in `get-tasks-done/bin/lib/uat.cjs`. */
 function buildUatCheckpoint(currentTest: { number: number; name: string; expected: string }): string {
   return [
     '╔══════════════════════════════════════════════════════════════╗',
@@ -191,7 +191,7 @@ function parseUatItems(content: string): Record<string, unknown>[] {
 /**
  * Parse frontmatter human_verification: YAML array entries into audit items.
  *
- * Fixes #2788: when gsd-verifier encodes human items in YAML frontmatter
+ * Fixes #2788: when gtd-verifier encodes human items in YAML frontmatter
  * rather than the body, parseVerificationItems was returning [] because it
  * only searched the body for a "## Human Verification" heading.
  */
@@ -233,7 +233,7 @@ function parseVerificationItems(content: string, status: string, fm?: Record<str
   const items: Record<string, unknown>[] = [];
   if (status === 'human_needed') {
     // Check frontmatter human_verification: array first (#2788).
-    // gsd-verifier writes items here; body-section fallback is secondary.
+    // gtd-verifier writes items here; body-section fallback is secondary.
     if (fm) {
       const fmItems = parseVerificationFrontmatterItems(fm);
       if (fmItems.length > 0) return fmItems;
@@ -284,7 +284,7 @@ function parseVerificationItems(content: string, status: string, fm?: Record<str
 export const auditUat: QueryHandler = async (_args, projectDir, workstream) => {
   const paths = planningPaths(projectDir, workstream);
   if (!existsSync(paths.phases)) {
-    throw new GSDError('No phases directory found in planning directory', ErrorClassification.Blocked);
+    throw new GTDError('No phases directory found in planning directory', ErrorClassification.Blocked);
   }
 
   const isDirInMilestone = await getMilestonePhaseFilter(projectDir, workstream);

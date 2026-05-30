@@ -19,8 +19,8 @@ const {
   learningsDelete,
   learningsCopyFromProject,
   learningsPrune,
-} = require('../get-shit-done/bin/lib/learnings.cjs');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+} = require('../get-tasks-done/bin/lib/learnings.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── Test Helpers ────────────────────────────────────────────────────────────
 
@@ -29,7 +29,7 @@ const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
  * @returns {string}
  */
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-learnings-test-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-learnings-test-'));
 }
 
 /**
@@ -498,7 +498,7 @@ describe('CLI integration', () => {
   afterEach(() => { cleanup(tmpDir); });
 
   test('learnings list returns valid JSON', () => {
-    const res = runGsdTools(['learnings', 'list'], tmpDir, { HOME: tmpDir });
+    const res = runGtdTools(['learnings', 'list'], tmpDir, { HOME: tmpDir });
     assert.strictEqual(res.success, true);
     const parsed = JSON.parse(res.output);
     assert.ok(Array.isArray(parsed.learnings));
@@ -506,20 +506,20 @@ describe('CLI integration', () => {
   });
 
   test('learnings query --tag succeeds', () => {
-    const res = runGsdTools(['learnings', 'query', '--tag', 'auth'], tmpDir, { HOME: tmpDir });
+    const res = runGtdTools(['learnings', 'query', '--tag', 'auth'], tmpDir, { HOME: tmpDir });
     assert.strictEqual(res.success, true);
     const parsed = JSON.parse(res.output);
     assert.ok(Array.isArray(parsed.learnings));
   });
 
   test('learnings prune with bad format exits non-zero', () => {
-    const res = runGsdTools(['learnings', 'prune', '--older-than', 'badformat'], tmpDir, { HOME: tmpDir });
+    const res = runGtdTools(['learnings', 'prune', '--older-than', 'badformat'], tmpDir, { HOME: tmpDir });
     assert.strictEqual(res.success, false);
     assert.ok(res.error.includes('Invalid duration format'));
   });
 
   test('learnings unknown subcommand exits non-zero', () => {
-    const res = runGsdTools(['learnings', 'unknown'], tmpDir, { HOME: tmpDir });
+    const res = runGtdTools(['learnings', 'unknown'], tmpDir, { HOME: tmpDir });
     assert.strictEqual(res.success, false);
     assert.ok(res.error.includes('Unknown learnings subcommand'));
   });

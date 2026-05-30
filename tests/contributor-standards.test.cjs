@@ -34,23 +34,13 @@ describe('docs/contributor-standards.md', () => {
     assert.ok(fs.existsSync(STANDARDS_DOC), 'docs/contributor-standards.md must exist');
   });
 
-  test('has required CONTEXT.md section', () => {
+  test('has required code/docs section', () => {
     const content = readStandardsDoc();
     const headings = parseH2Headings(content);
-    const hasContextSection = headings.some((h) => /context/i.test(h));
+    const hasContextSection = headings.some((h) => /code.*docs/i.test(h));
     assert.ok(
       hasContextSection,
-      `Expected an ## heading containing "context" (case-insensitive). Found headings: ${JSON.stringify(headings)}`
-    );
-  });
-
-  test('has required ADR section', () => {
-    const content = readStandardsDoc();
-    const headings = parseH2Headings(content);
-    const hasAdrSection = headings.some((h) => /adr/i.test(h));
-    assert.ok(
-      hasAdrSection,
-      `Expected an ## heading containing "ADR" (case-insensitive). Found headings: ${JSON.stringify(headings)}`
+      `Expected an ## heading containing "Code And Docs". Found headings: ${JSON.stringify(headings)}`
     );
   });
 
@@ -64,19 +54,11 @@ describe('docs/contributor-standards.md', () => {
     );
   });
 
-  test('references CONTEXT.md', () => {
+  test('references current workflow documentation', () => {
     const content = readStandardsDoc();
     assert.ok(
-      content.includes('CONTEXT.md'),
-      'docs/contributor-standards.md must reference CONTEXT.md'
-    );
-  });
-
-  test('references docs/adr/', () => {
-    const content = readStandardsDoc();
-    assert.ok(
-      content.includes('docs/adr/'),
-      'docs/contributor-standards.md must reference docs/adr/'
+      content.includes('GitHub task issue workflow'),
+      'docs/contributor-standards.md must reference the current workflow'
     );
   });
 });

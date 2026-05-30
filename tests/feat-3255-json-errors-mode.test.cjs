@@ -1,7 +1,7 @@
 /**
  * Tests for the --json-errors mode added in #3255.
  *
- * When gsd-tools is invoked with --json-errors, all error() calls emit a
+ * When gtd-tools is invoked with --json-errors, all error() calls emit a
  * structured JSON object to stderr:
  *
  *   { ok: false, reason: "<error_code>", message: "<human text>" }
@@ -16,7 +16,7 @@
  *   3. Missing required argument   → reason: "usage"  (--pick without value)
  *   4. Config key not found        → reason: "config_key_not_found"
  *   5. Unknown subcommand          → reason: "sdk_unknown_command"
- *   6. GSD_JSON_ERRORS=1 env var   → same structured output without --flag
+ *   6. GTD_JSON_ERRORS=1 env var   → same structured output without --flag
  *   7. Successful command unaffected
  *   8. Error object shape is stable ({ok, reason, message})
  *   9. Single error line per invocation
@@ -27,13 +27,13 @@
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-// Helper: run gsd-tools with --json-errors and parse the structured stderr.
+// Helper: run gtd-tools with --json-errors and parse the structured stderr.
 // Returns the parsed object, or throws if stderr is not valid JSON.
 function runJsonErrors(args, tmpDir, env = {}) {
   const allArgs = ['--json-errors', ...args];
-  const result = runGsdTools(allArgs, tmpDir, env);
+  const result = runGtdTools(allArgs, tmpDir, env);
   // Must have failed
   assert.strictEqual(result.success, false,
     `Expected failure with --json-errors for args: ${args.join(' ')}\nstdout: ${result.output}\nstderr: ${result.error}`);
@@ -106,7 +106,7 @@ describe('feat #3255: --json-errors mode emits structured error objects', () => 
   test('config-get for absent key emits { ok: false, reason: "config_key_not_found" }', () => {
     // Initialise config.json first so we reach the "key not found" branch
     // rather than the "no config.json" branch.
-    runGsdTools(['config-ensure-section'], tmpDir);
+    runGtdTools(['config-ensure-section'], tmpDir);
 
     const parsed = runJsonErrors(['config-get', 'nonexistent_config_key_xyzzy'], tmpDir);
 
@@ -131,14 +131,14 @@ describe('feat #3255: --json-errors mode emits structured error objects', () => 
       'message must be a non-empty string');
   });
 
-  // ── 6. GSD_JSON_ERRORS=1 env var activates structured mode ───────────────
+  // ── 6. GTD_JSON_ERRORS=1 env var activates structured mode ───────────────
 
-  test('GSD_JSON_ERRORS=1 env var produces same structured error as --json-errors flag', () => {
+  test('GTD_JSON_ERRORS=1 env var produces same structured error as --json-errors flag', () => {
     // Run with env var instead of --json-errors flag
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['totally-unknown-command-xyzzy'],
       tmpDir,
-      { GSD_JSON_ERRORS: '1' }
+      { GTD_JSON_ERRORS: '1' }
     );
     assert.strictEqual(result.success, false,
       'command must fail');
@@ -147,7 +147,7 @@ describe('feat #3255: --json-errors mode emits structured error objects', () => 
       parsed = JSON.parse(result.error);
     } catch (e) {
       throw new Error(
-        `GSD_JSON_ERRORS=1 must emit valid JSON on stderr.\n` +
+        `GTD_JSON_ERRORS=1 must emit valid JSON on stderr.\n` +
         `stderr: ${result.error}\n` +
         `parse error: ${e.message}`
       );
@@ -161,7 +161,7 @@ describe('feat #3255: --json-errors mode emits structured error objects', () => 
   // ── 7. Successful commands are unaffected by --json-errors ───────────────
 
   test('successful command with --json-errors flag still succeeds normally', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['--json-errors', 'generate-slug', 'hello-world'],
       tmpDir
     );
@@ -184,7 +184,7 @@ describe('feat #3255: --json-errors mode emits structured error objects', () => 
   // ── 9. Multiple errors in one session: only the first error is emitted ───
 
   test('only one error JSON line is emitted per invocation (process exits on first error)', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['--json-errors', 'totally-unknown-command-xyzzy'],
       tmpDir
     );

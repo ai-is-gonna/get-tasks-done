@@ -13,13 +13,13 @@
  */
 import { runAsWorker } from 'synckit';
 import { createRegistry } from '../query/index.js';
-import { GSDTransport } from '../gsd-transport.js';
+import { GTDTransport } from '../gtd-transport.js';
 import { QueryExecutionPolicy } from '../query-execution-policy.js';
 import { QueryNativeDirectAdapter } from '../query-native-direct-adapter.js';
 import { QueryNativeHotpathAdapter } from '../query-native-hotpath-adapter.js';
 import { QueryRuntimeBridge } from '../query-runtime-bridge.js';
-import { GSDToolsError } from '../gsd-tools-error.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDToolsError } from '../gtd-tools-error.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { createQueryNativeErrorFactory } from '../query-tools-error-factory.js';
 import type { RuntimeBridgeExecuteInput } from '../query-runtime-bridge.js';
 import type { RuntimeBridgeSyncResult, SyncErrorKind } from './index.js';
@@ -42,7 +42,7 @@ function getBridge(): QueryRuntimeBridge {
   // handler reading .planning/ (e.g. state.*) received an empty path and
   // silently failed or read from the process CWD. Constructing per-request
   // adds microseconds; correctness wins. (fix for latent bug, Phase 5.1)
-  const transport = new GSDTransport(registry, {
+  const transport = new GTDTransport(registry, {
     dispatchNative: (request) => {
       const adapter = new QueryNativeDirectAdapter({
         timeoutMs: NATIVE_TIMEOUT_MS,
@@ -101,21 +101,21 @@ function getBridge(): QueryRuntimeBridge {
 /**
  * Map a caught error into the 6-kind ADR-0001 error taxonomy.
  *
- * GSDToolsError.classification.kind: 'timeout' | 'failure'
- * GSDError.classification: ErrorClassification enum
+ * GTDToolsError.classification.kind: 'timeout' | 'failure'
+ * GTDError.classification: ErrorClassification enum
  *
  * Mapping:
  * - 'Subprocess fallback disabled' message → unknown_command (no native adapter for command)
- * - GSDToolsError timeout kind → native_timeout
- * - GSDError Validation → validation_error
- * - GSDError Blocked → validation_error (semantic: prerequisite missing)
+ * - GTDToolsError timeout kind → native_timeout
+ * - GTDError Validation → validation_error
+ * - GTDError Blocked → validation_error (semantic: prerequisite missing)
  * - TypeError (programming error) → internal_error
- * - GSDToolsError failure + TypeError cause → internal_error
- * - GSDToolsError failure → native_failure
+ * - GTDToolsError failure + TypeError cause → internal_error
+ * - GTDToolsError failure → native_failure
  * - Unknown Error → internal_error
  */
 function classifyError(error: unknown): { kind: SyncErrorKind; exitCode: number; message: string } {
-  if (error instanceof GSDToolsError) {
+  if (error instanceof GTDToolsError) {
     const { classification, exitCode, message } = error;
 
     // Unknown command: transport throws 'Subprocess fallback disabled: command ... cannot run without native dispatch'
@@ -140,7 +140,7 @@ function classifyError(error: unknown): { kind: SyncErrorKind; exitCode: number;
     return { kind: 'native_failure', exitCode: exitCode ?? 1, message };
   }
 
-  if (error instanceof GSDError) {
+  if (error instanceof GTDError) {
     const { classification, message } = error;
     if (
       classification === ErrorClassification.Validation ||

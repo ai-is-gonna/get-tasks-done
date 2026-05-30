@@ -8,7 +8,7 @@
  *
  * Pre-fix: initManager reported `complete` (explicit override at line ~451),
  * initProgress reported `pending` (disk-only policy). This mismatch meant
- * /gsd-manager and /gsd-progress disagreed on the same data. Post-fix:
+ * /gtd-manager and /gtd-progress disagreed on the same data. Post-fix:
  * both apply the ROADMAP-[x]-wins policy.
  */
 
@@ -33,8 +33,8 @@ const CONFIG = JSON.stringify({
   commit_docs: false,
   git: {
     branching_strategy: 'none',
-    phase_branch_template: 'gsd/phase-{phase}-{slug}',
-    milestone_branch_template: 'gsd/{milestone}-{slug}',
+    phase_branch_template: 'gtd/phase-{phase}-{slug}',
+    milestone_branch_template: 'gtd/{milestone}-{slug}',
     quick_branch_template: null,
   },
   workflow: { research: true, plan_check: true, verifier: true, nyquist_validation: true },
@@ -73,7 +73,7 @@ async function writeRoadmap(
 }
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-2674-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-2674-'));
   await mkdir(join(tmpDir, '.planning', 'phases'), { recursive: true });
   await writeFile(join(tmpDir, '.planning', 'config.json'), CONFIG);
   await writeFile(join(tmpDir, '.planning', 'STATE.md'), STATE);

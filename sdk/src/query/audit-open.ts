@@ -1,7 +1,7 @@
 /**
- * Open Artifact Audit — full TypeScript port of `get-shit-done/bin/lib/audit.cjs`.
+ * Open Artifact Audit — full TypeScript port of `get-tasks-done/bin/lib/audit.cjs`.
  *
- * Scans `.planning/` artifact categories for unresolved items (same JSON as gsd-tools `audit-open`).
+ * Scans `.planning/` artifact categories for unresolved items (same JSON as gtd-tools `audit-open`).
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -489,7 +489,7 @@ export interface AuditOpenResult {
 }
 
 /**
- * Same structured result as `gsd-tools.cjs audit-open` (JSON).
+ * Same structured result as `gtd-tools.cjs audit-open` (JSON).
  */
 export function auditOpenArtifacts(projectDir: string, workstream?: string): AuditOpenResult {
   const planDir = planningPaths(projectDir, workstream).planning;
@@ -583,7 +583,7 @@ export function auditOpenArtifacts(projectDir: string, workstream?: string): Aud
 }
 
 /**
- * Human-readable report (same text as gsd-tools without `--json`).
+ * Human-readable report (same text as gtd-tools without `--json`).
  */
 export function formatAuditReport(auditResult: AuditOpenResult): string {
   const { counts, items, has_open_items, has_scan_errors } = auditResult;

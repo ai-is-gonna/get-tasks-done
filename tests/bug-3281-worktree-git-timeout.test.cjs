@@ -19,7 +19,7 @@ const path = require('path');
 // ─── Module paths ─────────────────────────────────────────────────────────────
 
 const WORKTREE_SAFETY_PATH = path.join(
-  __dirname, '..', 'get-shit-done', 'bin', 'lib', 'worktree-safety.cjs'
+  __dirname, '..', 'get-tasks-done', 'bin', 'lib', 'worktree-safety.cjs'
 );
 
 // ─── Shared timeout stub ──────────────────────────────────────────────────────

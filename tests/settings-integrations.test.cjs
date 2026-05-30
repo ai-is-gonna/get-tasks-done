@@ -5,7 +5,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * #2529 — /gsd-settings-integrations: configure third-party search and review integrations.
+ * #2529 — /gtd-settings-integrations: configure third-party search and review integrations.
  *
  * Covers:
  *   - Artifacts exist (command, workflow, skill stub) with correct frontmatter
@@ -16,7 +16,7 @@
  *     confirmation pattern does not echo plaintext
  *   - config-set round-trips all integration keys through VALID_CONFIG_KEYS + dynamic patterns
  *   - Config merge preserves unrelated keys
- *   - /gsd:settings confirmation output mentions /gsd:settings-integrations
+ *   - /gtd:settings confirmation output mentions /gtd:settings-integrations
  *   - Negative: invalid agent-type name (path traversal / special char) is rejected
  *   - Negative: malformed review.models key is rejected
  *   - Logging: plaintext API keys do not appear in any file written under .planning/
@@ -28,18 +28,18 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 const {
   VALID_CONFIG_KEYS,
   isValidConfigKey,
-} = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 const REPO_ROOT = path.join(__dirname, '..');
 // #2790: settings-integrations.md was consolidated into config.md as the --integrations flag.
-const COMMAND_PATH = path.join(REPO_ROOT, 'commands', 'gsd', 'config.md');
-const WORKFLOW_PATH = path.join(REPO_ROOT, 'get-shit-done', 'workflows', 'settings-integrations.md');
-const SKILL_PATH = path.join(REPO_ROOT, '.claude', 'skills', 'gsd-settings-integrations.md');
-const SETTINGS_WORKFLOW_PATH = path.join(REPO_ROOT, 'get-shit-done', 'workflows', 'settings.md');
+const COMMAND_PATH = path.join(REPO_ROOT, 'commands', 'gtd', 'config.md');
+const WORKFLOW_PATH = path.join(REPO_ROOT, 'get-tasks-done', 'workflows', 'settings-integrations.md');
+const SKILL_PATH = path.join(REPO_ROOT, '.claude', 'skills', 'gtd-settings-integrations.md');
+const SETTINGS_WORKFLOW_PATH = path.join(REPO_ROOT, 'get-tasks-done', 'workflows', 'settings.md');
 
 function readIfExists(p) {
   try { return fs.readFileSync(p, 'utf-8'); } catch { return null; }
@@ -53,16 +53,16 @@ describe('#2529 artifacts', () => {
     assert.ok(fs.existsSync(COMMAND_PATH), `missing ${COMMAND_PATH}`);
   });
 
-  test('config.md frontmatter declares name gsd:config and routes to --integrations', () => {
+  test('config.md frontmatter declares name gtd:config and routes to --integrations', () => {
     const src = fs.readFileSync(COMMAND_PATH, 'utf-8');
-    // #2790: consolidated command uses gsd:config name
-    assert.match(src, /name:\s*gsd:config/);
+    // #2790: consolidated command uses gtd:config name
+    assert.match(src, /name:\s*gtd:config/);
     assert.match(src, /description:\s*.+/);
     assert.match(src, /allowed-tools:/);
     assert.match(src, /AskUserQuestion/);
   });
 
-  test('workflow exists at get-shit-done/workflows/settings-integrations.md', () => {
+  test('workflow exists at get-tasks-done/workflows/settings-integrations.md', () => {
     assert.ok(fs.existsSync(WORKFLOW_PATH), `missing ${WORKFLOW_PATH}`);
   });
 
@@ -133,8 +133,8 @@ describe('#2529 workflow — agent_skills injection', () => {
   });
 
   test('agent_skills.<valid-slug> passes validator', () => {
-    assert.ok(isValidConfigKey('agent_skills.gsd-executor'));
-    assert.ok(isValidConfigKey('agent_skills.gsd-planner'));
+    assert.ok(isValidConfigKey('agent_skills.gtd-task-executor'));
+    assert.ok(isValidConfigKey('agent_skills.gtd-planner'));
     assert.ok(isValidConfigKey('agent_skills.my_custom_agent'));
   });
 });
@@ -181,15 +181,15 @@ describe('#2529 config-set round-trip', () => {
   test('config-set writes brave_search, firecrawl, exa_search values to config.json', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
-    const r1 = runGsdTools(['config-set', 'brave_search', 'BSKY-111111112222'], tmp);
+    const r1 = runGtdTools(['config-set', 'brave_search', 'BSKY-111111112222'], tmp);
     assert.ok(r1.success, `brave_search set failed: ${r1.error}`);
-    const r2 = runGsdTools(['config-set', 'firecrawl', 'fc-aaaaaaaabbbbcccc'], tmp);
+    const r2 = runGtdTools(['config-set', 'firecrawl', 'fc-aaaaaaaabbbbcccc'], tmp);
     assert.ok(r2.success, `firecrawl set failed: ${r2.error}`);
-    const r3 = runGsdTools(['config-set', 'exa_search', 'ex-000011112222dddd'], tmp);
+    const r3 = runGtdTools(['config-set', 'exa_search', 'ex-000011112222dddd'], tmp);
     assert.ok(r3.success, `exa_search set failed: ${r3.error}`);
-    const r4 = runGsdTools(['config-set', 'search_gitignored', 'true'], tmp);
+    const r4 = runGtdTools(['config-set', 'search_gitignored', 'true'], tmp);
     assert.ok(r4.success, `search_gitignored set failed: ${r4.error}`);
 
     const cfg = JSON.parse(fs.readFileSync(path.join(tmp, '.planning', 'config.json'), 'utf-8'));
@@ -205,9 +205,9 @@ describe('#2529 config-set round-trip', () => {
   test('config-set round-trips review.models.<cli>', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
-    const r = runGsdTools(
+    const r = runGtdTools(
       ['config-set', 'review.models.codex', 'codex exec --model gpt-5'],
       tmp
     );
@@ -219,18 +219,18 @@ describe('#2529 config-set round-trip', () => {
   test('config-set round-trips agent_skills.<agent-type>', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
-    const r = runGsdTools(
-      ['config-set', 'agent_skills.gsd-executor', 'skill-a,skill-b'],
+    const r = runGtdTools(
+      ['config-set', 'agent_skills.gtd-task-executor', 'skill-a,skill-b'],
       tmp
     );
-    assert.ok(r.success, `agent_skills.gsd-executor set failed: ${r.error}`);
+    assert.ok(r.success, `agent_skills.gtd-task-executor set failed: ${r.error}`);
     const cfg = JSON.parse(fs.readFileSync(path.join(tmp, '.planning', 'config.json'), 'utf-8'));
     // Accept either array or string — validator accepts both shapes today.
-    const v = cfg.agent_skills?.['gsd-executor'];
+    const v = cfg.agent_skills?.['gtd-task-executor'];
     assert.ok(v === 'skill-a,skill-b' || (Array.isArray(v) && v.join(',') === 'skill-a,skill-b'),
-      `expected agent_skills.gsd-executor to contain both skills, got ${JSON.stringify(v)}`);
+      `expected agent_skills.gtd-task-executor to contain both skills, got ${JSON.stringify(v)}`);
   });
 });
 
@@ -240,10 +240,10 @@ describe('#2529 config merge safety', () => {
   test('setting brave_search preserves unrelated workflow.research key', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
-    runGsdTools(['config-set', 'workflow.research', 'false'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-set', 'workflow.research', 'false'], tmp);
 
-    const r = runGsdTools(['config-set', 'brave_search', 'BSKY-preserve-me-9999'], tmp);
+    const r = runGtdTools(['config-set', 'brave_search', 'BSKY-preserve-me-9999'], tmp);
     assert.ok(r.success, `set failed: ${r.error}`);
 
     const cfg = JSON.parse(fs.readFileSync(path.join(tmp, '.planning', 'config.json'), 'utf-8'));
@@ -251,33 +251,33 @@ describe('#2529 config merge safety', () => {
     assert.strictEqual(cfg.brave_search, 'BSKY-preserve-me-9999');
   });
 
-  test('setting agent_skills.gsd-executor preserves unrelated review.models.codex', (t) => {
+  test('setting agent_skills.gtd-task-executor preserves unrelated review.models.codex', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
-    runGsdTools(['config-set', 'review.models.codex', 'codex exec'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-set', 'review.models.codex', 'codex exec'], tmp);
 
-    const r = runGsdTools(['config-set', 'agent_skills.gsd-planner', 'a,b'], tmp);
+    const r = runGtdTools(['config-set', 'agent_skills.gtd-planner', 'a,b'], tmp);
     assert.ok(r.success, `set failed: ${r.error}`);
 
     const cfg = JSON.parse(fs.readFileSync(path.join(tmp, '.planning', 'config.json'), 'utf-8'));
     assert.strictEqual(cfg.review?.models?.codex, 'codex exec', 'unrelated review.models.codex must be preserved');
-    assert.ok(cfg.agent_skills?.['gsd-planner'], 'agent_skills.gsd-planner must be set');
+    assert.ok(cfg.agent_skills?.['gtd-planner'], 'agent_skills.gtd-planner must be set');
   });
 });
 
-// ─── /gsd-settings mentions /gsd-settings-integrations ──────────────────────
+// ─── /gtd-settings mentions /gtd-settings-integrations ──────────────────────
 
-describe('#2529 /gsd-settings mentions new command', () => {
-  test('settings workflow mentions canonical /gsd-config --integrations', () => {
+describe('#2529 /gtd-settings mentions new command', () => {
+  test('settings workflow mentions canonical /gtd-config --integrations', () => {
     const src = fs.readFileSync(SETTINGS_WORKFLOW_PATH, 'utf-8');
     assert.ok(
-      src.includes('/gsd:config --integrations'),
-      'settings.md must mention /gsd:config --integrations'
+      src.includes('/gtd:config --integrations'),
+      'settings.md must mention /gtd:config --integrations'
     );
     assert.ok(
-      !src.includes('/gsd-settings-integrations'),
-      'settings.md must not mention the legacy /gsd-settings-integrations variant'
+      !src.includes('/gtd-settings-integrations'),
+      'settings.md must not mention the legacy /gtd-settings-integrations variant'
     );
   });
 });
@@ -299,9 +299,9 @@ describe('#2529 negative — invalid inputs rejected', () => {
   test('config-set rejects agent_skills with path traversal', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
-    const r = runGsdTools(['config-set', 'agent_skills.../etc/passwd', 'x'], tmp);
+    const r = runGtdTools(['config-set', 'agent_skills.../etc/passwd', 'x'], tmp);
     assert.ok(!r.success, 'config-set must reject path-traversal agent-type slug');
   });
 
@@ -321,11 +321,11 @@ describe('#2529 security — plaintext containment', () => {
   test('after setting brave_search, plaintext appears only in config.json', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
     // Build sentinel via concat so secret-scanners do not flag the literal.
     const marker = ['MASKCHECK', '9f3a7b2c'].join('-');
-    const r = runGsdTools(['config-set', 'brave_search', marker], tmp);
+    const r = runGtdTools(['config-set', 'brave_search', marker], tmp);
     assert.ok(r.success, `set failed: ${r.error}`);
 
     const planning = path.join(tmp, '.planning');
@@ -352,10 +352,10 @@ describe('#2529 security — plaintext containment', () => {
   test('config-set does not echo plaintext secret on stdout/stderr', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
     const marker = ['ECHOCHECK', '77aa33bb'].join('-');
-    const r = runGsdTools(['config-set', 'brave_search', marker], tmp);
+    const r = runGtdTools(['config-set', 'brave_search', marker], tmp);
     assert.ok(r.success, `set failed: ${r.error}`);
     const combined = `${r.output || ''}\n${r.error || ''}`;
     assert.ok(
@@ -367,7 +367,7 @@ describe('#2529 security — plaintext containment', () => {
   test('config-get masks secrets and never echoes plaintext for brave_search/firecrawl/exa_search', (t) => {
     const tmp = createTempProject();
     t.after(() => cleanup(tmp));
-    runGsdTools(['config-ensure-section'], tmp);
+    runGtdTools(['config-ensure-section'], tmp);
 
     const cases = [
       { key: 'brave_search', marker: ['GETMASK', 'brave', 'aaaa1111'].join('-') },
@@ -376,10 +376,10 @@ describe('#2529 security — plaintext containment', () => {
     ];
 
     for (const { key, marker } of cases) {
-      const set = runGsdTools(['config-set', key, marker], tmp);
+      const set = runGtdTools(['config-set', key, marker], tmp);
       assert.ok(set.success, `${key} set failed: ${set.error}`);
 
-      const get = runGsdTools(['config-get', key], tmp);
+      const get = runGtdTools(['config-get', key], tmp);
       assert.ok(get.success, `${key} get failed: ${get.error}`);
       const combined = `${get.output || ''}\n${get.error || ''}`;
       assert.ok(

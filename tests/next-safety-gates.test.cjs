@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - /gsd-next safety gates and prior-phase completeness scan
+ * GTD Tools Tests - /gtd-next safety gates and prior-phase completeness scan
  *
  * Validates that the next workflow includes three hard-stop safety gates
  * (checkpoint, error state, verification), a prior-phase completeness scan
@@ -18,10 +18,10 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-describe('/gsd-next safety gates (#1732, #2089)', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'next.md');
+describe('/gtd-next safety gates (#1732, #2089)', () => {
+  const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'next.md');
   // #2790: next.md command was consolidated into progress.md as the --next flag.
-  const commandPath = path.join(__dirname, '..', 'commands', 'gsd', 'progress.md');
+  const commandPath = path.join(__dirname, '..', 'commands', 'gtd', 'progress.md');
 
   test('workflow contains safety_gates step', () => {
     const content = fs.readFileSync(workflowPath, 'utf8');
@@ -167,7 +167,7 @@ describe('/gsd-next safety gates (#1732, #2089)', () => {
   });
 
   test('command definition documents --next flag with --force AND completeness routing (#2790)', () => {
-    // #2790 absorbed standalone /gsd-next into /gsd-progress --next. The
+    // #2790 absorbed standalone /gtd-next into /gtd-progress --next. The
     // consolidated command must preserve BOTH safety-relevant contracts:
     //  (a) --force escape hatch for bypassing safety gates
     //  (b) the completeness scan / next-workflow routing semantics

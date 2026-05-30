@@ -6,7 +6,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const ROADMAP_WITH_MODE = `# Roadmap
 
@@ -32,7 +32,7 @@ describe('roadmap parser — mode field', () => {
 
   test('roadmap.get-phase returns mode="mvp" when **Mode:** mvp present', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_WITH_MODE);
-    const result = runGsdTools('roadmap get-phase 1', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.found, true);
@@ -41,7 +41,7 @@ describe('roadmap parser — mode field', () => {
 
   test('roadmap.get-phase returns mode=null when **Mode:** absent', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_WITH_MODE);
-    const result = runGsdTools('roadmap get-phase 2', tmpDir);
+    const result = runGtdTools('roadmap get-phase 2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.found, true);
@@ -50,7 +50,7 @@ describe('roadmap parser — mode field', () => {
 
   test('roadmap.analyze surfaces mode per phase', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_WITH_MODE);
-    const result = runGsdTools('roadmap analyze', tmpDir);
+    const result = runGtdTools('roadmap analyze', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const out = JSON.parse(result.output);
     const p1 = out.phases.find(p => p.number === '1');
@@ -62,7 +62,7 @@ describe('roadmap parser — mode field', () => {
   test('mode field is case-insensitive and trimmed', () => {
     const variant = ROADMAP_WITH_MODE.replace('**Mode:** mvp', '**mode**:  MVP  ');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), variant);
-    const result = runGsdTools('roadmap get-phase 1', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1', tmpDir);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.mode, 'mvp');
   });
@@ -70,7 +70,7 @@ describe('roadmap parser — mode field', () => {
   test('unrecognized mode value is preserved verbatim (forward-compat)', () => {
     const variant = ROADMAP_WITH_MODE.replace('**Mode:** mvp', '**Mode:** experimental');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), variant);
-    const result = runGsdTools('roadmap get-phase 1', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1', tmpDir);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.mode, 'experimental');
   });

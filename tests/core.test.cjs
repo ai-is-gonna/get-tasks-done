@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - core.cjs
+ * GTD Tools Tests - core.cjs
  *
  * Tests for the foundational module's exports including regressions
  * for known bugs (REG-01: loadConfig model_overrides, REG-02: getRoadmapPhaseInternal export).
@@ -35,7 +35,7 @@ const {
   detectSubRepos,
   planningDir,
   timeAgo,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../get-tasks-done/bin/lib/core.cjs');
 
 // ─── loadConfig ────────────────────────────────────────────────────────────────
 
@@ -92,9 +92,9 @@ describe('loadConfig', () => {
 
   // Bug: loadConfig previously omitted model_overrides from return value
   test('returns model_overrides when present (REG-01)', () => {
-    writeConfig({ model_overrides: { 'gsd-executor': 'opus' } });
+    writeConfig({ model_overrides: { 'gtd-task-executor': 'opus' } });
     const config = loadConfig(tmpDir);
-    assert.deepStrictEqual(config.model_overrides, { 'gsd-executor': 'opus' });
+    assert.deepStrictEqual(config.model_overrides, { 'gtd-task-executor': 'opus' });
   });
 
   test('returns model_overrides as null when not in config', () => {
@@ -162,7 +162,7 @@ describe('loadConfig', () => {
     // Verify that loadConfig's unknown-key check uses config-set's VALID_CONFIG_KEYS
     // as its source of truth. If a new key is added to config-set, it should
     // automatically be recognized by loadConfig without a separate update.
-    const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config.cjs');
+    const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config.cjs');
     // Every top-level key from VALID_CONFIG_KEYS should be recognized
     const topLevelKeys = [...VALID_CONFIG_KEYS].map(k => k.split('.')[0]);
     // For value-validated keys (e.g. `runtime` enforces an enum at loadConfig
@@ -211,15 +211,15 @@ describe('loadConfig workstream config inheritance (#2714)', () => {
 
   beforeEach(() => {
     tmpDir = createTempProject();
-    originalEnv = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    originalEnv = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
   });
 
   afterEach(() => {
     if (originalEnv !== undefined) {
-      process.env.GSD_WORKSTREAM = originalEnv;
+      process.env.GTD_WORKSTREAM = originalEnv;
     } else {
-      delete process.env.GSD_WORKSTREAM;
+      delete process.env.GTD_WORKSTREAM;
     }
     cleanup(tmpDir);
   });
@@ -241,27 +241,27 @@ describe('loadConfig workstream config inheritance (#2714)', () => {
   }
 
   test('workstream config inherits model_overrides from root when not defined in workstream', () => {
-    writeRootConfig({ model_overrides: { 'gsd-executor': 'opus' } });
+    writeRootConfig({ model_overrides: { 'gtd-task-executor': 'opus' } });
     writeWorkstreamConfig('feature-a', { model_profile: 'quality' });
-    process.env.GSD_WORKSTREAM = 'feature-a';
+    process.env.GTD_WORKSTREAM = 'feature-a';
     const config = loadConfig(tmpDir);
-    assert.deepStrictEqual(config.model_overrides, { 'gsd-executor': 'opus' });
+    assert.deepStrictEqual(config.model_overrides, { 'gtd-task-executor': 'opus' });
     assert.strictEqual(config.model_profile, 'quality');
   });
 
   test('workstream-specific keys override root config values', () => {
-    writeRootConfig({ model_profile: 'balanced', model_overrides: { 'gsd-executor': 'opus' } });
-    writeWorkstreamConfig('feature-b', { model_profile: 'speed', model_overrides: { 'gsd-executor': 'haiku' } });
-    process.env.GSD_WORKSTREAM = 'feature-b';
+    writeRootConfig({ model_profile: 'balanced', model_overrides: { 'gtd-task-executor': 'opus' } });
+    writeWorkstreamConfig('feature-b', { model_profile: 'speed', model_overrides: { 'gtd-task-executor': 'haiku' } });
+    process.env.GTD_WORKSTREAM = 'feature-b';
     const config = loadConfig(tmpDir);
     assert.strictEqual(config.model_profile, 'speed');
-    assert.deepStrictEqual(config.model_overrides, { 'gsd-executor': 'haiku' });
+    assert.deepStrictEqual(config.model_overrides, { 'gtd-task-executor': 'haiku' });
   });
 
   test('deep merge works for nested workflow.* keys', () => {
     writeRootConfig({ workflow: { research: false, auto_advance: true } });
     writeWorkstreamConfig('feature-c', { workflow: { auto_advance: false } });
-    process.env.GSD_WORKSTREAM = 'feature-c';
+    process.env.GTD_WORKSTREAM = 'feature-c';
     const config = loadConfig(tmpDir);
     // research inherited from root
     assert.strictEqual(config.research, false);
@@ -270,33 +270,33 @@ describe('loadConfig workstream config inheritance (#2714)', () => {
   });
 
   test('explicit null in workstream config overrides root value (PR #2717 null-override bug)', () => {
-    writeRootConfig({ model_overrides: { 'gsd-executor': 'opus', 'gsd-planner': 'sonnet' } });
+    writeRootConfig({ model_overrides: { 'gtd-task-executor': 'opus', 'gtd-planner': 'sonnet' } });
     writeWorkstreamConfig('feature-d', { model_overrides: null });
-    process.env.GSD_WORKSTREAM = 'feature-d';
+    process.env.GTD_WORKSTREAM = 'feature-d';
     const config = loadConfig(tmpDir);
     // null in workstream should override root, not fall back to root value
     assert.strictEqual(config.model_overrides, null);
   });
 
   test('workstream without config.json inherits root config', () => {
-    writeRootConfig({ model_profile: 'quality', model_overrides: { 'gsd-executor': 'opus' } });
+    writeRootConfig({ model_profile: 'quality', model_overrides: { 'gtd-task-executor': 'opus' } });
     // Create workstream dir without config.json
     fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams', 'feature-e'), { recursive: true });
-    process.env.GSD_WORKSTREAM = 'feature-e';
+    process.env.GTD_WORKSTREAM = 'feature-e';
     const config = loadConfig(tmpDir);
     assert.strictEqual(config.model_profile, 'quality');
-    assert.deepStrictEqual(config.model_overrides, { 'gsd-executor': 'opus' });
+    assert.deepStrictEqual(config.model_overrides, { 'gtd-task-executor': 'opus' });
   });
 
-  test('loadConfig does not mutate GSD_WORKSTREAM when workstream config is missing', () => {
+  test('loadConfig does not mutate GTD_WORKSTREAM when workstream config is missing', () => {
     writeRootConfig({ model_profile: 'quality' });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams', 'feature-f'), { recursive: true });
-    process.env.GSD_WORKSTREAM = 'feature-f';
+    process.env.GTD_WORKSTREAM = 'feature-f';
 
     const config = loadConfig(tmpDir);
 
     assert.strictEqual(config.model_profile, 'quality');
-    assert.strictEqual(process.env.GSD_WORKSTREAM, 'feature-f');
+    assert.strictEqual(process.env.GTD_WORKSTREAM, 'feature-f');
   });
 });
 
@@ -359,7 +359,7 @@ describe('loadConfig commit_docs gitignore auto-detection (#1250)', () => {
     // When config.json is missing, loadConfig catches and returns defaults.
     // The gitignore check happens inside the try block, so with no config.json
     // the catch returns defaults (commit_docs: true). This is acceptable since
-    // a project without config.json hasn't been initialized by GSD yet.
+    // a project without config.json hasn't been initialized by GTD yet.
     assert.strictEqual(typeof config.commit_docs, 'boolean');
   });
 });
@@ -386,7 +386,7 @@ describe('resolveModelInternal', () => {
 
   describe('model profile structural validation', () => {
     test('all known agents resolve to a valid string for each profile', () => {
-      const knownAgents = ['gsd-planner', 'gsd-executor', 'gsd-phase-researcher', 'gsd-codebase-mapper'];
+      const knownAgents = ['gtd-planner', 'gtd-task-executor', 'gtd-phase-researcher', 'gtd-codebase-mapper'];
       const profiles = ['quality', 'balanced', 'budget', 'inherit'];
       const validValues = ['inherit', 'sonnet', 'haiku', 'opus'];
 
@@ -403,7 +403,7 @@ describe('resolveModelInternal', () => {
     });
 
     test('inherit profile forces all known agents to inherit model', () => {
-      const knownAgents = ['gsd-planner', 'gsd-executor', 'gsd-phase-researcher', 'gsd-codebase-mapper'];
+      const knownAgents = ['gtd-planner', 'gtd-task-executor', 'gtd-phase-researcher', 'gtd-codebase-mapper'];
       writeConfig({ model_profile: 'inherit' });
       for (const agent of knownAgents) {
         assert.strictEqual(resolveModelInternal(tmpDir, agent), 'inherit');
@@ -415,78 +415,78 @@ describe('resolveModelInternal', () => {
     test('per-agent override takes precedence over profile', () => {
       writeConfig({
         model_profile: 'balanced',
-        model_overrides: { 'gsd-executor': 'haiku' },
+        model_overrides: { 'gtd-task-executor': 'haiku' },
       });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'haiku');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-task-executor'), 'haiku');
     });
 
     test('opus override resolves to opus', () => {
       writeConfig({
-        model_overrides: { 'gsd-executor': 'opus' },
+        model_overrides: { 'gtd-task-executor': 'opus' },
       });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'opus');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-task-executor'), 'opus');
     });
 
     test('agents not in override fall back to profile', () => {
       writeConfig({
         model_profile: 'quality',
-        model_overrides: { 'gsd-executor': 'haiku' },
+        model_overrides: { 'gtd-task-executor': 'haiku' },
       });
-      // gsd-planner not overridden, should use quality profile -> opus
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'opus');
+      // gtd-planner not overridden, should use quality profile -> opus
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), 'opus');
     });
   });
 
   describe('edge cases', () => {
     test('returns sonnet for unknown agent type', () => {
       writeConfig({ model_profile: 'balanced' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), 'sonnet');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-nonexistent'), 'sonnet');
     });
 
     test('returns opus for unknown agent type with quality profile', () => {
       writeConfig({ model_profile: 'quality' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), 'opus');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-nonexistent'), 'opus');
     });
 
     test('returns haiku for unknown agent type with budget profile', () => {
       writeConfig({ model_profile: 'budget' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), 'haiku');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-nonexistent'), 'haiku');
     });
 
     test('returns inherit for unknown agent type with inherit profile', () => {
       writeConfig({ model_profile: 'inherit' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), 'inherit');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-nonexistent'), 'inherit');
     });
 
     test('defaults to balanced profile when model_profile missing', () => {
       writeConfig({});
-      // balanced profile, gsd-planner -> opus
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'opus');
+      // balanced profile, gtd-planner -> opus
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), 'opus');
     });
   });
 
   describe('resolve_model_ids: "omit"', () => {
     test('returns empty string for known agents', () => {
       writeConfig({ resolve_model_ids: 'omit' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), '');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), '');
     });
 
     test('returns empty string for unknown agents', () => {
       writeConfig({ resolve_model_ids: 'omit' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), '');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-nonexistent'), '');
     });
 
     test('still respects model_overrides even when omit', () => {
       writeConfig({
         resolve_model_ids: 'omit',
-        model_overrides: { 'gsd-planner': 'openai/gpt-5.4' },
+        model_overrides: { 'gtd-planner': 'openai/gpt-5.4' },
       });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'openai/gpt-5.4');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), 'openai/gpt-5.4');
     });
 
     test('returns empty string with inherit profile', () => {
       writeConfig({ resolve_model_ids: 'omit', model_profile: 'inherit' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), '');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), '');
     });
   });
 
@@ -494,17 +494,17 @@ describe('resolveModelInternal', () => {
     // Regression test for #2712: MODEL_ALIAS_MAP must track current model releases.
     test('opus alias resolves to claude-opus-4-7', () => {
       writeConfig({ resolve_model_ids: true, model_profile: 'quality' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'claude-opus-4-7');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-planner'), 'claude-opus-4-7');
     });
 
     test('sonnet alias resolves to claude-sonnet-4-6', () => {
       writeConfig({ resolve_model_ids: true, model_profile: 'balanced' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'claude-sonnet-4-6');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-task-executor'), 'claude-sonnet-4-6');
     });
 
     test('haiku alias resolves to claude-haiku-4-5', () => {
       writeConfig({ resolve_model_ids: true, model_profile: 'budget' });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-codebase-mapper'), 'claude-haiku-4-5');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gtd-codebase-mapper'), 'claude-haiku-4-5');
     });
   });
 });
@@ -825,7 +825,7 @@ describe('searchPhaseInDir', () => {
   let phasesDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-core-test-'));
     phasesDir = path.join(tmpDir, 'phases');
     fs.mkdirSync(phasesDir, { recursive: true });
   });
@@ -1190,46 +1190,46 @@ describe('getMilestonePhaseFilter', () => {
 // ─── Stale hook filter regression (#1200) ─────────────────────────────────────
 
 describe('stale hook filter', () => {
-  test('filter should only match gsd-prefixed .js files', () => {
+  test('filter should only match gtd-prefixed .js files', () => {
     const files = [
-      'gsd-check-update.js',
-      'gsd-context-monitor.js',
-      'gsd-prompt-guard.js',
-      'gsd-statusline.js',
-      'gsd-workflow-guard.js',
+      'gtd-check-update.js',
+      'gtd-context-monitor.js',
+      'gtd-prompt-guard.js',
+      'gtd-statusline.js',
+      'gtd-workflow-guard.js',
       'guard-edits-outside-project.js',  // user hook
       'my-custom-hook.js',               // user hook
-      'gsd-check-update.js.bak',         // backup file
+      'gtd-check-update.js.bak',         // backup file
       'README.md',                       // non-js file
     ];
 
-    const gsdFilter = f => f.startsWith('gsd-') && f.endsWith('.js');
-    const filtered = files.filter(gsdFilter);
+    const gtdFilter = f => f.startsWith('gtd-') && f.endsWith('.js');
+    const filtered = files.filter(gtdFilter);
 
     assert.deepStrictEqual(filtered, [
-      'gsd-check-update.js',
-      'gsd-context-monitor.js',
-      'gsd-prompt-guard.js',
-      'gsd-statusline.js',
-      'gsd-workflow-guard.js',
-    ], 'should only include gsd-prefixed .js files');
+      'gtd-check-update.js',
+      'gtd-context-monitor.js',
+      'gtd-prompt-guard.js',
+      'gtd-statusline.js',
+      'gtd-workflow-guard.js',
+    ], 'should only include gtd-prefixed .js files');
 
     assert.ok(!filtered.includes('guard-edits-outside-project.js'), 'must not include user hooks');
-    assert.ok(!filtered.includes('my-custom-hook.js'), 'must not include non-gsd hooks');
+    assert.ok(!filtered.includes('my-custom-hook.js'), 'must not include non-gtd hooks');
   });
 });
 
 // ─── stale hook path regression (#1249) ──────────────────────────────────────
 
 describe('stale hook path', () => {
-  test('gsd-check-update.js checks configDir/hooks/ where hooks are actually installed (#1421)', () => {
+  test('gtd-check-update.js checks configDir/hooks/ where hooks are actually installed (#1421)', () => {
     // The stale-hook scan logic lives in the worker (moved from inline -e template literal).
     // The worker receives configDir via env and constructs the hooksDir path.
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'gsd-check-update-worker.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'gtd-check-update-worker.js'), 'utf-8'
     );
     // Hooks are installed at configDir/hooks/ (e.g. ~/.claude/hooks/),
-    // not configDir/get-shit-done/hooks/ which doesn't exist (#1421)
+    // not configDir/get-tasks-done/hooks/ which doesn't exist (#1421)
     assert.ok(
       content.includes("path.join(configDir, 'hooks')"),
       'stale hook check must look in configDir/hooks/ where hooks are actually installed'
@@ -1240,31 +1240,31 @@ describe('stale hook path', () => {
 // ─── shared cache directory regression (#1421) ─────────────────────────────────
 
 describe('shared cache directory (#1421)', () => {
-  test('gsd-check-update.js writes cache to shared ~/.cache/gsd/ directory', () => {
+  test('gtd-check-update.js writes cache to shared ~/.cache/gtd/ directory', () => {
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'gsd-check-update.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'gtd-check-update.js'), 'utf-8'
     );
     // Cache must use a tool-agnostic path so statusline can find it
     // regardless of which runtime (Claude, Gemini, OpenCode) ran the check
     assert.ok(
-      content.includes("path.join(homeDir, '.cache', 'gsd')"),
-      'check-update must write cache to ~/.cache/gsd/ (shared, tool-agnostic)'
+      content.includes("path.join(homeDir, '.cache', 'gtd')"),
+      'check-update must write cache to ~/.cache/gtd/ (shared, tool-agnostic)'
     );
   });
 
-  test('gsd-statusline.js checks shared cache first, falls back to legacy (#1421)', () => {
+  test('gtd-statusline.js checks shared cache first, falls back to legacy (#1421)', () => {
     const content = fs.readFileSync(
-      path.join(__dirname, '..', 'hooks', 'gsd-statusline.js'), 'utf-8'
+      path.join(__dirname, '..', 'hooks', 'gtd-statusline.js'), 'utf-8'
     );
     // Statusline must check the shared cache path first
     assert.ok(
-      content.includes("path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json')"),
-      'statusline must check shared cache at ~/.cache/gsd/gsd-update-check.json'
+      content.includes("path.join(homeDir, '.cache', 'gtd', 'gtd-update-check.json')"),
+      'statusline must check shared cache at ~/.cache/gtd/gtd-update-check.json'
     );
     // Must fall back to legacy runtime-specific cache for backward compat
     assert.ok(
-      content.includes("path.join(claudeDir, 'cache', 'gsd-update-check.json')"),
-      'statusline must fall back to legacy cache at claudeDir/cache/gsd-update-check.json'
+      content.includes("path.join(claudeDir, 'cache', 'gtd-update-check.json')"),
+      'statusline must fall back to legacy cache at claudeDir/cache/gtd-update-check.json'
     );
     // Shared cache must be checked before legacy (existsSync order matters)
     const sharedIdx = content.indexOf('sharedCacheFile');
@@ -1279,7 +1279,7 @@ describe('shared cache directory (#1421)', () => {
 // ─── resolveWorktreeRoot ─────────────────────────────────────────────────────
 
 describe('resolveWorktreeRoot', () => {
-  const { resolveWorktreeRoot } = require('../get-shit-done/bin/lib/core.cjs');
+  const { resolveWorktreeRoot } = require('../get-tasks-done/bin/lib/core.cjs');
   let tmpDir;
 
   beforeEach(() => {
@@ -1304,7 +1304,7 @@ describe('resolveWorktreeRoot', () => {
 // ─── resolveWorktreeRoot — linked worktree with .planning/ (#1315) ───────────
 
 describe('resolveWorktreeRoot with linked worktree .planning/', () => {
-  const { resolveWorktreeRoot } = require('../get-shit-done/bin/lib/core.cjs');
+  const { resolveWorktreeRoot } = require('../get-tasks-done/bin/lib/core.cjs');
   const { execSync: execSyncLocal } = require('child_process');
   // On Windows CI, os.tmpdir() may return 8.3 short paths (RUNNER~1) while
   // git returns long paths (runneradmin). realpathSync.native resolves both.
@@ -1316,7 +1316,7 @@ describe('resolveWorktreeRoot with linked worktree .planning/', () => {
   let worktreeDir;
 
   function initBareGitRepo() {
-    const dir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-wt-main-')));
+    const dir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-wt-main-')));
     execSyncLocal('git init', { cwd: dir, stdio: 'pipe' });
     execSyncLocal('git config user.email "test@test.com"', { cwd: dir, stdio: 'pipe' });
     execSyncLocal('git config user.name "Test"', { cwd: dir, stdio: 'pipe' });
@@ -1345,7 +1345,7 @@ describe('resolveWorktreeRoot with linked worktree .planning/', () => {
     fs.mkdirSync(path.join(mainDir, '.planning'), { recursive: true });
 
     // Create a linked worktree
-    worktreeDir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-wt-linked-')));
+    worktreeDir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-wt-linked-')));
     fs.rmSync(worktreeDir, { recursive: true, force: true });
     execSyncLocal(`git worktree add "${worktreeDir}" -b test-linked`, { cwd: mainDir, stdio: 'pipe' });
 
@@ -1360,7 +1360,7 @@ describe('resolveWorktreeRoot with linked worktree .planning/', () => {
 
   test('returns main repo root when linked worktree has no .planning/', () => {
     // Create a linked worktree (no .planning/ in main or worktree)
-    worktreeDir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-wt-linked-')));
+    worktreeDir = normalizePath(fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-wt-linked-')));
     fs.rmSync(worktreeDir, { recursive: true, force: true });
     execSyncLocal(`git worktree add "${worktreeDir}" -b test-linked-no-plan`, { cwd: mainDir, stdio: 'pipe' });
 
@@ -1375,11 +1375,11 @@ describe('resolveWorktreeRoot with linked worktree .planning/', () => {
 // ─── monorepo worktree CWD preservation (#1283) ─────────────────────────────
 
 describe('monorepo worktree CWD preservation', () => {
-  const { resolveWorktreeRoot } = require('../get-shit-done/bin/lib/core.cjs');
+  const { resolveWorktreeRoot } = require('../get-tasks-done/bin/lib/core.cjs');
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-monorepo-wt-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-monorepo-wt-'));
   });
 
   afterEach(() => {
@@ -1412,7 +1412,7 @@ describe('monorepo worktree CWD preservation', () => {
 // ─── withPlanningLock ────────────────────────────────────────────────────────
 
 describe('withPlanningLock', () => {
-  const { withPlanningLock, planningDir } = require('../get-shit-done/bin/lib/core.cjs');
+  const { withPlanningLock, planningDir } = require('../get-tasks-done/bin/lib/core.cjs');
   let tmpDir;
 
   beforeEach(() => {
@@ -1456,7 +1456,7 @@ describe('detectSubRepos', () => {
   let projectRoot;
 
   beforeEach(() => {
-    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-detect-test-'));
+    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-detect-test-'));
   });
 
   afterEach(() => {
@@ -1502,7 +1502,7 @@ describe('loadConfig sub_repos auto-sync', () => {
   let projectRoot;
 
   beforeEach(() => {
-    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-sync-test-'));
+    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-sync-test-'));
     fs.mkdirSync(path.join(projectRoot, '.planning'), { recursive: true });
   });
 
@@ -1573,7 +1573,7 @@ describe('findProjectRoot', () => {
   let projectRoot;
 
   beforeEach(() => {
-    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-root-test-'));
+    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-root-test-'));
   });
 
   afterEach(() => {
@@ -1785,27 +1785,27 @@ describe('findProjectRoot', () => {
 // ─── reapStaleTempFiles ─────────────────────────────────────────────────────
 
 describe('reapStaleTempFiles', () => {
-  const gsdTmpDir = path.join(os.tmpdir(), 'gsd');
+  const gtdTmpDir = path.join(os.tmpdir(), 'gtd');
 
-  test('removes stale gsd-*.json files older than maxAgeMs', () => {
-    fs.mkdirSync(gsdTmpDir, { recursive: true });
-    const stalePath = path.join(gsdTmpDir, `gsd-reap-test-${Date.now()}.json`);
+  test('removes stale gtd-*.json files older than maxAgeMs', () => {
+    fs.mkdirSync(gtdTmpDir, { recursive: true });
+    const stalePath = path.join(gtdTmpDir, `gtd-reap-test-${Date.now()}.json`);
     fs.writeFileSync(stalePath, '{}');
     // Set mtime to 10 minutes ago
     const oldTime = new Date(Date.now() - 10 * 60 * 1000);
     fs.utimesSync(stalePath, oldTime, oldTime);
 
-    reapStaleTempFiles('gsd-reap-test-', { maxAgeMs: 5 * 60 * 1000 });
+    reapStaleTempFiles('gtd-reap-test-', { maxAgeMs: 5 * 60 * 1000 });
 
     assert.ok(!fs.existsSync(stalePath), 'stale file should be removed');
   });
 
-  test('preserves fresh gsd-*.json files', () => {
-    fs.mkdirSync(gsdTmpDir, { recursive: true });
-    const freshPath = path.join(gsdTmpDir, `gsd-reap-fresh-${Date.now()}.json`);
+  test('preserves fresh gtd-*.json files', () => {
+    fs.mkdirSync(gtdTmpDir, { recursive: true });
+    const freshPath = path.join(gtdTmpDir, `gtd-reap-fresh-${Date.now()}.json`);
     fs.writeFileSync(freshPath, '{}');
 
-    reapStaleTempFiles('gsd-reap-fresh-', { maxAgeMs: 5 * 60 * 1000 });
+    reapStaleTempFiles('gtd-reap-fresh-', { maxAgeMs: 5 * 60 * 1000 });
 
     assert.ok(fs.existsSync(freshPath), 'fresh file should be preserved');
     // Clean up
@@ -1813,21 +1813,21 @@ describe('reapStaleTempFiles', () => {
   });
 
   test('removes stale temp directories when present', () => {
-    fs.mkdirSync(gsdTmpDir, { recursive: true });
-    const staleDir = fs.mkdtempSync(path.join(gsdTmpDir, 'gsd-reap-dir-'));
+    fs.mkdirSync(gtdTmpDir, { recursive: true });
+    const staleDir = fs.mkdtempSync(path.join(gtdTmpDir, 'gtd-reap-dir-'));
     fs.writeFileSync(path.join(staleDir, 'data.jsonl'), 'test');
     // Set mtime to 10 minutes ago
     const oldTime = new Date(Date.now() - 10 * 60 * 1000);
     fs.utimesSync(staleDir, oldTime, oldTime);
 
-    reapStaleTempFiles('gsd-reap-dir-', { maxAgeMs: 5 * 60 * 1000 });
+    reapStaleTempFiles('gtd-reap-dir-', { maxAgeMs: 5 * 60 * 1000 });
 
     assert.ok(!fs.existsSync(staleDir), 'stale directory should be removed');
   });
 
   test('does not throw on empty or missing prefix matches', () => {
     assert.doesNotThrow(() => {
-      reapStaleTempFiles('gsd-nonexistent-prefix-xyz-', { maxAgeMs: 0 });
+      reapStaleTempFiles('gtd-nonexistent-prefix-xyz-', { maxAgeMs: 0 });
     });
   });
 });
@@ -1839,17 +1839,17 @@ describe('planningDir', () => {
   let savedProject, savedWorkstream;
 
   beforeEach(() => {
-    savedProject = process.env.GSD_PROJECT;
-    savedWorkstream = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_PROJECT;
-    delete process.env.GSD_WORKSTREAM;
+    savedProject = process.env.GTD_PROJECT;
+    savedWorkstream = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_PROJECT;
+    delete process.env.GTD_WORKSTREAM;
   });
 
   afterEach(() => {
-    if (savedProject !== undefined) process.env.GSD_PROJECT = savedProject;
-    else delete process.env.GSD_PROJECT;
-    if (savedWorkstream !== undefined) process.env.GSD_WORKSTREAM = savedWorkstream;
-    else delete process.env.GSD_WORKSTREAM;
+    if (savedProject !== undefined) process.env.GTD_PROJECT = savedProject;
+    else delete process.env.GTD_PROJECT;
+    if (savedWorkstream !== undefined) process.env.GTD_WORKSTREAM = savedWorkstream;
+    else delete process.env.GTD_WORKSTREAM;
   });
 
   test('returns .planning/ when neither project nor workstream is set', () => {
@@ -1872,8 +1872,8 @@ describe('planningDir', () => {
     assert.strictEqual(result, path.join(cwd, '.planning', 'my-app', 'workstreams', 'feature-x'));
   });
 
-  test('reads GSD_PROJECT from env when project param is undefined', () => {
-    process.env.GSD_PROJECT = 'env-project';
+  test('reads GTD_PROJECT from env when project param is undefined', () => {
+    process.env.GTD_PROJECT = 'env-project';
     const result = planningDir(cwd);
     assert.strictEqual(result, path.join(cwd, '.planning', 'env-project'));
   });

@@ -9,9 +9,9 @@
 // to silently fail with:
 //   [agent-skills] WARNING: Global skill not found at "~/.cursor/skills/X/SKILL.md" — skipping
 //
-// Fix introduces get-shit-done/bin/lib/runtime-homes.cjs with first-class
+// Fix introduces get-tasks-done/bin/lib/runtime-homes.cjs with first-class
 // support for all 15 supported runtimes, including:
-//   - hermes: nested skills/gsd/<skillName>/ layout (#2841)
+//   - hermes: nested skills/gtd/<skillName>/ layout (#2841)
 //   - cline: rules-based, returns null (no skills directory)
 //   - CLAUDE_CONFIG_DIR env var for Claude (was missing)
 //   - All other runtime-specific env vars
@@ -27,7 +27,7 @@ const {
   getGlobalSkillsBase,
   getGlobalSkillDir,
   getGlobalSkillDisplayPath,
-} = require(path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'runtime-homes.cjs'));
+} = require(path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'runtime-homes.cjs'));
 
 // Helper: run fn with an env var temporarily set
 function withEnv(key, value, fn) {
@@ -128,11 +128,11 @@ describe('bug #3126: runtime-homes getGlobalSkillsBase', () => {
       );
     });
   });
-  test('hermes: skills at <configDir>/skills/gsd (nested layout #2841)', () => {
+  test('hermes: skills at <configDir>/skills/gtd (nested layout #2841)', () => {
     withEnv('HERMES_HOME', undefined, () => {
       assert.strictEqual(
         getGlobalSkillsBase('hermes'),
-        path.join(os.homedir(), '.hermes', 'skills', 'gsd'),
+        path.join(os.homedir(), '.hermes', 'skills', 'gtd'),
       );
     });
   });
@@ -145,21 +145,21 @@ describe('bug #3126: runtime-homes getGlobalSkillDir', () => {
   test('cursor: <configDir>/skills/<skillName>', () => {
     withEnv('CURSOR_CONFIG_DIR', undefined, () => {
       assert.strictEqual(
-        getGlobalSkillDir('cursor', 'gsd-executor'),
-        path.join(os.homedir(), '.cursor', 'skills', 'gsd-executor'),
+        getGlobalSkillDir('cursor', 'gtd-task-executor'),
+        path.join(os.homedir(), '.cursor', 'skills', 'gtd-task-executor'),
       );
     });
   });
-  test('hermes: <configDir>/skills/gsd/<skillName>', () => {
+  test('hermes: <configDir>/skills/gtd/<skillName>', () => {
     withEnv('HERMES_HOME', undefined, () => {
       assert.strictEqual(
-        getGlobalSkillDir('hermes', 'gsd-executor'),
-        path.join(os.homedir(), '.hermes', 'skills', 'gsd', 'gsd-executor'),
+        getGlobalSkillDir('hermes', 'gtd-task-executor'),
+        path.join(os.homedir(), '.hermes', 'skills', 'gtd', 'gtd-task-executor'),
       );
     });
   });
   test('cline: returns null', () => {
-    assert.strictEqual(getGlobalSkillDir('cline', 'gsd-executor'), null);
+    assert.strictEqual(getGlobalSkillDir('cline', 'gtd-task-executor'), null);
   });
 });
 
@@ -167,7 +167,7 @@ describe('bug #3126: init.cjs uses runtime-homes not hardcoded .claude', () => {
   test('init.cjs has no hardcoded globalSkillsBase assignment to ~/.claude/skills', () => {
     const fs = require('node:fs');
     const src = fs.readFileSync(
-      path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'init.cjs'),
+      path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'init.cjs'),
       'utf8',
     );
     assert.ok(
@@ -178,7 +178,7 @@ describe('bug #3126: init.cjs uses runtime-homes not hardcoded .claude', () => {
   test('init.cjs requires runtime-homes', () => {
     const fs = require('node:fs');
     const src = fs.readFileSync(
-      path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'init.cjs'),
+      path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'init.cjs'),
       'utf8',
     );
     assert.ok(
@@ -189,7 +189,7 @@ describe('bug #3126: init.cjs uses runtime-homes not hardcoded .claude', () => {
   test('init.cjs warning message no longer hardcodes ~/.claude/skills', () => {
     const fs = require('node:fs');
     const src = fs.readFileSync(
-      path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'init.cjs'),
+      path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'init.cjs'),
       'utf8',
     );
     assert.ok(

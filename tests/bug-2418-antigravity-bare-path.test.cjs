@@ -5,11 +5,11 @@
  * misses bare ~/.claude (without trailing slash), leaving unreplaced references
  * that cause the installer to warn about leaked paths.
  *
- * Files affected: agents/gsd-debugger.md (configDir = ~/.claude) and
- * get-shit-done/workflows/update.md (comment with e.g. ~/.claude).
+ * Files affected: agents/gtd-debugger.md (configDir = ~/.claude) and
+ * get-tasks-done/workflows/update.md (comment with e.g. ~/.claude).
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -54,17 +54,17 @@ describe('convertClaudeToAntigravityContent bare path replacement (#2418)', () =
     });
 
     test('still replaces ~/.claude/ (with trailing slash) correctly', () => {
-      const input = 'See ~/.claude/get-shit-done/workflows/';
+      const input = 'See ~/.claude/get-tasks-done/workflows/';
       const result = convertClaudeToAntigravityContent(input, true);
       assert.ok(
-        result.includes('~/.gemini/antigravity/get-shit-done/workflows/'),
+        result.includes('~/.gemini/antigravity/get-tasks-done/workflows/'),
         `Expected path with trailing slash to be replaced, got: ${result}`
       );
       assert.ok(!result.includes('~/.claude/'), `Expected ~/ .claude/ to be fully replaced, got: ${result}`);
     });
 
     test('does not double-replace ~/.claude/ paths', () => {
-      const input = 'See ~/.claude/get-shit-done/';
+      const input = 'See ~/.claude/get-tasks-done/';
       const result = convertClaudeToAntigravityContent(input, true);
       // Result should contain exactly one occurrence of the replacement path
       const count = (result.match(/~\/.gemini\/antigravity\//g) || []).length;
@@ -100,7 +100,7 @@ describe('convertClaudeToAntigravityContent bare path replacement (#2418)', () =
     });
 
     test('does not double-replace ~/.claude/ paths', () => {
-      const input = 'See ~/.claude/get-shit-done/';
+      const input = 'See ~/.claude/get-tasks-done/';
       const result = convertClaudeToAntigravityContent(input, false);
       // .agent/ should appear exactly once
       const count = (result.match(/\.agent\//g) || []).length;
@@ -121,19 +121,19 @@ describe('convertClaudeToAntigravityContent bare path replacement (#2418)', () =
       return convertClaudeToAntigravityContent(content, isGlobal);
     }
 
-    test('gsd-debugger.md has no leaked ~/.claude after global Antigravity conversion', () => {
-      const debuggerPath = path.join(repoRoot, 'agents', 'gsd-debugger.md');
+    test('gtd-debugger.md has no leaked ~/.claude after global Antigravity conversion', () => {
+      const debuggerPath = path.join(repoRoot, 'agents', 'gtd-debugger.md');
       if (!fs.existsSync(debuggerPath)) return; // skip if file doesn't exist
       const converted = convertFile(debuggerPath, true);
       const matches = converted.match(leakedPathRegex);
       assert.strictEqual(
         matches, null,
-        `gsd-debugger.md still contains leaked .claude paths after Antigravity conversion: ${matches}`
+        `gtd-debugger.md still contains leaked .claude paths after Antigravity conversion: ${matches}`
       );
     });
 
     test('update.md has no leaked ~/.claude after global Antigravity conversion', () => {
-      const updatePath = path.join(repoRoot, 'get-shit-done', 'workflows', 'update.md');
+      const updatePath = path.join(repoRoot, 'get-tasks-done', 'workflows', 'update.md');
       if (!fs.existsSync(updatePath)) return; // skip if file doesn't exist
       const converted = convertFile(updatePath, true);
       const matches = converted.match(leakedPathRegex);

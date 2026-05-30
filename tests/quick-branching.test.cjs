@@ -1,7 +1,7 @@
 /**
  * Quick task branching tests
  *
- * Validates that /gsd-quick exposes branch_name from init and that the Step 2.5
+ * Validates that /gtd-quick exposes branch_name from init and that the Step 2.5
  * "Handle quick-task branching" block:
  *   1. Reuses an existing branch as-is (no rebase / no reset).
  *   2. When the branch does not exist, creates it from origin/HEAD's default
@@ -20,7 +20,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
+const QUICK_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'quick.md');
 
 const GIT_ENV = Object.freeze({
   ...process.env,
@@ -104,7 +104,7 @@ function extractStep25Bash() {
  * defaults to `main`, every assertion below collapses (#2921 CR nitpick).
  */
 function setupFixture(defaultBranch = 'trunk') {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-quick-branching-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-quick-branching-'));
   const seedPath = path.join(root, 'seed');
   const originPath = path.join(root, 'origin.git');
   const clonePath = path.join(root, 'clone');
@@ -138,7 +138,7 @@ function runStep(bash, cwd, branchName) {
   // Write the script to a sibling tempdir, not inside the repo — putting it in
   // `cwd` would create an untracked file that trips `git status --porcelain`
   // and steers the step into the dirty-tree path.
-  const scriptDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-quick-step-'));
+  const scriptDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-quick-step-'));
   const scriptPath = path.join(scriptDir, 'step25.sh');
   const script = `#!/usr/bin/env bash\nset -uo pipefail\nbranch_name="${branchName}"\n${bash}\n`;
   fs.writeFileSync(scriptPath, script, { mode: 0o755 });

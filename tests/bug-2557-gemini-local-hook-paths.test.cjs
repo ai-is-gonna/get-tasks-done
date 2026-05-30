@@ -5,7 +5,7 @@
  *
  * $CLAUDE_PROJECT_DIR is a Claude Code-specific env variable. Gemini CLI does
  * not set it. On Windows, Gemini's own variable-substitution + path-join logic
- * produced a doubled path like `D:\Projects\GSD\'D:\Projects\GSD'`, causing
+ * produced a doubled path like `D:\Projects\GTD\'D:\Projects\GTD'`, causing
  * every local project hook to fail at SessionStart.
  *
  * Fix: localPrefix is now runtime-conditional. Gemini/Antigravity use bare
@@ -17,7 +17,7 @@ const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const projection = require(path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'shell-command-projection.cjs'));
+const projection = require(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'shell-command-projection.cjs'));
 const { projectLocalHookPrefix, projectShellCommandText } = projection;
 
 describe('bug #2557: Gemini/Antigravity local hooks use relative paths (not $CLAUDE_PROJECT_DIR)', () => {
@@ -40,7 +40,7 @@ describe('bug #2557: Gemini/Antigravity local hooks use relative paths (not $CLA
     const prefix = projectLocalHookPrefix({ runtime: 'gemini', dirName: '.gemini' });
     const command = projectShellCommandText({
       runnerToken: '"/usr/local/bin/node"',
-      argTokens: [`${prefix}/hooks/gsd-check-update.js`],
+      argTokens: [`${prefix}/hooks/gtd-check-update.js`],
       runtime: 'gemini',
       platform: 'linux',
     });

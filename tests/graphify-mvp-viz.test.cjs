@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const CMD = path.join(__dirname, '..', 'commands', 'gsd', 'graphify.md');
+const CMD = path.join(__dirname, '..', 'commands', 'gtd', 'graphify.md');
 
 function parseVizContract(content) {
   const lines = content.split(/\r?\n/);

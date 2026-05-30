@@ -62,7 +62,7 @@ export function fallbackFailureError(input: {
   return {
     kind: 'fallback_failure',
     code: 1,
-    message: `Error: gsd-tools.cjs fallback failed: ${input.message}`,
+    message: `Error: gtd-tools.cjs fallback failed: ${input.message}`,
     details: fallbackErrorDetails({
       command: input.command,
       args: input.args,

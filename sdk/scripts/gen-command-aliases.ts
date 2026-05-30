@@ -140,9 +140,9 @@ async function main(): Promise<void> {
   ].join('\n');
   await writeFile(tsOutPath, tsHeader + tsBody, 'utf-8');
 
-  // Also generate the CJS mirror used by get-shit-done/bin/lib/ seams.
+  // Also generate the CJS mirror used by get-tasks-done/bin/lib/ seams.
   // CJS is plain JavaScript — no type annotations.
-  const cjsOutPath = fileURLToPath(new URL('../../get-shit-done/bin/lib/command-aliases.generated.cjs', import.meta.url));
+  const cjsOutPath = fileURLToPath(new URL('../../get-tasks-done/bin/lib/command-aliases.generated.cjs', import.meta.url));
   const cjsHeader = `'use strict';\n\n/**\n * GENERATED FILE — state.*, verify.*, init.*, phase.*, phases.*, validate.*, roadmap.*, and non-family alias/subcommand metadata for CJS routing.\n * Source: sdk/src/query/command-manifest.{state,verify,init,phase,phases,validate,roadmap,non-family}.ts\n */\n\n`;
   const cjsBody = [
     `const STATE_COMMAND_ALIASES = ${JSON.stringify(stateEntries, null, 2)};`,

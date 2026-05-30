@@ -16,7 +16,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, before, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -43,7 +43,7 @@ describe('#2248: local Claude install does not clobber profile-level statusLine'
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-local-install-2248-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-local-install-2248-'));
   });
 
   afterEach(() => {

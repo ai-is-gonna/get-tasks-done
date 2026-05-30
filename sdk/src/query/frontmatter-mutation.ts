@@ -1,7 +1,7 @@
 /**
  * Frontmatter mutation handlers — write operations for YAML frontmatter.
  *
- * Ported from get-shit-done/bin/lib/frontmatter.cjs.
+ * Ported from get-tasks-done/bin/lib/frontmatter.cjs.
  * Provides reconstructFrontmatter (serialization), spliceFrontmatter (replacement),
  * and query handlers for frontmatter.set, frontmatter.merge, frontmatter.validate.
  *
@@ -18,7 +18,7 @@
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter } from './frontmatter.js';
 import { normalizeMd, resolvePathUnderProject } from './helpers.js';
 import type { QueryHandler } from './utils.js';
@@ -173,7 +173,7 @@ export const frontmatterSet: QueryHandler = async (args, projectDir) => {
   const hasNamedArgs = fi !== -1 || vi !== -1;
   if (hasNamedArgs) {
     if (fi === -1 || vi === -1 || !args[fi + 1] || args[vi + 1] === undefined) {
-      throw new GSDError('file, --field, and --value required together', ErrorClassification.Validation);
+      throw new GTDError('file, --field, and --value required together', ErrorClassification.Validation);
     }
     filePath = args[0];
     field = args[fi + 1];
@@ -185,19 +185,19 @@ export const frontmatterSet: QueryHandler = async (args, projectDir) => {
   }
 
   if (!filePath || !field || value === undefined) {
-    throw new GSDError('file, field, and value required', ErrorClassification.Validation);
+    throw new GTDError('file, field, and value required', ErrorClassification.Validation);
   }
 
   // Path traversal guard: reject null bytes
   if (filePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   let fullPath: string;
   try {
     fullPath = await resolvePathUnderProject(projectDir, filePath);
   } catch (err) {
-    if (err instanceof GSDError) {
+    if (err instanceof GTDError) {
       return { data: { error: err.message, path: filePath } };
     }
     throw err;
@@ -227,7 +227,7 @@ export const frontmatterSet: QueryHandler = async (args, projectDir) => {
  * Reads a file, merges JSON object into existing frontmatter, writes back.
  * Port of `cmdFrontmatterMerge` from frontmatter.cjs lines 344-356.
  *
- * @param args - `file --data <json>` (gsd-tools) or `[file, jsonString]` (SDK)
+ * @param args - `file --data <json>` (gtd-tools) or `[file, jsonString]` (SDK)
  * @param projectDir - Project root directory
  * @returns QueryResult with { merged: true, fields: [...] }
  */
@@ -237,19 +237,19 @@ export const frontmatterMerge: QueryHandler = async (args, projectDir) => {
   const jsonString = dataIdx !== -1 ? args[dataIdx + 1] : args[1];
 
   if (!filePath || !jsonString) {
-    throw new GSDError('file and data required', ErrorClassification.Validation);
+    throw new GTDError('file and data required', ErrorClassification.Validation);
   }
 
   // Path traversal guard: reject null bytes (consistent with frontmatterSet)
   if (filePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   let fullPath: string;
   try {
     fullPath = await resolvePathUnderProject(projectDir, filePath);
   } catch (err) {
-    if (err instanceof GSDError) {
+    if (err instanceof GTDError) {
       return { data: { error: err.message, path: filePath } };
     }
     throw err;
@@ -266,7 +266,7 @@ export const frontmatterMerge: QueryHandler = async (args, projectDir) => {
   try {
     mergeData = JSON.parse(jsonString) as Record<string, unknown>;
   } catch {
-    throw new GSDError('Invalid JSON for merge data', ErrorClassification.Validation);
+    throw new GTDError('Invalid JSON for merge data', ErrorClassification.Validation);
   }
 
   const fm = extractFrontmatter(content);
@@ -302,17 +302,17 @@ export const frontmatterValidate: QueryHandler = async (args, projectDir) => {
   }
 
   if (!filePath || !schemaName) {
-    throw new GSDError('file and schema required', ErrorClassification.Validation);
+    throw new GTDError('file and schema required', ErrorClassification.Validation);
   }
 
   // Path traversal guard: reject null bytes (consistent with frontmatterSet)
   if (filePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   const schema = FRONTMATTER_SCHEMAS[schemaName];
   if (!schema) {
-    throw new GSDError(
+    throw new GTDError(
       `Unknown schema: ${schemaName}. Available: ${Object.keys(FRONTMATTER_SCHEMAS).join(', ')}`,
       ErrorClassification.Validation
     );
@@ -322,7 +322,7 @@ export const frontmatterValidate: QueryHandler = async (args, projectDir) => {
   try {
     fullPath = await resolvePathUnderProject(projectDir, filePath);
   } catch (err) {
-    if (err instanceof GSDError) {
+    if (err instanceof GTDError) {
       return { data: { error: err.message, path: filePath } };
     }
     throw err;

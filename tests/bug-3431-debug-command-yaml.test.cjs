@@ -10,16 +10,16 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { parseFrontmatter } = require('./helpers.cjs');
 
-const DEBUG_COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'debug.md');
+const DEBUG_COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'debug.md');
 
 function readFrontmatter(filePath) {
   return parseFrontmatter(fs.readFileSync(filePath, 'utf8'));
 }
 
-test('#3431: commands/gsd/debug.md frontmatter parses as YAML and preserves argument-hint', () => {
+test('#3431: commands/gtd/debug.md frontmatter parses as YAML and preserves argument-hint', () => {
   const frontmatter = readFrontmatter(DEBUG_COMMAND_PATH);
 
-  assert.equal(frontmatter.name, 'gsd:debug');
+  assert.equal(frontmatter.name, 'gtd:debug');
   assert.equal(
     frontmatter['argument-hint'],
     '[list | status <slug> | continue <slug> | --diagnose] [issue description]',

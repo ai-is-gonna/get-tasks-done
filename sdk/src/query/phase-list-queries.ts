@@ -1,11 +1,11 @@
 /**
  * Handlers: phase.list-plans, phase.list-artifacts — deterministic plan/artifact listing
- * for agents (replaces shell `ls` / `find` patterns). SDK-only; no gsd-tools.cjs mirror.
+ * for agents (replaces shell `ls` / `find` patterns). SDK-only; no gtd-tools.cjs mirror.
  */
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter } from './frontmatter.js';
 import {
   normalizePhaseName,
@@ -42,17 +42,17 @@ type ArtifactType = 'context' | 'summary' | 'verification' | 'research';
  */
 export const phaseListArtifacts: QueryHandler = async (args, projectDir, workstream) => {
   if (!args[0]) {
-    throw new GSDError('phase required', ErrorClassification.Validation);
+    throw new GTDError('phase required', ErrorClassification.Validation);
   }
   const typeIdx = args.indexOf('--type');
   if (typeIdx === -1 || !args[typeIdx + 1]) {
-    throw new GSDError('--type context|summary|verification|research required', ErrorClassification.Validation);
+    throw new GTDError('--type context|summary|verification|research required', ErrorClassification.Validation);
   }
   const phase = args[0];
   const rawType = args[typeIdx + 1].toLowerCase();
   const allowed: ArtifactType[] = ['context', 'summary', 'verification', 'research'];
   if (!allowed.includes(rawType as ArtifactType)) {
-    throw new GSDError(`invalid --type ${rawType}`, ErrorClassification.Validation);
+    throw new GTDError(`invalid --type ${rawType}`, ErrorClassification.Validation);
   }
   const artifactType = rawType as ArtifactType;
 
@@ -95,14 +95,14 @@ export const phaseListArtifacts: QueryHandler = async (args, projectDir, workstr
  */
 export const phaseListPlans: QueryHandler = async (args, projectDir, workstream) => {
   if (!args[0]) {
-    throw new GSDError('phase required', ErrorClassification.Validation);
+    throw new GTDError('phase required', ErrorClassification.Validation);
   }
   let schemaKey: string | null = null;
   const wsIdx = args.indexOf('--with-schema');
   if (wsIdx !== -1) {
     schemaKey = args[wsIdx + 1] ?? null;
     if (!schemaKey) {
-      throw new GSDError('--with-schema requires a field name', ErrorClassification.Validation);
+      throw new GTDError('--with-schema requires a field name', ErrorClassification.Validation);
     }
   }
 

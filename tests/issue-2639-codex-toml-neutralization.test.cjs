@@ -15,7 +15,7 @@
  * `.claude/commands/`, `.claude/agents/`, and `.claudeignore`.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -26,7 +26,7 @@ const os = require('os');
 const { installCodexConfig } = require('../bin/install.js');
 
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2639-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2639-'));
 }
 
 function writeAgentFixture(agentsSrc, name, body) {
@@ -58,7 +58,7 @@ describe('#2639 — Codex TOML emit routes through full neutralization pipeline'
   });
 
   test('strips CLAUDE.md, .claude/skills/, .claude/commands/, .claude/agents/, and .claudeignore from emitted TOML', () => {
-    writeAgentFixture(agentsSrc, 'gsd-code-reviewer', [
+    writeAgentFixture(agentsSrc, 'gtd-code-reviewer', [
       '**Project instructions:** Read `./CLAUDE.md` if it exists.',
       '',
       '**CLAUDE.md enforcement:** If `./CLAUDE.md` exists, treat it as hard constraints.',
@@ -74,7 +74,7 @@ describe('#2639 — Codex TOML emit routes through full neutralization pipeline'
 
     installCodexConfig(targetDir, agentsSrc);
 
-    const tomlPath = path.join(targetDir, 'agents', 'gsd-code-reviewer.toml');
+    const tomlPath = path.join(targetDir, 'agents', 'gtd-code-reviewer.toml');
     assert.ok(fs.existsSync(tomlPath), 'per-agent TOML written');
     const toml = fs.readFileSync(tomlPath, 'utf8');
 
@@ -96,13 +96,13 @@ describe('#2639 — Codex TOML emit routes through full neutralization pipeline'
   });
 
   test('preserves Claude product/model names (Claude Code, Claude Opus) in TOML', () => {
-    writeAgentFixture(agentsSrc, 'gsd-executor', [
+    writeAgentFixture(agentsSrc, 'gtd-task-executor', [
       'This agent runs under Claude Code with the Claude Opus 4 model.',
       'Do not confuse with Claude Sonnet or Claude Haiku.',
     ].join('\n'));
 
     installCodexConfig(targetDir, agentsSrc);
-    const toml = fs.readFileSync(path.join(targetDir, 'agents', 'gsd-executor.toml'), 'utf8');
+    const toml = fs.readFileSync(path.join(targetDir, 'agents', 'gtd-task-executor.toml'), 'utf8');
 
     assert.ok(toml.includes('Claude Code'), 'Claude Code product name preserved');
     assert.ok(toml.includes('Claude Opus'), 'Claude Opus model name preserved');

@@ -4,7 +4,7 @@
  *
  * Imports the compiled ESM output from sdk/dist/project-root/index.js,
  * captures findProjectRoot via Function.prototype.toString(), then emits
- * get-shit-done/bin/lib/project-root.generated.cjs.
+ * get-tasks-done/bin/lib/project-root.generated.cjs.
  *
  * Run: cd sdk && npm run gen:project-root
  * Freshness check: node sdk/scripts/check-project-root-fresh.mjs
@@ -78,7 +78,7 @@ export async function buildProjectRootCjs() {
 async function main() {
   const content = await buildProjectRootCjs();
   const outPath = fileURLToPath(
-    new URL('../../get-shit-done/bin/lib/project-root.generated.cjs', import.meta.url),
+    new URL('../../get-tasks-done/bin/lib/project-root.generated.cjs', import.meta.url),
   );
   await writeFile(outPath, content, 'utf-8');
   console.log(`Written: ${outPath}`);

@@ -1,5 +1,5 @@
 /**
- * Structured JSON logger for GSD debugging.
+ * Structured JSON logger for GTD debugging.
  *
  * Writes structured log entries to stderr (or configurable writable stream).
  * This is a debugging facility (R019), separate from the event stream.
@@ -33,7 +33,7 @@ export interface LogEntry {
 
 // ─── Logger options ──────────────────────────────────────────────────────────
 
-export interface GSDLoggerOptions {
+export interface GTDLoggerOptions {
   /** Minimum log level to output. Default: 'info'. */
   level?: LogLevel;
   /** Output stream. Default: process.stderr. */
@@ -48,14 +48,14 @@ export interface GSDLoggerOptions {
 
 // ─── Logger class ────────────────────────────────────────────────────────────
 
-export class GSDLogger {
+export class GTDLogger {
   private readonly minLevel: number;
   private readonly output: Writable;
   private phase?: PhaseType;
   private plan?: string;
   private sessionId?: string;
 
-  constructor(options: GSDLoggerOptions = {}) {
+  constructor(options: GTDLoggerOptions = {}) {
     this.minLevel = LOG_LEVEL_PRIORITY[options.level ?? 'info'];
     this.output = options.output ?? process.stderr;
     this.phase = options.phase;

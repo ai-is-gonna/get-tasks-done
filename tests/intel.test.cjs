@@ -1,8 +1,8 @@
 /**
- * Tests for get-shit-done/bin/lib/intel.cjs
+ * Tests for get-tasks-done/bin/lib/intel.cjs
  *
  * Covers: query, status, diff, validate, snapshot, patch-meta,
- * extract-exports, enabled/disabled gating, and CLI routing via gsd-tools.
+ * extract-exports, enabled/disabled gating, and CLI routing via gtd-tools.
  */
 
 'use strict';
@@ -11,7 +11,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 const {
   intelQuery,
@@ -24,7 +24,7 @@ const {
   ensureIntelDir,
   isIntelEnabled,
   INTEL_FILES,
-} = require('../get-shit-done/bin/lib/intel.cjs');
+} = require('../get-tasks-done/bin/lib/intel.cjs');
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -560,9 +560,9 @@ describe('intelExtractExports', () => {
   });
 });
 
-// ─── CLI routing via gsd-tools ──────────────────────────────────────────────
+// ─── CLI routing via gtd-tools ──────────────────────────────────────────────
 
-describe('gsd-tools intel subcommands', () => {
+describe('gtd-tools intel subcommands', () => {
   let tmpDir;
 
   beforeEach(() => {
@@ -574,14 +574,14 @@ describe('gsd-tools intel subcommands', () => {
   });
 
   test('intel status returns disabled message when not enabled', () => {
-    const result = runGsdTools(['intel', 'status'], tmpDir);
+    const result = runGtdTools(['intel', 'status'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.disabled, true);
   });
 
   test('intel query returns disabled message when not enabled', () => {
-    const result = runGsdTools(['intel', 'query', 'test'], tmpDir);
+    const result = runGtdTools(['intel', 'query', 'test'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.disabled, true);
@@ -589,7 +589,7 @@ describe('gsd-tools intel subcommands', () => {
 
   test('intel status returns file status when enabled', () => {
     enableIntel(path.join(tmpDir, '.planning'));
-    const result = runGsdTools(['intel', 'status'], tmpDir);
+    const result = runGtdTools(['intel', 'status'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.ok(output.files);
@@ -598,7 +598,7 @@ describe('gsd-tools intel subcommands', () => {
 
   test('intel validate reports errors for missing files when enabled', () => {
     enableIntel(path.join(tmpDir, '.planning'));
-    const result = runGsdTools(['intel', 'validate'], tmpDir);
+    const result = runGtdTools(['intel', 'validate'], tmpDir);
     assert.strictEqual(result.success, true);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.valid, false);

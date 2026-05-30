@@ -1,11 +1,11 @@
 /**
  * Unit tests for runtime-gate.ts
  *
- * Regression tests for #2832: gsd-sdk auto silently routed Codex (and other
+ * Regression tests for #2832: gtd-sdk auto silently routed Codex (and other
  * non-Claude) runtime projects through the Claude Agent SDK, picked
  * Claude-Sonnet defaults from the profile map, and reported instant failures.
  * The gate fails fast with an actionable error so users either set the right
- * runtime or fall back to the in-session GSD slash commands.
+ * runtime or fall back to the in-session GTD slash commands.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -14,12 +14,12 @@ import { assertRuntimeSupportsAutoMode } from './runtime-gate.js';
 describe('assertRuntimeSupportsAutoMode', () => {
   let prevEnv: string | undefined;
   beforeEach(() => {
-    prevEnv = process.env.GSD_RUNTIME;
-    delete process.env.GSD_RUNTIME;
+    prevEnv = process.env.GTD_RUNTIME;
+    delete process.env.GTD_RUNTIME;
   });
   afterEach(() => {
-    if (prevEnv === undefined) delete process.env.GSD_RUNTIME;
-    else process.env.GSD_RUNTIME = prevEnv;
+    if (prevEnv === undefined) delete process.env.GTD_RUNTIME;
+    else process.env.GTD_RUNTIME = prevEnv;
   });
 
   it('passes for runtime: claude (config)', () => {
@@ -35,8 +35,8 @@ describe('assertRuntimeSupportsAutoMode', () => {
     expect(() => assertRuntimeSupportsAutoMode({ runtime: 'codex' })).toThrow(/codex/);
   });
 
-  it('throws for GSD_RUNTIME=codex even when config says claude', () => {
-    process.env.GSD_RUNTIME = 'codex';
+  it('throws for GTD_RUNTIME=codex even when config says claude', () => {
+    process.env.GTD_RUNTIME = 'codex';
     expect(() => assertRuntimeSupportsAutoMode({ runtime: 'claude' })).toThrow(/codex/);
   });
 
@@ -49,7 +49,7 @@ describe('assertRuntimeSupportsAutoMode', () => {
     }
     expect(caught).toBeDefined();
     expect(caught!.message).toMatch(/#2832/);
-    expect(caught!.message).toMatch(/gsd-discuss-phase|gsd-plan-phase|gsd-execute-phase/);
+    expect(caught!.message).toMatch(/gtd-discuss-phase|gtd-plan-phase|gtd-work-task-issue/);
   });
 
   it('throws for gemini runtime', () => {
@@ -66,11 +66,11 @@ describe('assertRuntimeSupportsAutoMode', () => {
     expect(() => assertRuntimeSupportsAutoMode({ runtime: 'totally-bogus' })).not.toThrow();
   });
 
-  it('attributes source to config when GSD_RUNTIME is set to an unsupported value', () => {
+  it('attributes source to config when GTD_RUNTIME is set to an unsupported value', () => {
     // Unsupported env values fall through to config in detectRuntime; the
     // gate's error message must report config (not the discarded env value)
     // as the source so users debug the right thing.
-    process.env.GSD_RUNTIME = 'unsupported-env';
+    process.env.GTD_RUNTIME = 'unsupported-env';
     let caught: Error | undefined;
     try {
       assertRuntimeSupportsAutoMode({ runtime: 'codex' });
@@ -79,6 +79,6 @@ describe('assertRuntimeSupportsAutoMode', () => {
     }
     expect(caught).toBeDefined();
     expect(caught!.message).toMatch(/config\.runtime="codex"/);
-    expect(caught!.message).not.toMatch(/GSD_RUNTIME=unsupported-env/);
+    expect(caught!.message).not.toMatch(/GTD_RUNTIME=unsupported-env/);
   });
 });

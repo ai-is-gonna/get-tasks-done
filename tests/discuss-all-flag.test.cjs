@@ -3,7 +3,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * Tests for --all flag on /gsd-discuss-phase (#2188)
+ * Tests for --all flag on /gtd-discuss-phase (#2188)
  *
  * The --all flag auto-selects all gray areas, skipping the interactive
  * AskUserQuestion, but does NOT auto-advance to plan-phase afterward
@@ -18,14 +18,14 @@ const path = require('path');
 describe('#2188: discuss-phase --all flag', () => {
   test('discuss-phase command argument-hint includes --all', () => {
     const command = fs.readFileSync(
-      path.join(__dirname, '..', 'commands', 'gsd', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'commands', 'gtd', 'discuss-phase.md'), 'utf8'
     );
     assert.ok(command.includes('--all'), 'argument-hint should include --all');
   });
 
   test('discuss-phase command description mentions --all', () => {
     const command = fs.readFileSync(
-      path.join(__dirname, '..', 'commands', 'gsd', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'commands', 'gtd', 'discuss-phase.md'), 'utf8'
     );
     // The description frontmatter or objective should reference --all
     assert.ok(command.includes('--all'), 'command description should mention --all flag');
@@ -33,14 +33,14 @@ describe('#2188: discuss-phase --all flag', () => {
 
   test('discuss-phase workflow handles --all flag in present_gray_areas', () => {
     const workflow = fs.readFileSync(
-      path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md'), 'utf8'
     );
     assert.ok(workflow.includes('--all'), 'workflow should handle --all flag');
   });
 
   test('discuss-phase workflow auto-selects all areas when --all is present', () => {
     const workflow = fs.readFileSync(
-      path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md'), 'utf8'
     );
     // The present_gray_areas step must trigger auto-select when --all is set
     const grayAreasStep = workflow.slice(
@@ -56,7 +56,7 @@ describe('#2188: discuss-phase --all flag', () => {
 
   test('discuss-phase workflow does NOT auto-advance when --all is used without --auto or --chain', () => {
     const workflow = fs.readFileSync(
-      path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md'), 'utf8'
     );
     // The auto_advance step should NOT treat --all as a trigger for plan-phase auto-launch
     const autoAdvanceStep = workflow.slice(
@@ -75,7 +75,7 @@ describe('#2188: discuss-phase --all flag', () => {
 
   test('discuss-phase workflow initialize step documents --all flag behavior', () => {
     const workflow = fs.readFileSync(
-      path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md'), 'utf8'
+      path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md'), 'utf8'
     );
     // The initialize step should document --all mode like it documents --auto and --chain
     const initStep = workflow.slice(
@@ -91,7 +91,7 @@ describe('#2188: discuss-phase --all flag', () => {
     );
     // Find the discuss-phase section and verify --all is documented
     const discussSection = commands.slice(
-      commands.indexOf('gsd-discuss-phase') > -1 ? commands.indexOf('gsd-discuss-phase') : commands.indexOf('discuss-phase')
+      commands.indexOf('gtd-discuss-phase') > -1 ? commands.indexOf('gtd-discuss-phase') : commands.indexOf('discuss-phase')
     );
     assert.ok(discussSection.includes('--all'), 'COMMANDS.md should document --all for discuss-phase');
   });

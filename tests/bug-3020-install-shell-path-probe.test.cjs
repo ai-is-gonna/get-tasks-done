@@ -1,13 +1,13 @@
 /**
  * Regression test for bug #3020.
  *
- * The installer prints `✓ GSD SDK ready (sdk/dist/cli.js)` whenever
- * isGsdSdkOnPath() — which reads process.env.PATH from the install
+ * The installer prints `✓ GTD SDK ready (sdk/dist/cli.js)` whenever
+ * isGtdSdkOnPath() — which reads process.env.PATH from the install
  * subprocess — finds the shim. That set is not the same as the user's
  * later interactive shell PATH:
  *
- *   - Windows cross-shell: gsd-sdk.cmd resolves under PowerShell/cmd
- *     (PATHEXT) but bare `gsd-sdk` does not resolve under Git Bash /
+ *   - Windows cross-shell: gtd-sdk.cmd resolves under PowerShell/cmd
+ *     (PATHEXT) but bare `gtd-sdk` does not resolve under Git Bash /
  *     MSYS / WSL bash.
  *   - POSIX ~/.local/bin: install subprocess inherits npm/npx-injected
  *     PATH containing ~/.local/bin; user's login shell may not.
@@ -18,7 +18,7 @@
  *
  * Fix: introduce two helpers and use them at install time.
  *
- *   isGsdSdkOnPath(pathString?: string)
+ *   isGtdSdkOnPath(pathString?: string)
  *     - Now accepts an optional explicit PATH string. When omitted,
  *       falls back to process.env.PATH (preserves existing behavior).
  *     - Pure: no spawn, no I/O beyond fs.statSync on candidates.
@@ -34,7 +34,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -43,32 +43,32 @@ const os = require('node:os');
 const path = require('node:path');
 
 const INSTALL = require(path.join(__dirname, '..', 'bin', 'install.js'));
-const { isGsdSdkOnPath, getUserShellPath } = INSTALL;
+const { isGtdSdkOnPath, getUserShellPath } = INSTALL;
 
-describe('bug #3020: isGsdSdkOnPath accepts an explicit PATH string', () => {
+describe('bug #3020: isGtdSdkOnPath accepts an explicit PATH string', () => {
   test('exported as a function', () => {
-    assert.equal(typeof isGsdSdkOnPath, 'function');
+    assert.equal(typeof isGtdSdkOnPath, 'function');
   });
 
-  test('returns true when an executable gsd-sdk exists in the supplied PATH', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3020-'));
+  test('returns true when an executable gtd-sdk exists in the supplied PATH', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3020-'));
     try {
-      // Create a fake `gsd-sdk` shim with the executable bit set.
-      const shimName = process.platform === 'win32' ? 'gsd-sdk.cmd' : 'gsd-sdk';
+      // Create a fake `gtd-sdk` shim with the executable bit set.
+      const shimName = process.platform === 'win32' ? 'gtd-sdk.cmd' : 'gtd-sdk';
       const shimPath = path.join(tmp, shimName);
       fs.writeFileSync(shimPath, process.platform === 'win32' ? '@echo off\nexit 0\n' : '#!/bin/sh\nexit 0\n');
       if (process.platform !== 'win32') fs.chmodSync(shimPath, 0o755);
-      const result = isGsdSdkOnPath(tmp);
+      const result = isGtdSdkOnPath(tmp);
       assert.equal(result, true, `expected true for PATH=${tmp}, got ${result}`);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
 
-  test('returns false when the supplied PATH has no gsd-sdk', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3020-'));
+  test('returns false when the supplied PATH has no gtd-sdk', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3020-'));
     try {
-      const result = isGsdSdkOnPath(tmp);
+      const result = isGtdSdkOnPath(tmp);
       assert.equal(result, false);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -77,22 +77,22 @@ describe('bug #3020: isGsdSdkOnPath accepts an explicit PATH string', () => {
 
   test('zero-arg form preserves existing behavior (reads process.env.PATH)', () => {
     // Just call it — it shouldn't throw and should return a boolean.
-    const result = isGsdSdkOnPath();
+    const result = isGtdSdkOnPath();
     assert.equal(typeof result, 'boolean');
   });
 
   test('treats an empty PATH string as no segments to scan', () => {
-    const result = isGsdSdkOnPath('');
+    const result = isGtdSdkOnPath('');
     assert.equal(result, false);
   });
 
   test('null pathString is type-guarded — falls back to process.env.PATH (#3028 CR)', () => {
-    // Pre-fix: isGsdSdkOnPath(null) threw "Cannot read properties of null
+    // Pre-fix: isGtdSdkOnPath(null) threw "Cannot read properties of null
     // (reading 'split')". Post-fix: typeof check falls back to process.env.PATH.
     let threw = null;
     let result;
     try {
-      result = isGsdSdkOnPath(null);
+      result = isGtdSdkOnPath(null);
     } catch (e) {
       threw = e;
     }
@@ -102,9 +102,9 @@ describe('bug #3020: isGsdSdkOnPath accepts an explicit PATH string', () => {
 
   test('non-string pathString (number, object) falls back to process.env.PATH (#3028 CR)', () => {
     // Defensive: any non-string argument should fall back, not throw.
-    assert.equal(typeof isGsdSdkOnPath(0), 'boolean');
-    assert.equal(typeof isGsdSdkOnPath({}), 'boolean');
-    assert.equal(typeof isGsdSdkOnPath([]), 'boolean');
+    assert.equal(typeof isGtdSdkOnPath(0), 'boolean');
+    assert.equal(typeof isGtdSdkOnPath({}), 'boolean');
+    assert.equal(typeof isGtdSdkOnPath([]), 'boolean');
   });
 });
 
@@ -145,16 +145,16 @@ describe('bug #3020: getUserShellPath probes the user login shell PATH', () => {
 
 describe('bug #3020: cross-shell PATH mismatch is detectable via the new helpers', () => {
   test('install-time PATH has shim, user-shell PATH does not → mismatch detected', () => {
-    const installDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3020-install-'));
-    const userDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3020-user-'));
+    const installDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3020-install-'));
+    const userDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3020-user-'));
     try {
-      const shimName = process.platform === 'win32' ? 'gsd-sdk.cmd' : 'gsd-sdk';
+      const shimName = process.platform === 'win32' ? 'gtd-sdk.cmd' : 'gtd-sdk';
       const shimPath = path.join(installDir, shimName);
       fs.writeFileSync(shimPath, process.platform === 'win32' ? '@echo off\nexit 0\n' : '#!/bin/sh\nexit 0\n');
       if (process.platform !== 'win32') fs.chmodSync(shimPath, 0o755);
 
-      const installSees = isGsdSdkOnPath(installDir);
-      const userSees = isGsdSdkOnPath(userDir);
+      const installSees = isGtdSdkOnPath(installDir);
+      const userSees = isGtdSdkOnPath(userDir);
 
       assert.equal(installSees, true, 'install-time PATH sees the shim');
       assert.equal(userSees, false, 'user-shell PATH does not see the shim');

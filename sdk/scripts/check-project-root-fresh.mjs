@@ -23,7 +23,7 @@ const { buildProjectRootCjs } = await import('./gen-project-root.mjs');
 
 const expected = await buildProjectRootCjs();
 
-const committedPath = resolve(here, '..', '..', 'get-shit-done', 'bin', 'lib', 'project-root.generated.cjs');
+const committedPath = resolve(here, '..', '..', 'get-tasks-done', 'bin', 'lib', 'project-root.generated.cjs');
 const committed = await readFile(committedPath, 'utf-8');
 
 if (expected === committed) {

@@ -22,9 +22,9 @@ const path = require('path');
 const INSTALL_SRC = path.join(__dirname, '..', 'bin', 'install.js');
 
 const SH_HOOKS = [
-  { name: 'gsd-validate-commit.sh', settingsVar: 'validateCommitCommand' },
-  { name: 'gsd-session-state.sh',   settingsVar: 'sessionStateCommand' },
-  { name: 'gsd-phase-boundary.sh',  settingsVar: 'phaseBoundaryCommand' },
+  { name: 'gtd-validate-commit.sh', settingsVar: 'validateCommitCommand' },
+  { name: 'gtd-session-state.sh',   settingsVar: 'sessionStateCommand' },
+  { name: 'gtd-phase-boundary.sh',  settingsVar: 'phaseBoundaryCommand' },
 ];
 
 describe('bug #1817: .sh hook registration guards', () => {

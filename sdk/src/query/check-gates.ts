@@ -2,14 +2,14 @@
  * Safety gate consolidation (`check.gates`).
  *
  * Checks blocking conditions before proceeding with a workflow — replaces
- * per-workflow gate logic in `next.md`, `execute-phase.md`, `discuss-phase.md`.
+ * per-workflow gate logic in `next.md`, `work-task-issue.md`, `discuss-phase.md`.
  * See `.planning/research/decision-routing-audit.md` §3.2.
  */
 
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { normalizePhaseName, planningPaths } from './helpers.js';
 import { findPhase } from './phase.js';
 import type { QueryHandler } from './utils.js';
@@ -39,7 +39,7 @@ async function readFileSafe(filePath: string): Promise<string | null> {
 export const checkGates: QueryHandler = async (args, projectDir, workstream) => {
   const workflow = args[0];
   if (!workflow) {
-    throw new GSDError('workflow name required for check gates', ErrorClassification.Validation);
+    throw new GTDError('workflow name required for check gates', ErrorClassification.Validation);
   }
 
   // Parse optional --phase flag

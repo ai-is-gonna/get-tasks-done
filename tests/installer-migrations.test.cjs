@@ -14,11 +14,11 @@ const {
   readInstallState,
   runInstallerMigrations,
   writeInstallState,
-} = require('../get-shit-done/bin/lib/installer-migrations.cjs');
-const firstTimeBaselineMigration = require('../get-shit-done/bin/lib/installer-migrations/000-first-time-baseline.cjs');
+} = require('../get-tasks-done/bin/lib/installer-migrations.cjs');
+const firstTimeBaselineMigration = require('../get-tasks-done/bin/lib/installer-migrations/000-first-time-baseline.cjs');
 
 function createTempInstall() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-installer-migrations-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-installer-migrations-'));
 }
 
 function cleanup(dir) {
@@ -37,7 +37,7 @@ function writeFile(root, relPath, content) {
 
 function writeManifest(root, files) {
   fs.writeFileSync(
-    path.join(root, 'gsd-file-manifest.json'),
+    path.join(root, 'gtd-file-manifest.json'),
     JSON.stringify({
       version: '1.49.0',
       timestamp: '2026-05-10T00:00:00.000Z',
@@ -73,7 +73,7 @@ function legacyCodexHook(configDir) {
     hooks: [
       {
         type: 'command',
-        command: `node "${path.join(configDir, 'hooks', 'gsd-check-update.js')}"`,
+        command: `node "${path.join(configDir, 'hooks', 'gtd-check-update.js')}"`,
       },
     ],
   };
@@ -93,10 +93,10 @@ function userHook(command) {
 test('records a first-time baseline while preserving user-owned artifacts', () => {
   const configDir = createTempInstall();
   try {
-    writeFile(configDir, 'get-shit-done/workflows/plan.md', 'managed workflow\n');
-    writeFile(configDir, 'get-shit-done/USER-PROFILE.md', 'user profile\n');
+    writeFile(configDir, 'get-tasks-done/workflows/plan.md', 'managed workflow\n');
+    writeFile(configDir, 'get-tasks-done/USER-PROFILE.md', 'user profile\n');
     writeManifest(configDir, {
-      'get-shit-done/workflows/plan.md': sha256('managed workflow\n'),
+      'get-tasks-done/workflows/plan.md': sha256('managed workflow\n'),
     });
 
     const result = runInstallerMigrations({
@@ -109,8 +109,8 @@ test('records a first-time baseline while preserving user-owned artifacts', () =
     });
 
     assert.deepEqual(result.appliedMigrationIds, ['2026-05-11-first-time-baseline-scan']);
-    assert.equal(fs.readFileSync(path.join(configDir, 'get-shit-done/workflows/plan.md'), 'utf8'), 'managed workflow\n');
-    assert.equal(fs.readFileSync(path.join(configDir, 'get-shit-done/USER-PROFILE.md'), 'utf8'), 'user profile\n');
+    assert.equal(fs.readFileSync(path.join(configDir, 'get-tasks-done/workflows/plan.md'), 'utf8'), 'managed workflow\n');
+    assert.equal(fs.readFileSync(path.join(configDir, 'get-tasks-done/USER-PROFILE.md'), 'utf8'), 'user profile\n');
 
     assert.deepEqual(
       result.plan.actions.map((action) => ({
@@ -121,12 +121,12 @@ test('records a first-time baseline while preserving user-owned artifacts', () =
       [
         {
           type: 'record-baseline',
-          relPath: 'get-shit-done/workflows/plan.md',
+          relPath: 'get-tasks-done/workflows/plan.md',
           classification: 'managed-pristine',
         },
         {
           type: 'baseline-preserve-user',
-          relPath: 'get-shit-done/USER-PROFILE.md',
+          relPath: 'get-tasks-done/USER-PROFILE.md',
           classification: 'user-owned',
         },
       ]
@@ -223,10 +223,10 @@ test('preserves user-owned skill files during baseline without hashing their con
   );
 });
 
-test('blocks stale GSD-looking baseline artifacts for explicit user choice', () => {
+test('blocks stale GTD-looking baseline artifacts for explicit user choice', () => {
   const configDir = createTempInstall();
   try {
-    writeFile(configDir, 'hooks/gsd-retired-hook.js', 'old gsd hook\n');
+    writeFile(configDir, 'hooks/gtd-retired-hook.js', 'old gtd hook\n');
     writeManifest(configDir, {});
 
     const result = runInstallerMigrations({
@@ -241,7 +241,7 @@ test('blocks stale GSD-looking baseline artifacts for explicit user choice', () 
     assert.deepEqual(result.appliedMigrationIds, []);
     assert.equal(result.journalRelPath, null);
     assert.equal(fs.existsSync(path.join(configDir, INSTALL_STATE_NAME)), false);
-    assert.equal(fs.readFileSync(path.join(configDir, 'hooks/gsd-retired-hook.js'), 'utf8'), 'old gsd hook\n');
+    assert.equal(fs.readFileSync(path.join(configDir, 'hooks/gtd-retired-hook.js'), 'utf8'), 'old gtd hook\n');
     assert.deepEqual(
       result.blocked.map((action) => ({
         type: action.type,
@@ -252,8 +252,8 @@ test('blocks stale GSD-looking baseline artifacts for explicit user choice', () 
       [
         {
           type: 'prompt-user',
-          relPath: 'hooks/gsd-retired-hook.js',
-          classification: 'stale-gsd-looking',
+          relPath: 'hooks/gtd-retired-hook.js',
+          classification: 'stale-gtd-looking',
           choices: ['keep', 'remove'],
         },
       ]
@@ -266,9 +266,9 @@ test('blocks stale GSD-looking baseline artifacts for explicit user choice', () 
 test('records known generated agent artifacts so profile cleanup can remove them', () => {
   const configDir = createTempInstall();
   try {
-    writeFile(configDir, 'agents/gsd-executor.md', 'old generated agent\n');
-    writeFile(configDir, 'agents/gsd-executor.toml', 'old generated agent config\n');
-    writeFile(configDir, 'agents/gsd-local-experiment.md', 'user experiment\n');
+    writeFile(configDir, 'agents/gtd-task-executor.md', 'old generated agent\n');
+    writeFile(configDir, 'agents/gtd-task-executor.toml', 'old generated agent config\n');
+    writeFile(configDir, 'agents/gtd-local-experiment.md', 'user experiment\n');
     writeManifest(configDir, {});
 
     const result = runInstallerMigrations({
@@ -289,25 +289,25 @@ test('records known generated agent artifacts so profile cleanup can remove them
       [
         {
           type: 'record-baseline',
-          relPath: 'agents/gsd-executor.md',
+          relPath: 'agents/gtd-task-executor.md',
           classification: 'unknown',
         },
         {
           type: 'record-baseline',
-          relPath: 'agents/gsd-executor.toml',
+          relPath: 'agents/gtd-task-executor.toml',
           classification: 'unknown',
         },
         {
           type: 'prompt-user',
-          relPath: 'agents/gsd-local-experiment.md',
-          classification: 'stale-gsd-looking',
+          relPath: 'agents/gtd-local-experiment.md',
+          classification: 'stale-gtd-looking',
         },
       ]
     );
-    assert.deepEqual(result.blocked.map((action) => action.relPath), ['agents/gsd-local-experiment.md']);
-    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gsd-executor.md'), 'utf8'), 'old generated agent\n');
-    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gsd-executor.toml'), 'utf8'), 'old generated agent config\n');
-    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gsd-local-experiment.md'), 'utf8'), 'user experiment\n');
+    assert.deepEqual(result.blocked.map((action) => action.relPath), ['agents/gtd-local-experiment.md']);
+    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gtd-task-executor.md'), 'utf8'), 'old generated agent\n');
+    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gtd-task-executor.toml'), 'utf8'), 'old generated agent config\n');
+    assert.equal(fs.readFileSync(path.join(configDir, 'agents/gtd-local-experiment.md'), 'utf8'), 'user experiment\n');
   } finally {
     cleanup(configDir);
   }
@@ -489,7 +489,7 @@ test('classifies large files without loading the whole file through readFileSync
     cleanup(configDir);
   });
 
-  const relPath = 'skills/gsd-large/SKILL.md';
+  const relPath = 'skills/gtd-large/SKILL.md';
   const fullPath = path.join(configDir, relPath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   fs.writeFileSync(fullPath, Buffer.alloc(1024 * 1024 + 1, 'a'));
@@ -534,7 +534,7 @@ test('applies an unblocked plan with a journal and install-state update', () => 
     assert.deepEqual(result.appliedMigrationIds, ['2026-05-11-remove-old-hook']);
     assert.match(
       result.journalRelPath,
-      /^gsd-migration-journal\/2026-05-11T00-00-01-000Z-[0-9a-f]+\.json$/
+      /^gtd-migration-journal\/2026-05-11T00-00-01-000Z-[0-9a-f]+\.json$/
     );
 
     const journal = JSON.parse(fs.readFileSync(path.join(configDir, result.journalRelPath), 'utf8'));
@@ -627,7 +627,7 @@ test('stores modified-file backups under the unique migration run journal', (t) 
   const journal = JSON.parse(fs.readFileSync(path.join(configDir, result.journalRelPath), 'utf8'));
   const backupRelPath = journal.actions[0].backupRelPath;
 
-  assert.match(backupRelPath, /^gsd-migration-journal\/2026-05-11T00-00-10-000Z-[0-9a-f]+-backups\/hooks\/old-hook\.js$/);
+  assert.match(backupRelPath, /^gtd-migration-journal\/2026-05-11T00-00-10-000Z-[0-9a-f]+-backups\/hooks\/old-hook\.js$/);
   assert.equal(fs.readFileSync(path.join(configDir, backupRelPath), 'utf8'), 'user changed hook\n');
 });
 
@@ -659,7 +659,7 @@ test('successful migration rollback removes run-scoped backup directories', (t) 
   assert.equal(fs.readFileSync(path.join(configDir, 'hooks/old-hook.js'), 'utf8'), 'user changed hook\n');
   assert.equal(fs.existsSync(path.join(configDir, result.journalRelPath)), false);
   assert.equal(
-    fs.readdirSync(path.join(configDir, 'gsd-migration-journal')).some((name) => name.includes('backups')),
+    fs.readdirSync(path.join(configDir, 'gtd-migration-journal')).some((name) => name.includes('backups')),
     false
   );
 });
@@ -667,7 +667,7 @@ test('successful migration rollback removes run-scoped backup directories', (t) 
 test('refuses to run migrations while another installer owns the migration lock', (t) => {
   const configDir = createTempInstall();
   t.after(() => cleanup(configDir));
-  fs.writeFileSync(path.join(configDir, 'gsd-install-migration.lock'), 'held by test\n', 'utf8');
+  fs.writeFileSync(path.join(configDir, 'gtd-install-migration.lock'), 'held by test\n', 'utf8');
 
   assert.throws(
     () => runInstallerMigrations({
@@ -688,7 +688,7 @@ test('reports lock release failures after migration work completes', (t) => {
   });
 
   fs.rmSync = (targetPath, ...args) => {
-    if (path.basename(String(targetPath)) === 'gsd-install-migration.lock') {
+    if (path.basename(String(targetPath)) === 'gtd-install-migration.lock') {
       throw new Error('simulated lock unlink failure');
     }
     return originalRmSync.call(fs, targetPath, ...args);
@@ -716,7 +716,7 @@ test('rollback handle restores files and install state after a successful apply'
         {
           id: 'already-applied',
           appliedAt: '2026-05-10T00:00:00.000Z',
-          journal: 'gsd-migration-journal/prior.json',
+          journal: 'gtd-migration-journal/prior.json',
         },
       ],
     });
@@ -806,8 +806,8 @@ test('rolls back touched files and leaves state unchanged when apply fails', () 
     assert.equal(fs.readFileSync(path.join(configDir, 'hooks/old-hook.js'), 'utf8'), 'managed hook\n');
     assert.deepEqual(readInstallState(configDir).appliedMigrations, []);
     assert.equal(
-      fs.existsSync(path.join(configDir, 'gsd-migration-journal')) &&
-        fs.readdirSync(path.join(configDir, 'gsd-migration-journal')).some((name) =>
+      fs.existsSync(path.join(configDir, 'gtd-migration-journal')) &&
+        fs.readdirSync(path.join(configDir, 'gtd-migration-journal')).some((name) =>
           name.startsWith('2026-05-11T00-00-02-000Z')
         ),
       false
@@ -862,8 +862,8 @@ test('cleans rollback and backup artifacts when migration apply fails', (t) => {
 
   assert.equal(fs.readFileSync(path.join(configDir, 'hooks/old-hook.js'), 'utf8'), 'user changed hook\n');
   assert.equal(
-    fs.existsSync(path.join(configDir, 'gsd-migration-journal')) &&
-      fs.readdirSync(path.join(configDir, 'gsd-migration-journal')).some((name) =>
+    fs.existsSync(path.join(configDir, 'gtd-migration-journal')) &&
+      fs.readdirSync(path.join(configDir, 'gtd-migration-journal')).some((name) =>
         name.startsWith('2026-05-11T00-00-12-000Z')
       ),
     false
@@ -1003,7 +1003,7 @@ test('skips migration records already present in install state', () => {
         {
           id: '2026-05-11-remove-old-hook',
           appliedAt: '2026-05-11T00:00:00.000Z',
-          journal: 'gsd-migration-journal/prior.json',
+          journal: 'gtd-migration-journal/prior.json',
         },
       ],
     });
@@ -1070,7 +1070,7 @@ test('refuses to plan an already-applied migration whose checksum changed', () =
           id: '2026-05-11-remove-old-hook',
           checksum: 'sha256:old-definition',
           appliedAt: '2026-05-11T00:00:00.000Z',
-          journal: 'gsd-migration-journal/prior.json',
+          journal: 'gtd-migration-journal/prior.json',
         },
       ],
     });
@@ -1104,7 +1104,7 @@ test('ignores checksum drift for applied migrations outside the active runtime s
           id: '2026-05-11-codex-only',
           checksum: 'sha256:old-definition',
           appliedAt: '2026-05-11T00:00:00.000Z',
-          journal: 'gsd-migration-journal/prior.json',
+          journal: 'gtd-migration-journal/prior.json',
         },
       ],
     });
@@ -1261,7 +1261,7 @@ test('backs up modified legacy orphan files before removing them', () => {
     const plan = planInstallerMigrations({
       configDir,
       migrations: discoverInstallerMigrations({
-        migrationsDir: path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'installer-migrations'),
+        migrationsDir: path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'installer-migrations'),
       }),
       scope: 'global',
       now: () => '2026-05-11T00:00:05.000Z',
@@ -1285,6 +1285,71 @@ test('backs up modified legacy orphan files before removing them', () => {
   }
 });
 
+test('removes legacy manifest-managed install artifacts after GTD rename', () => {
+  const configDir = createTempInstall();
+  const oldShortName = String.fromCharCode(103, 115, 100);
+  const oldRepoName = ['get', String.fromCharCode(115, 104, 105, 116), 'done'].join('-');
+  const oldWorkflowPath = `${oldRepoName}/workflows/plan.md`;
+  const oldCommandPath = `commands/${oldShortName}/help.md`;
+  const oldSkillPath = `skills/${oldShortName}-plan/SKILL.md`;
+  const oldAgentPath = `agents/${oldShortName}-planner.md`;
+  const oldHookPath = `hooks/${oldShortName}-check-update.js`;
+  const oldUserSkillPath = `skills/${oldShortName}-custom/SKILL.md`;
+  const oldManifestName = `${oldShortName}-file-manifest.json`;
+  try {
+    writeFile(configDir, oldWorkflowPath, 'legacy workflow\n');
+    writeFile(configDir, oldCommandPath, 'legacy command\n');
+    writeFile(configDir, oldSkillPath, 'legacy skill\n');
+    writeFile(configDir, oldAgentPath, 'user modified legacy agent\n');
+    writeFile(configDir, oldHookPath, 'legacy hook\n');
+    writeFile(configDir, oldUserSkillPath, 'user-owned old-looking skill\n');
+    fs.writeFileSync(
+      path.join(configDir, oldManifestName),
+      JSON.stringify({
+        version: '1.50.0',
+        timestamp: '2026-05-24T00:00:00.000Z',
+        mode: 'full',
+        files: {
+          [oldWorkflowPath]: sha256('legacy workflow\n'),
+          [oldCommandPath]: sha256('legacy command\n'),
+          [oldSkillPath]: sha256('legacy skill\n'),
+          [oldAgentPath]: sha256('legacy agent\n'),
+          [oldHookPath]: sha256('legacy hook\n'),
+        },
+      }, null, 2),
+      'utf8'
+    );
+
+    const result = runInstallerMigrations({
+      configDir,
+      scope: 'global',
+      now: () => '2026-05-25T00:00:00.000Z',
+    });
+
+    assert.equal(fs.existsSync(path.join(configDir, oldWorkflowPath)), false);
+    assert.equal(fs.existsSync(path.join(configDir, oldCommandPath)), false);
+    assert.equal(fs.existsSync(path.join(configDir, oldSkillPath)), false);
+    assert.equal(fs.existsSync(path.join(configDir, oldAgentPath)), false);
+    assert.equal(fs.existsSync(path.join(configDir, oldHookPath)), false);
+    assert.equal(fs.existsSync(path.join(configDir, oldManifestName)), false);
+    assert.equal(
+      fs.readFileSync(path.join(configDir, oldUserSkillPath), 'utf8'),
+      'user-owned old-looking skill\n'
+    );
+
+    const journal = JSON.parse(fs.readFileSync(path.join(configDir, result.journalRelPath), 'utf8'));
+    const modifiedAgent = journal.actions.find((item) => item.relPath === oldAgentPath);
+    assert.equal(modifiedAgent.type, 'backup-and-remove');
+    assert.equal(
+      fs.readFileSync(path.join(configDir, modifiedAgent.backupRelPath), 'utf8'),
+      'user modified legacy agent\n'
+    );
+    assert.ok(result.appliedMigrationIds.includes('2026-05-25-legacy-acronym-install-cleanup'));
+  } finally {
+    cleanup(configDir);
+  }
+});
+
 test('runs a Codex legacy hooks.json cleanup migration without removing user hooks', () => {
   const configDir = createTempInstall();
   try {
@@ -1295,7 +1360,7 @@ test('runs a Codex legacy hooks.json cleanup migration without removing user hoo
         SessionStart: [
           legacyCodexHook(configDir),
           userHook('node "/Users/example/bin/user-hook.js"'),
-          userHook('node "/Users/example/bin/gsd-check-update.js"'),
+          userHook('node "/Users/example/bin/gtd-check-update.js"'),
         ],
       }, null, 2)
     );
@@ -1313,7 +1378,7 @@ test('runs a Codex legacy hooks.json cleanup migration without removing user hoo
 
     assert.deepEqual(commands, [
       'node "/Users/example/bin/user-hook.js"',
-      'node "/Users/example/bin/gsd-check-update.js"',
+      'node "/Users/example/bin/gtd-check-update.js"',
     ]);
     assert.ok(result.appliedMigrationIds.includes('2026-05-11-codex-legacy-hooks-json'));
   } finally {
@@ -1375,7 +1440,7 @@ test('skips runtime-specific migration records for other runtimes', () => {
     });
 
     const hooksJson = JSON.parse(fs.readFileSync(path.join(configDir, 'hooks.json'), 'utf8'));
-    assert.equal(hooksJson.SessionStart[0].hooks[0].command, `node "${path.join(configDir, 'hooks', 'gsd-check-update.js')}"`);
+    assert.equal(hooksJson.SessionStart[0].hooks[0].command, `node "${path.join(configDir, 'hooks', 'gtd-check-update.js')}"`);
     assert.equal(result.appliedMigrationIds.includes('2026-05-11-codex-legacy-hooks-json'), false);
   } finally {
     cleanup(configDir);

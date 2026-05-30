@@ -16,7 +16,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 // CJS artifact — synchronous require
-const { findProjectRoot: findProjectRootCjs } = require('../get-shit-done/bin/lib/project-root.generated.cjs');
+const { findProjectRoot: findProjectRootCjs } = require('../get-tasks-done/bin/lib/project-root.generated.cjs');
 
 // SDK ESM — loaded once before all tests via dynamic import
 let findProjectRootSdk;
@@ -28,7 +28,7 @@ before(async () => {
 // ── Fixture helpers ─────────────────────────────────────────────────────────
 
 function makeTmp() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-parity-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-parity-'));
 }
 
 function writeConfig(dir, content) {

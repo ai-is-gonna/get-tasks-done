@@ -73,7 +73,7 @@ export function createCommandTopology(registry: QueryRegistry): CommandTopology 
           kind: 'no_match',
           attempted: [],
           hints: [],
-          message: 'Error: "gsd-sdk query" requires a command',
+          message: 'Error: "gtd-sdk query" requires a command',
         };
       }
 

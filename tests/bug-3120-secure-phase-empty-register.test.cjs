@@ -22,7 +22,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const src = fs.readFileSync(
-  path.join(ROOT, 'get-shit-done', 'workflows', 'secure-phase.md'),
+  path.join(ROOT, 'get-tasks-done', 'workflows', 'secure-phase.md'),
   'utf8',
 );
 

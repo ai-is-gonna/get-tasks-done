@@ -6,9 +6,9 @@
 /**
  * Phase Researcher Application-Aware Tests (#1988)
  *
- * Validates that gsd-phase-researcher maps capabilities to architectural
+ * Validates that gtd-phase-researcher maps capabilities to architectural
  * tiers before diving into framework-specific research. Also validates
- * that gsd-planner and gsd-plan-checker consume the Architectural
+ * that gtd-planner and gtd-plan-checker consume the Architectural
  * Responsibility Map downstream.
  */
 
@@ -18,18 +18,18 @@ const fs = require('fs');
 const path = require('path');
 
 const AGENTS_DIR = path.join(__dirname, '..', 'agents');
-const TEMPLATES_DIR = path.join(__dirname, '..', 'get-shit-done', 'templates');
+const TEMPLATES_DIR = path.join(__dirname, '..', 'get-tasks-done', 'templates');
 
 // ─── Phase Researcher: Architectural Responsibility Mapping ─────────────────
 
 describe('phase-researcher: Architectural Responsibility Mapping', () => {
-  const researcherPath = path.join(AGENTS_DIR, 'gsd-phase-researcher.md');
+  const researcherPath = path.join(AGENTS_DIR, 'gtd-phase-researcher.md');
   const content = fs.readFileSync(researcherPath, 'utf-8');
 
   test('contains Architectural Responsibility Mapping step', () => {
     assert.ok(
       content.includes('Architectural Responsibility Map'),
-      'gsd-phase-researcher.md must contain "Architectural Responsibility Map"'
+      'gtd-phase-researcher.md must contain "Architectural Responsibility Map"'
     );
   });
 
@@ -66,7 +66,7 @@ describe('phase-researcher: Architectural Responsibility Mapping', () => {
     const toolPatterns = [
       /```bash/,
       /node "\$HOME/,
-      /gsd-tools\.cjs/,
+      /gtd-tools\.cjs/,
       /WebSearch/,
       /Context7/,
       /mcp__/,
@@ -112,13 +112,13 @@ describe('phase-researcher: Architectural Responsibility Mapping', () => {
 // ─── Planner: Architectural Responsibility Map Sanity Check ─────────────────
 
 describe('planner: Architectural Responsibility Map sanity check', () => {
-  const plannerPath = path.join(AGENTS_DIR, 'gsd-planner.md');
+  const plannerPath = path.join(AGENTS_DIR, 'gtd-planner.md');
   const content = fs.readFileSync(plannerPath, 'utf-8');
 
   test('references Architectural Responsibility Map', () => {
     assert.ok(
       content.includes('Architectural Responsibility Map'),
-      'gsd-planner.md must reference the Architectural Responsibility Map'
+      'gtd-planner.md must reference the Architectural Responsibility Map'
     );
   });
 
@@ -126,7 +126,7 @@ describe('planner: Architectural Responsibility Map sanity check', () => {
     // Must mention checking/verifying plan tasks against the responsibility map
     assert.ok(
       content.includes('sanity check') || content.includes('sanity-check'),
-      'gsd-planner.md must include a sanity check against the Architectural Responsibility Map'
+      'gtd-planner.md must include a sanity check against the Architectural Responsibility Map'
     );
   });
 });
@@ -134,14 +134,14 @@ describe('planner: Architectural Responsibility Map sanity check', () => {
 // ─── Plan Checker: Architectural Tier Verification Dimension ────────────────
 
 describe('plan-checker: Architectural Tier verification dimension', () => {
-  const checkerPath = path.join(AGENTS_DIR, 'gsd-plan-checker.md');
+  const checkerPath = path.join(AGENTS_DIR, 'gtd-plan-checker.md');
   const content = fs.readFileSync(checkerPath, 'utf-8');
 
   test('has verification dimension for architectural tier', () => {
     assert.ok(
       content.includes('Architectural Responsibility Map') ||
       content.includes('Architectural Tier'),
-      'gsd-plan-checker.md must have a verification dimension for architectural tier mapping'
+      'gtd-plan-checker.md must have a verification dimension for architectural tier mapping'
     );
   });
 

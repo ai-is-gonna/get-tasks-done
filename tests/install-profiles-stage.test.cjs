@@ -15,22 +15,22 @@ const {
   cleanupStagedSkills,
   resolveProfile,
   loadSkillsManifest,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
-const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 const REAL_AGENTS_DIR = path.join(__dirname, '..', 'agents');
 
 function createFixtureSkillsDir() {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-profile-'));
-  for (const name of ['plan-phase', 'execute-phase', 'autonomous', 'progress', 'help', 'phase']) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-profile-'));
+  for (const name of ['plan-phase', 'export-phase-issues', 'work-task-issue', 'orchestrate-tasks', 'autonomous', 'progress', 'help', 'phase']) {
     fs.writeFileSync(path.join(tmp, `${name}.md`), `# ${name}\n`);
   }
   return tmp;
 }
 
 function createFixtureAgentsDir() {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-agents-profile-'));
-  for (const name of ['gsd-planner', 'gsd-executor', 'gsd-code-reviewer']) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-agents-profile-'));
+  for (const name of ['gtd-planner', 'gtd-task-executor', 'gtd-code-reviewer']) {
     fs.writeFileSync(path.join(tmp, `${name}.md`), `# ${name}\n`);
   }
   return tmp;
@@ -79,7 +79,7 @@ describe('stageSkillsForProfile', () => {
   });
 
   test('non-existent srcDir returns srcDir unchanged', () => {
-    const ghost = path.join(os.tmpdir(), 'gsd-no-exist-' + Date.now());
+    const ghost = path.join(os.tmpdir(), 'gtd-no-exist-' + Date.now());
     const result = stageSkillsForProfile(ghost, { skills: new Set(['help']), agents: new Set() });
     assert.strictEqual(result, ghost);
   });
@@ -126,10 +126,10 @@ describe('stageAgentsForProfile', () => {
     const src = createFixtureAgentsDir();
     let staged;
     try {
-      const agents = new Set(['gsd-planner']);
+      const agents = new Set(['gtd-planner']);
       staged = stageAgentsForProfile(src, { skills: new Set(['plan-phase']), agents });
       const files = fs.readdirSync(staged).sort();
-      assert.deepStrictEqual(files, ['gsd-planner.md']);
+      assert.deepStrictEqual(files, ['gtd-planner.md']);
     } finally {
       fs.rmSync(src, { recursive: true, force: true });
       if (staged) cleanupStagedSkills();
@@ -137,7 +137,7 @@ describe('stageAgentsForProfile', () => {
   });
 
   test('non-existent srcAgentsDir returns srcAgentsDir unchanged', () => {
-    const ghost = path.join(os.tmpdir(), 'gsd-agents-no-exist-' + Date.now());
+    const ghost = path.join(os.tmpdir(), 'gtd-agents-no-exist-' + Date.now());
     const result = stageAgentsForProfile(ghost, { skills: new Set(), agents: new Set() });
     assert.strictEqual(result, ghost);
   });
@@ -148,7 +148,7 @@ describe('stageAgentsForProfile', () => {
     const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
     const resolved = resolveProfile({ modes: ['standard'], manifest });
     assert.ok(resolved.agents instanceof Set && resolved.agents.size > 0,
-      'standard profile must have >0 agents (plan-phase calls gsd-planner etc)');
+      'standard profile must have >0 agents (plan-phase calls gtd-planner etc)');
     let staged;
     try {
       staged = stageAgentsForProfile(REAL_AGENTS_DIR, resolved);

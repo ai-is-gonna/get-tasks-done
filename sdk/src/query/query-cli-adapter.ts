@@ -1,6 +1,6 @@
 import { createRegistry } from './index.js';
 import { runQueryDispatch } from './query-dispatch.js';
-import { resolveGsdToolsPath } from '../query-gsd-tools-path.js';
+import { resolveGtdToolsPath } from '../query-gtd-tools-path.js';
 import { resolveQueryRuntimeContext } from './query-runtime-context.js';
 import { createCommandTopology } from './command-topology.js';
 import { buildQueryCliOutputFromDispatch, buildQueryCliOutputFromError, type QueryCliAdapterOutput } from './query-cli-output.js';
@@ -13,7 +13,7 @@ export interface QueryCliAdapterInput {
 
 
 function queryFallbackToCjsEnabled(): boolean {
-  const v = process.env.GSD_QUERY_FALLBACK?.toLowerCase();
+  const v = process.env.GTD_QUERY_FALLBACK?.toLowerCase();
   if (v === 'off' || v === 'never' || v === 'false' || v === '0') return false;
   return true;
 }
@@ -28,7 +28,7 @@ export async function runQueryCliCommand(input: QueryCliAdapterInput): Promise<Q
       projectDir: runtime.projectDir,
       ws: runtime.ws,
       cjsFallbackEnabled: queryFallbackToCjsEnabled(),
-      resolveGsdToolsPath,
+      resolveGtdToolsPath,
       topology,
     }, input.queryArgv ?? []);
 

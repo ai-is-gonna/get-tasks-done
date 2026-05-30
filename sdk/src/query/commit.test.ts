@@ -16,7 +16,7 @@ import { execSync } from 'node:child_process';
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-commit-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-commit-'));
   // Initialize a git repo
   execSync('git init', { cwd: tmpDir, stdio: 'pipe' });
   execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });

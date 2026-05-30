@@ -1,11 +1,11 @@
 'use strict';
 /**
- * Regression test for #3298 — phase-dir prefix drift in /gsd-plan-milestone-gaps,
- * /gsd-import, and /gsd-capture --backlog workflows (PRED.k015 sibling audit).
+ * Regression test for #3298 — phase-dir prefix drift in /gtd-plan-milestone-gaps,
+ * /gtd-import, and /gtd-capture --backlog workflows (PRED.k015 sibling audit).
  *
  * Projects with `project_code` set in `.planning/config.json` must have
  * consistent `<CODE>-<NN>-<slug>` directory naming across ALL phase-creation
- * paths. PR #3292 (#3287) fixed `/gsd-discuss-phase` and `/gsd-plan-phase`.
+ * paths. PR #3292 (#3287) fixed `/gtd-discuss-phase` and `/gtd-plan-phase`.
  *
  * Missed sites (this PR):
  *   1. `plan-milestone-gaps.md` step 8 — raw `{NN}-{name}` mkdir pattern.
@@ -26,13 +26,13 @@ const fs = require('fs');
 const path = require('path');
 
 const PMG_WF = path.join(
-  __dirname, '..', 'get-shit-done', 'workflows', 'plan-milestone-gaps.md',
+  __dirname, '..', 'get-tasks-done', 'workflows', 'plan-milestone-gaps.md',
 );
 const IMPORT_WF = path.join(
-  __dirname, '..', 'get-shit-done', 'workflows', 'import.md',
+  __dirname, '..', 'get-tasks-done', 'workflows', 'import.md',
 );
 const BACKLOG_WF = path.join(
-  __dirname, '..', 'get-shit-done', 'workflows', 'add-backlog.md',
+  __dirname, '..', 'get-tasks-done', 'workflows', 'add-backlog.md',
 );
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ describe('bug-3298 — import.md must not construct bare {NN}-{slug} phase dirs'
     const content = readWorkflow(IMPORT_WF);
     assert.ok(
       content.includes('init.phase-op') || content.includes('init phase-op'),
-      'import.md must call gsd-sdk query init.phase-op to get expected_phase_dir with project_code prefix',
+      'import.md must call gtd-sdk query init.phase-op to get expected_phase_dir with project_code prefix',
     );
   });
 });

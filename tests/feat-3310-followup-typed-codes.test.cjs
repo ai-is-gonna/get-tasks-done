@@ -1,6 +1,6 @@
 /**
  * Follow-up tests for #3310: every remaining `error()` call at a subcommand
- * boundary or usage check in `gsd-tools.cjs` carries a typed `ERROR_REASON`.
+ * boundary or usage check in `gtd-tools.cjs` carries a typed `ERROR_REASON`.
  *
  * #3304 wired four representative paths (unknown top-level command, unknown
  * intel subcommand, missing --pick value, --version flag). The rest fell
@@ -17,22 +17,22 @@
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-// Run gsd-tools with GSD_JSON_ERRORS=1 (env-var activation, exercises the
+// Run gtd-tools with GTD_JSON_ERRORS=1 (env-var activation, exercises the
 // path #3304 added alongside the --json-errors flag) and parse the
 // structured stderr. Returns the parsed object; throws if stderr is not JSON.
 function runJsonErrors(args, tmpDir, env = {}) {
-  const result = runGsdTools(args, tmpDir, { ...env, GSD_JSON_ERRORS: '1' });
+  const result = runGtdTools(args, tmpDir, { ...env, GTD_JSON_ERRORS: '1' });
   assert.strictEqual(result.success, false,
-    `Expected failure with GSD_JSON_ERRORS=1 for args: ${args.join(' ')}\n` +
+    `Expected failure with GTD_JSON_ERRORS=1 for args: ${args.join(' ')}\n` +
     `stdout: ${result.output}\nstderr: ${result.error}`);
   let parsed;
   try {
     parsed = JSON.parse(result.error);
   } catch (e) {
     throw new Error(
-      `GSD_JSON_ERRORS=1 must emit valid JSON on stderr.\n` +
+      `GTD_JSON_ERRORS=1 must emit valid JSON on stderr.\n` +
       `Args: ${args.join(' ')}\nstderr: ${result.error}\nparse error: ${e.message}`
     );
   }

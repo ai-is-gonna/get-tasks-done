@@ -26,7 +26,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('bug #2769: phase complete ticks REQUIREMENTS.md across header variants', () => {
   let tmpDir;
@@ -95,7 +95,7 @@ describe('bug #2769: phase complete ticks REQUIREMENTS.md across header variants
       ].join('\n');
       fs.writeFileSync(path.join(tmpDir, '.planning', 'REQUIREMENTS.md'), requirements);
 
-      const result = runGsdTools(['phase', 'complete', '1'], tmpDir);
+      const result = runGtdTools(['phase', 'complete', '1'], tmpDir);
       assert.ok(result.success, `phase complete failed: ${result.error}`);
 
       const updated = fs.readFileSync(

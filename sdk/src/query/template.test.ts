@@ -10,14 +10,14 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { templateSelect, templateFill } from './template.js';
 import { createRegistry } from './index.js';
-import { GSDEventStream } from '../event-stream.js';
-import { GSDEventType } from '../types.js';
-import type { GSDEvent } from '../types.js';
+import { GTDEventStream } from '../event-stream.js';
+import { GTDEventType } from '../types.js';
+import type { GTDEvent } from '../types.js';
 
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = join(tmpdir(), `gsd-template-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = join(tmpdir(), `gtd-template-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await mkdir(join(tmpDir, '.planning', 'phases', '09-foundation'), { recursive: true });
   // Create minimal STATE.md
   await writeFile(join(tmpDir, '.planning', 'STATE.md'), '---\nstatus: executing\n---\n\n# Project State\n');
@@ -133,14 +133,14 @@ describe('event emission wiring', () => {
     ].join('\n');
     await writeFile(join(tmpDir, '.planning', 'STATE.md'), stateContent);
 
-    const eventStream = new GSDEventStream();
-    const events: GSDEvent[] = [];
-    eventStream.on('event', (e: GSDEvent) => events.push(e));
+    const eventStream = new GTDEventStream();
+    const events: GTDEvent[] = [];
+    eventStream.on('event', (e: GTDEvent) => events.push(e));
 
     const registry = createRegistry(eventStream, 'corr-xyz');
     await registry.dispatch('state.update', ['status', 'Executing'], tmpDir);
 
-    const mutationEvents = events.filter(e => e.type === GSDEventType.StateMutation);
+    const mutationEvents = events.filter(e => e.type === GTDEventType.StateMutation);
     expect(mutationEvents.length).toBe(1);
     const evt = mutationEvents[0] as { type: string; command: string; success: boolean; sessionId?: string };
     expect(evt.command).toBe('state.update');
@@ -151,14 +151,14 @@ describe('event emission wiring', () => {
   it('emits ConfigMutation event for config-set dispatch', async () => {
     await writeFile(join(tmpDir, '.planning', 'config.json'), '{"model_profile":"balanced"}');
 
-    const eventStream = new GSDEventStream();
-    const events: GSDEvent[] = [];
-    eventStream.on('event', (e: GSDEvent) => events.push(e));
+    const eventStream = new GTDEventStream();
+    const events: GTDEvent[] = [];
+    eventStream.on('event', (e: GTDEvent) => events.push(e));
 
     const registry = createRegistry(eventStream);
     await registry.dispatch('config-set', ['model_profile', 'quality'], tmpDir);
 
-    const mutationEvents = events.filter(e => e.type === GSDEventType.ConfigMutation);
+    const mutationEvents = events.filter(e => e.type === GTDEventType.ConfigMutation);
     expect(mutationEvents.length).toBe(1);
     const evt = mutationEvents[0] as { type: string; command: string; success: boolean };
     expect(evt.command).toBe('config-set');
@@ -167,14 +167,14 @@ describe('event emission wiring', () => {
 
   it('emits TemplateFill event for template.fill dispatch', async () => {
     const outPath = join(tmpDir, 'event-test.md');
-    const eventStream = new GSDEventStream();
-    const events: GSDEvent[] = [];
-    eventStream.on('event', (e: GSDEvent) => events.push(e));
+    const eventStream = new GTDEventStream();
+    const events: GTDEvent[] = [];
+    eventStream.on('event', (e: GTDEvent) => events.push(e));
 
     const registry = createRegistry(eventStream);
     await registry.dispatch('template.fill', ['summary', outPath], tmpDir);
 
-    const templateEvents = events.filter(e => e.type === GSDEventType.TemplateFill);
+    const templateEvents = events.filter(e => e.type === GTDEventType.TemplateFill);
     expect(templateEvents.length).toBe(1);
   });
 });

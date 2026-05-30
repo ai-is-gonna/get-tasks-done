@@ -3,7 +3,7 @@
 /**
  * Post-install path audit for workflow-invoked scripts (#2995).
  *
- * Walks workflowsDir, extracts every `${GSD_HOME[...]}/<path>.<cjs|js|sh>`
+ * Walks workflowsDir, extracts every `${GTD_HOME[...]}/<path>.<cjs|js|sh>`
  * token, and asserts:
  *   1. the file exists in the repo at that <path> (catches typos)
  *   2. <path>'s first segment is in installedPrefixes (catches the
@@ -21,10 +21,10 @@ const AUDIT_FINDING = Object.freeze({
   NOT_INSTALLED: 'not_installed',
 });
 
-// Match `${GSD_HOME}` or `${GSD_HOME:-...}` followed by a /-rooted path
+// Match `${GTD_HOME}` or `${GTD_HOME:-...}` followed by a /-rooted path
 // ending in .cjs/.js/.sh. The path is captured verbatim (relative to
 // the install root).
-const REF_RE = /\$\{GSD_HOME(?::-[^}]*)?\}\/([A-Za-z0-9_./-]+\.(?:cjs|js|sh))/g;
+const REF_RE = /\$\{GTD_HOME(?::-[^}]*)?\}\/([A-Za-z0-9_./-]+\.(?:cjs|js|sh))/g;
 
 function listWorkflowFiles(dir) {
   if (!fs.existsSync(dir)) return [];

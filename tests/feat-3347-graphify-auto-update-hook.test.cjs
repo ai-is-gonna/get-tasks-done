@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Regression tests for #3347 — hooks/gsd-graphify-update.sh behavior.
+ * Regression tests for #3347 — hooks/gtd-graphify-update.sh behavior.
  *
  * The hook is a PostToolUse handler that fires after every Bash tool call.
  * It is a no-op except when ALL of these are true:
@@ -34,10 +34,10 @@ const cp = require('node:child_process');
 const os = require('node:os');
 
 const ROOT = path.join(__dirname, '..');
-const HOOK = path.join(ROOT, 'hooks', 'gsd-graphify-update.sh');
+const HOOK = path.join(ROOT, 'hooks', 'gtd-graphify-update.sh');
 
 function createTempGitRepo(opts = {}) {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3347-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3347-'));
   cp.execFileSync('git', ['init', '-b', opts.defaultBranch || 'main'], {
     cwd: tmpDir,
     stdio: 'ignore',

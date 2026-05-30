@@ -6,20 +6,20 @@
 /**
  * Regression tests for bug #1991
  *
- * Cline is listed in GSD documentation as a supported runtime but was
- * completely absent from bin/install.js. Running `npx get-shit-done-cc`
+ * Cline is listed in GTD documentation as a supported runtime but was
+ * completely absent from bin/install.js. Running `npx get-tasks-done`
  * did not show Cline as an option in the interactive menu.
  *
  * Fixed: Cline is now a first-class runtime that:
  * - Appears in the interactive menu and --all flag
  * - Supports the --cline CLI flag
  * - Writes .clinerules to the install directory
- * - Installs get-shit-done/ engine with path replacement
+ * - Installs get-tasks-done/ engine with path replacement
  */
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -108,7 +108,7 @@ describe('Cline markdown conversion', () => {
   });
 
   test('replaces .claude/ paths with .cline/', () => {
-    const result = convertClaudeToCliineMarkdown('See ~/.claude/get-shit-done/');
+    const result = convertClaudeToCliineMarkdown('See ~/.claude/get-tasks-done/');
     assert.ok(!result.includes('.claude/'), `Expected no .claude/ in: ${result}`);
     assert.ok(result.includes('.cline/'));
   });
@@ -120,7 +120,7 @@ describe('Cline markdown conversion', () => {
   });
 
   test('replaces .claude/skills/ with .cline/skills/', () => {
-    const result = convertClaudeToCliineMarkdown('skills at .claude/skills/gsd-executor');
+    const result = convertClaudeToCliineMarkdown('skills at .claude/skills/gtd-task-executor');
     assert.ok(!result.includes('.claude/skills/'));
     assert.ok(result.includes('.cline/skills/'));
   });
@@ -131,7 +131,7 @@ describe('Cline install (local)', () => {
   let previousCwd;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-cline-test-');
+    tmpDir = createTempDir('gtd-cline-test-');
     previousCwd = process.cwd();
     process.chdir(tmpDir);
   });
@@ -147,17 +147,17 @@ describe('Cline install (local)', () => {
     assert.ok(fs.existsSync(clinerules), '.clinerules must exist after cline install');
   });
 
-  test('.clinerules contains GSD instructions', () => {
+  test('.clinerules contains GTD instructions', () => {
     install(false, 'cline');
     const clinerules = path.join(tmpDir, '.clinerules');
     const content = fs.readFileSync(clinerules, 'utf8');
-    assert.ok(content.includes('GSD') || content.includes('gsd'), '.clinerules must reference GSD');
+    assert.ok(content.includes('GTD') || content.includes('gtd'), '.clinerules must reference GTD');
   });
 
-  test('install creates get-shit-done engine directory', () => {
+  test('install creates get-tasks-done engine directory', () => {
     install(false, 'cline');
-    const engineDir = path.join(tmpDir, 'get-shit-done');
-    assert.ok(fs.existsSync(engineDir), 'get-shit-done directory must exist after install');
+    const engineDir = path.join(tmpDir, 'get-tasks-done');
+    assert.ok(fs.existsSync(engineDir), 'get-tasks-done directory must exist after install');
   });
 
   test('finishInstall does not throw ERR_INVALID_ARG_TYPE for cline runtime (regression: null settingsPath guard)', () => {
@@ -179,7 +179,7 @@ describe('Cline install (local)', () => {
 
   test('installed engine files have no leaked .claude paths', () => {
     install(false, 'cline');
-    const engineDir = path.join(tmpDir, 'get-shit-done');
+    const engineDir = path.join(tmpDir, 'get-tasks-done');
     if (!fs.existsSync(engineDir)) return; // skip if engine not installed
 
     function scanDir(dir) {
@@ -192,11 +192,11 @@ describe('Cline install (local)', () => {
           // CHANGELOG.md is a historical record and is not path-converted — skip it
           if (entry.name === 'CHANGELOG.md') continue;
           const content = fs.readFileSync(fullPath, 'utf8');
-          // Check for GSD install paths that should have been substituted.
+          // Check for GTD install paths that should have been substituted.
           // profile-pipeline.cjs intentionally references ~/.claude/projects (Claude Code
           // session data) as a runtime feature — that is not a leaked install path.
-          const hasLeaked = /~\/\.claude\/(?:get-shit-done|commands|agents|hooks)|HOME\/\.claude\/(?:get-shit-done|commands|agents|hooks)/.test(content);
-          assert.ok(!hasLeaked, `Found leaked GSD .claude install path in ${fullPath}`);
+          const hasLeaked = /~\/\.claude\/(?:get-tasks-done|commands|agents|hooks)|HOME\/\.claude\/(?:get-tasks-done|commands|agents|hooks)/.test(content);
+          assert.ok(!hasLeaked, `Found leaked GTD .claude install path in ${fullPath}`);
         }
       }
     }

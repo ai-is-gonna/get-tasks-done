@@ -1,5 +1,5 @@
 'use strict';
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -8,7 +8,7 @@ const cp = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const { checkLatestVersion, CHECK_REASON, PACKAGE_NAME } = require(
-  path.join(ROOT, 'get-shit-done', 'bin', 'check-latest-version.cjs'),
+  path.join(ROOT, 'get-tasks-done', 'bin', 'check-latest-version.cjs'),
 );
 
 // checkLatestVersion is a pure-ish function: it spawns one fixed npm
@@ -17,8 +17,8 @@ const { checkLatestVersion, CHECK_REASON, PACKAGE_NAME } = require(
 // Tests use a pluggable spawn so no real npm process is invoked.
 
 describe('Bug #2992: deterministic latest-version check', () => {
-  test('PACKAGE_NAME is the constant get-shit-done-cc (no callers can override)', () => {
-    assert.equal(PACKAGE_NAME, 'get-shit-done-cc');
+  test('PACKAGE_NAME is the constant @ai-is-gonna/get-tasks-done (no callers can override)', () => {
+    assert.equal(PACKAGE_NAME, '@ai-is-gonna/get-tasks-done');
   });
 
   test('CHECK_REASON enum exposes the documented codes', () => {
@@ -36,7 +36,7 @@ describe('Bug #2992: deterministic latest-version check', () => {
 });
 
 describe('Bug #2992: error paths', () => {
-  const { checkLatestVersion, CHECK_REASON } = require(require('node:path').join(__dirname, '..', 'get-shit-done', 'bin', 'check-latest-version.cjs'));
+  const { checkLatestVersion, CHECK_REASON } = require(require('node:path').join(__dirname, '..', 'get-tasks-done', 'bin', 'check-latest-version.cjs'));
 
   test('FAIL_NPM_FAILED when npm exits non-zero (e.g. offline, 404)', () => {
     const r = checkLatestVersion({

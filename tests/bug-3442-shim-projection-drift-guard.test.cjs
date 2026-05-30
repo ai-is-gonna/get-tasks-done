@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -11,7 +11,7 @@ const { spawnSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const INSTALL = require(path.join(ROOT, 'bin', 'install.js'));
-const PROJECTION = require(path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'shell-command-projection.cjs'));
+const PROJECTION = require(path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'shell-command-projection.cjs'));
 const DRIFT_LINT = path.join(ROOT, 'scripts', 'lint-shell-command-projection-drift.cjs');
 
 function runLint(targetFile) {
@@ -23,7 +23,7 @@ function runLint(targetFile) {
 
 describe('bug #3442: shim/wrapper projection seam', () => {
   test('buildWindowsShimTriple matches shared projection output', () => {
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
     const fromInstall = INSTALL.buildWindowsShimTriple(shimSrc);
     const fromProjection = PROJECTION.buildWindowsShimTriple(shimSrc);
     assert.deepEqual(fromInstall.invocation, fromProjection.invocation);
@@ -42,7 +42,7 @@ describe('bug #3442: shim/wrapper serialized-command drift guard', () => {
   });
 
   test('drift guard fails when install-owned inline shim text builder is present', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3442-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3442-'));
     try {
       const fixture = path.join(tmp, 'install-inline-builder.js');
       fs.writeFileSync(
@@ -62,7 +62,7 @@ describe('bug #3442: shim/wrapper serialized-command drift guard', () => {
   });
 
   test('drift guard does not block safe subprocess execution patterns', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3442-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3442-'));
     try {
       const fixture = path.join(tmp, 'install-subprocess-safe.js');
       fs.writeFileSync(

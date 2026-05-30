@@ -27,9 +27,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const WORKFLOW_PATH = path.join(ROOT, 'get-shit-done', 'workflows', 'code-review.md');
-const FIXER_PATH = path.join(ROOT, 'agents', 'gsd-code-fixer.md');
-const REVIEWER_PATH = path.join(ROOT, 'agents', 'gsd-code-reviewer.md');
+const WORKFLOW_PATH = path.join(ROOT, 'get-tasks-done', 'workflows', 'code-review.md');
+const FIXER_PATH = path.join(ROOT, 'agents', 'gtd-code-fixer.md');
+const REVIEWER_PATH = path.join(ROOT, 'agents', 'gtd-code-reviewer.md');
 
 // ---------------------------------------------------------------------------
 // Pure-function implementation of the compute_file_scope Node script body.
@@ -265,12 +265,12 @@ describe('Bug 2 — present_results severity-label parser', () => {
 // ---------------------------------------------------------------------------
 // BUG 3 — fixer agent ID alphabet and filter sets must include BL-* alongside CR-*.
 // ---------------------------------------------------------------------------
-describe('Bug 3 — gsd-code-fixer BL-* inclusion in filter sets', () => {
+describe('Bug 3 — gtd-code-fixer BL-* inclusion in filter sets', () => {
   test('finding_parser documents BL-\\d+ as Critical-tier-equivalent', () => {
     const src = fs.readFileSync(FIXER_PATH, 'utf8');
     const parserStart = src.indexOf('<finding_parser>');
     const parserEnd = src.indexOf('</finding_parser>');
-    assert.ok(parserStart !== -1, 'gsd-code-fixer.md must have a <finding_parser> block');
+    assert.ok(parserStart !== -1, 'gtd-code-fixer.md must have a <finding_parser> block');
     const parserSection = src.slice(parserStart, parserEnd);
     assert.ok(
       parserSection.includes('BL-'),
@@ -282,7 +282,7 @@ describe('Bug 3 — gsd-code-fixer BL-* inclusion in filter sets', () => {
     const src = fs.readFileSync(FIXER_PATH, 'utf8');
     const stepStart = src.indexOf('<step name="parse_findings">');
     const stepEnd = src.indexOf('</step>', stepStart);
-    assert.ok(stepStart !== -1, 'gsd-code-fixer.md must have a parse_findings step');
+    assert.ok(stepStart !== -1, 'gtd-code-fixer.md must have a parse_findings step');
     const stepSection = src.slice(stepStart, stepEnd);
     assert.ok(
       stepSection.includes('CR-* or BL-*') || stepSection.includes('CR-* and BL-*'),
@@ -320,15 +320,15 @@ describe('Bug 3 — gsd-code-fixer BL-* inclusion in filter sets', () => {
 });
 
 // ---------------------------------------------------------------------------
-// REVIEWER CONTRACT — gsd-code-reviewer.md must acknowledge BL-/blocker: as
+// REVIEWER CONTRACT — gtd-code-reviewer.md must acknowledge BL-/blocker: as
 // an accepted alternative to CR-/critical: (tier-equivalent).
 // ---------------------------------------------------------------------------
-describe('Reviewer contract — gsd-code-reviewer.md label-equivalence', () => {
+describe('Reviewer contract — gtd-code-reviewer.md label-equivalence', () => {
   test('write_review step documents blocker: as accepted alternative to critical:', () => {
     const src = fs.readFileSync(REVIEWER_PATH, 'utf8');
     const stepStart = src.indexOf('<step name="write_review">');
     const stepEnd = src.indexOf('</step>', stepStart);
-    assert.ok(stepStart !== -1, 'gsd-code-reviewer.md must have a write_review step');
+    assert.ok(stepStart !== -1, 'gtd-code-reviewer.md must have a write_review step');
     const stepSection = src.slice(stepStart, stepEnd);
     assert.ok(
       stepSection.includes('blocker'),

@@ -16,7 +16,7 @@ import type { QueryResult } from './utils.js';
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-pipeline-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-pipeline-'));
   await mkdir(join(tmpDir, '.planning'), { recursive: true });
   await writeFile(join(tmpDir, '.planning', 'STATE.md'), '# State\nstatus: idle\n');
 });

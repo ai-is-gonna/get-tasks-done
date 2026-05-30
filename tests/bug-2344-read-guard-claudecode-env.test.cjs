@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2344
  *
- * gsd-read-guard.js checked process.env.CLAUDE_SESSION_ID to detect the
+ * gtd-read-guard.js checked process.env.CLAUDE_SESSION_ID to detect the
  * Claude Code runtime and skip its advisory. However, Claude Code CLI exports
  * CLAUDECODE=1, not CLAUDE_SESSION_ID. The skip never fired, so the
  * READ-BEFORE-EDIT advisory injected on every Edit/Write call inside Claude
@@ -11,7 +11,7 @@
  * emitting the advisory.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -21,7 +21,7 @@ const { execFileSync } = require('node:child_process');
 
 const { createTempDir, cleanup } = require('./helpers.cjs');
 
-const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gsd-read-guard.js');
+const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gtd-read-guard.js');
 
 function runHook(payload, envOverrides = {}) {
   const input = JSON.stringify(payload);
@@ -55,7 +55,7 @@ function runHook(payload, envOverrides = {}) {
 describe('bug #2344: read guard skips on CLAUDECODE env var', () => {
   let tmpDir;
 
-  beforeEach(() => { tmpDir = createTempDir('gsd-read-guard-2344-'); });
+  beforeEach(() => { tmpDir = createTempDir('gtd-read-guard-2344-'); });
   afterEach(() => { cleanup(tmpDir); });
 
   test('skips advisory when CLAUDECODE=1 is set (Claude Code CLI env)', () => {

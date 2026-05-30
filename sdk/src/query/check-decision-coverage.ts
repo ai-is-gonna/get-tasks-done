@@ -243,13 +243,13 @@ async function loadGateConfig(projectDir: string, workstream?: string): Promise<
       const lower = v.toLowerCase();
       if (lower === 'false' || lower === 'true') return lower !== 'false';
       console.warn(
-        `[gsd] workflow.context_coverage_gate is a string "${v}" — expected boolean. Defaulting to ON.`,
+        `[gtd] workflow.context_coverage_gate is a string "${v}" — expected boolean. Defaulting to ON.`,
       );
       return true;
     }
     if (v !== undefined && v !== null) {
       console.warn(
-        `[gsd] workflow.context_coverage_gate has invalid type ${typeof v} (value: ${JSON.stringify(v)}); expected boolean. Defaulting to ON.`,
+        `[gtd] workflow.context_coverage_gate has invalid type ${typeof v} (value: ${JSON.stringify(v)}); expected boolean. Defaulting to ON.`,
       );
     }
     return true; // default ON
@@ -447,7 +447,7 @@ async function readModifiedFilesContent(projectDir: string, summaries: string[])
         // Reject absolute paths AND any relative path that escapes projectDir.
         if (!isInsideRoot(f, projectDir)) {
           console.warn(
-            `[gsd] decision-coverage: skipping files_modified entry "${f}" — outside project root`,
+            `[gtd] decision-coverage: skipping files_modified entry "${f}" — outside project root`,
           );
           continue;
         }

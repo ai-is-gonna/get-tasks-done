@@ -2,11 +2,11 @@
 
 // allow-test-rule: source-text-is-the-product
 // `workflows/help/modes/*.md` files ARE the help output — their text is what
-// the runtime emits when the user runs `/gsd:help [--brief|--full|<topic>]`.
+// the runtime emits when the user runs `/gtd:help [--brief|--full|<topic>]`.
 // Asserting on their structure tests the deployed contract directly.
 
 /**
- * Feature #3039: tiered /gsd:help output.
+ * Feature #3039: tiered /gtd:help output.
  *
  * The legacy single-file 747-line help is replaced by:
  *   - workflows/help.md             — small dispatcher (progressive disclosure)
@@ -25,9 +25,9 @@
  *      - bare or `--full <topic>` → topic.md in full scope
  *   5. topic.md documents an explicit routing preamble + compact-scope rule.
  *   6. Every topic alias in topic.md resolves to a heading that exists in full.md.
- *   7. Every /gsd:* sub-block token in topic.md's alias table appears in full.md.
+ *   7. Every /gtd:* sub-block token in topic.md's alias table appears in full.md.
  *   8. Every full.md heading is either aliased or in the intentional-orphan allowlist.
- *   9. The `commands/gsd/help.md` shim passes `$ARGUMENTS` through and advertises
+ *   9. The `commands/gtd/help.md` shim passes `$ARGUMENTS` through and advertises
  *      the composable `--brief <topic>` form.
  */
 
@@ -37,10 +37,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const WORKFLOWS = path.join(ROOT, 'get-shit-done', 'workflows');
+const WORKFLOWS = path.join(ROOT, 'get-tasks-done', 'workflows');
 const MODES = path.join(WORKFLOWS, 'help', 'modes');
 const DISPATCHER = path.join(WORKFLOWS, 'help.md');
-const COMMAND_SHIM = path.join(ROOT, 'commands', 'gsd', 'help.md');
+const COMMAND_SHIM = path.join(ROOT, 'commands', 'gtd', 'help.md');
 
 const MODE_FILES = ['brief.md', 'default.md', 'full.md', 'topic.md'];
 
@@ -273,15 +273,15 @@ describe('feature #3039: tiered help — topic alias coverage', () => {
       `topic.md references headings not present in full.md: ${missing.join(' | ')}`);
   });
 
-  test('every /gsd:* sub-block token in topic.md alias table exists in full.md', () => {
+  test('every /gtd:* sub-block token in topic.md alias table exists in full.md', () => {
     // Validates fix for review finding #2: sub-block aliases reference bold-line
-    // anchors (**`/gsd:X`**) — assert each token actually appears in full.md.
+    // anchors (**`/gtd:X`**) — assert each token actually appears in full.md.
     const tableSection = aliasTableSection(topicSrc);
-    const tokens = [...tableSection.matchAll(/`(\/gsd:[a-z-]+(?:\s+--[a-z-]+)?)`/g)].map(m => m[1]);
-    assert.ok(tokens.length > 0, 'expected at least one /gsd:* token in alias table');
+    const tokens = [...tableSection.matchAll(/`(\/gtd:[a-z-]+(?:\s+--[a-z-]+)?)`/g)].map(m => m[1]);
+    assert.ok(tokens.length > 0, 'expected at least one /gtd:* token in alias table');
     const missing = tokens.filter(t => !fullSrc.includes(t));
     assert.deepEqual(missing, [],
-      `topic.md references /gsd:* tokens not present in full.md: ${missing.join(' | ')}`);
+      `topic.md references /gtd:* tokens not present in full.md: ${missing.join(' | ')}`);
   });
 
   test('every full.md heading is either aliased or in the intentional-orphan allowlist', () => {

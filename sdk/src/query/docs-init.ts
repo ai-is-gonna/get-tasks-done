@@ -1,7 +1,7 @@
 /**
  * Docs-init — context bundle for the docs-update workflow.
  *
- * Full port of `cmdDocsInit` and helpers from `get-shit-done/bin/lib/docs.cjs`.
+ * Full port of `cmdDocsInit` and helpers from `get-tasks-done/bin/lib/docs.cjs`.
  */
 
 import {
@@ -21,7 +21,7 @@ import { MODEL_PROFILES, resolveModel } from './config-query.js';
 import { detectRuntime, resolveAgentsDir, toPosixPath } from './helpers.js';
 import type { QueryHandler } from './utils.js';
 
-const GSD_MARKER = '<!-- generated-by: gsd-doc-writer -->';
+const GTD_MARKER = '<!-- generated-by: gtd-doc-writer -->';
 
 const SKIP_DIRS = new Set([
   'node_modules', '.git', '.planning', '.claude', '__pycache__',
@@ -37,13 +37,13 @@ function pathExistsInternal(cwd: string, rel: string): boolean {
   }
 }
 
-function hasGsdMarker(filePath: string): boolean {
+function hasGtdMarker(filePath: string): boolean {
   try {
     const buf = Buffer.alloc(500);
     const fd = openSync(filePath, 'r');
     const bytesRead = readSync(fd, buf, 0, 500, 0);
     closeSync(fd);
-    return buf.subarray(0, bytesRead).toString('utf-8').includes(GSD_MARKER);
+    return buf.subarray(0, bytesRead).toString('utf-8').includes(GTD_MARKER);
   } catch {
     return false;
   }
@@ -53,9 +53,9 @@ function hasGsdMarker(filePath: string): boolean {
  * Recursively scan project root `.md` files and `docs/` (or fallbacks) up to depth 4.
  * Port of `scanExistingDocs` from docs.cjs.
  */
-export function scanExistingDocs(cwd: string): Array<{ path: string; has_gsd_marker: boolean }> {
+export function scanExistingDocs(cwd: string): Array<{ path: string; has_gtd_marker: boolean }> {
   const MAX_DEPTH = 4;
-  const results: Array<{ path: string; has_gsd_marker: boolean }> = [];
+  const results: Array<{ path: string; has_gtd_marker: boolean }> = [];
 
   function walkDir(dir: string, depth: number): void {
     if (depth > MAX_DEPTH) return;
@@ -69,7 +69,7 @@ export function scanExistingDocs(cwd: string): Array<{ path: string; has_gsd_mar
           walkDir(abs, depth + 1);
         } else if (entry.isFile() && nameStr.toLowerCase().endsWith('.md')) {
           const rel = toPosixPath(relative(cwd, abs));
-          results.push({ path: rel, has_gsd_marker: hasGsdMarker(abs) });
+          results.push({ path: rel, has_gtd_marker: hasGtdMarker(abs) });
         }
       }
     } catch { /* directory may not exist */ }
@@ -82,7 +82,7 @@ export function scanExistingDocs(cwd: string): Array<{ path: string; has_gsd_mar
       if (entry.isFile() && nameStr.toLowerCase().endsWith('.md')) {
         const abs = join(cwd, nameStr);
         const rel = toPosixPath(relative(cwd, abs));
-        results.push({ path: rel, has_gsd_marker: hasGsdMarker(abs) });
+        results.push({ path: rel, has_gtd_marker: hasGtdMarker(abs) });
       }
     }
   } catch { /* best-effort */ }
@@ -229,13 +229,13 @@ function checkAgentsInstalled(config?: { runtime?: unknown }): { agents_installe
 }
 
 /**
- * Init payload for docs-update workflow — matches `gsd-tools docs-init` JSON.
+ * Init payload for docs-update workflow — matches `gtd-tools docs-init` JSON.
  * Port of `cmdDocsInit` from docs.cjs.
  */
 export const docsInit: QueryHandler = async (_args, projectDir) => {
   const config = await loadConfig(projectDir);
   const configExists = existsSync(join(projectDir, '.planning', 'config.json'));
-  const docModelResult = await resolveModel(['gsd-doc-writer'], projectDir);
+  const docModelResult = await resolveModel(['gtd-doc-writer'], projectDir);
   const docWriterData = docModelResult.data as Record<string, unknown>;
   const doc_writer_model = configExists ? ((docWriterData?.model as string) || '') : '';
 

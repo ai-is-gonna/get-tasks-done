@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Tests for `gsd-tools migrate-config` subcommand (#3536).
+ * Tests for `gtd-tools migrate-config` subcommand (#3536).
  *
  * Covers the three acceptance-criteria cases:
  *   1. No-op when config is already canonical (migrated: false)
@@ -19,7 +19,7 @@ const { spawnSync } = require('node:child_process');
 const { createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
 const TEST_ENV_BASE = {
-  GSD_SESSION_KEY: '',
+  GTD_SESSION_KEY: '',
   CODEX_THREAD_ID: '',
   CLAUDE_SESSION_ID: '',
   CLAUDE_CODE_SSE_PORT: '',
@@ -59,7 +59,7 @@ describe('migrate-config — no-op on already-canonical config', () => {
   });
 
   test('returns migrated: false when no legacy keys present', () => {
-    tmpDir = createTempProject('gsd-migrate-noop-');
+    tmpDir = createTempProject('gtd-migrate-noop-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -97,7 +97,7 @@ describe('migrate-config — migrates legacy branching_strategy', () => {
   });
 
   test('returns migrated: true and normalizations for top-level branching_strategy', () => {
-    tmpDir = createTempProject('gsd-migrate-bs-');
+    tmpDir = createTempProject('gtd-migrate-bs-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -151,7 +151,7 @@ describe('migrate-config — idempotent (running twice produces no-op)', () => {
   });
 
   test('second run is a no-op after first run migrated the config', () => {
-    tmpDir = createTempProject('gsd-migrate-idem-');
+    tmpDir = createTempProject('gtd-migrate-idem-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,

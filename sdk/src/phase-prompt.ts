@@ -12,10 +12,13 @@ import { fileURLToPath } from 'node:url';
 
 import type { ContextFiles, ParsedPlan } from './types.js';
 import { PhaseType } from './types.js';
-import { buildExecutorPrompt } from './prompt-builder.js';
 import { PHASE_AGENT_MAP } from './tool-scoping.js';
 import { sanitizePrompt } from './prompt-sanitizer.js';
-import { resolveLegacyInstallDir } from './sdk-package-compatibility.js';
+import {
+  resolveBundledAgentsDir,
+  resolveBundledWorkflowsDir,
+  resolveLegacyInstallDir,
+} from './sdk-package-compatibility.js';
 
 // ─── Workflow file mapping ───────────────────────────────────────────────────
 
@@ -23,12 +26,12 @@ import { resolveLegacyInstallDir } from './sdk-package-compatibility.js';
  * Maps phase types to their workflow file names.
  */
 const PHASE_WORKFLOW_MAP: Record<PhaseType, string> = {
-  [PhaseType.Execute]: 'execute-plan.md',
+  [PhaseType.Execute]: 'work-task-issue.md',
   [PhaseType.Research]: 'research-phase.md',
   [PhaseType.Plan]: 'plan-phase.md',
   [PhaseType.Verify]: 'verify-phase.md',
   [PhaseType.Discuss]: 'discuss-phase.md',
-  [PhaseType.Repair]: 'execute-plan.md',
+  [PhaseType.Repair]: 'work-task-issue.md',
 };
 
 // ─── XML block extraction ────────────────────────────────────────────────────
@@ -83,15 +86,15 @@ export class PromptFactory {
   private readonly projectDir?: string;
 
   constructor(options?: {
-    gsdInstallDir?: string;
+    gtdInstallDir?: string;
     agentsDir?: string;
     projectAgentsDir?: string;
     sdkPromptsDir?: string;
     projectDir?: string;
   }) {
-    const gsdInstallDir = options?.gsdInstallDir ?? resolveLegacyInstallDir();
-    this.workflowsDir = join(gsdInstallDir, 'workflows');
-    this.agentsDir = options?.agentsDir ?? join(gsdInstallDir, '..', 'agents');
+    const gtdInstallDir = options?.gtdInstallDir ?? resolveLegacyInstallDir();
+    this.workflowsDir = join(gtdInstallDir, 'workflows');
+    this.agentsDir = options?.agentsDir ?? join(gtdInstallDir, '..', 'agents');
     this.projectAgentsDir = options?.projectAgentsDir;
     this.projectDir = options?.projectDir;
     // SDK prompts dir: explicit override → package-relative default via import.meta.url
@@ -103,8 +106,7 @@ export class PromptFactory {
   /**
    * Build a complete prompt for the given phase type.
    *
-   * For execute phase with a plan, delegates to buildExecutorPrompt().
-   * For other phases, assembles: role + purpose + process steps + context.
+   * Assembles: role + purpose + process steps + context.
    */
   async buildPrompt(
     phaseType: PhaseType,
@@ -112,12 +114,6 @@ export class PromptFactory {
     contextFiles: ContextFiles,
     phaseDir?: string,
   ): Promise<string> {
-    // Execute phase with a plan: delegate to existing buildExecutorPrompt
-    if (phaseType === PhaseType.Execute && plan) {
-      const agentDef = await this.loadAgentDef(phaseType);
-      return sanitizePrompt(buildExecutorPrompt(plan, { agentDef, phaseDir }), this.projectDir);
-    }
-
     // Prompt assembly order is cache-optimized (#1614):
     // Stable prefix (deterministic per phase type) → cached by Anthropic at 0.1x cost
     // Variable suffix (.planning/ files) → uncached, changes per project/run
@@ -169,16 +165,17 @@ export class PromptFactory {
 
   /**
    * Load the workflow file for a phase type.
-   * Tries installed GSD workflows first (the complete, up-to-date versions),
+   * Tries installed GTD workflows first (the complete, up-to-date versions),
    * then falls back to SDK bundled copies only if installed not found.
    * Returns the raw content, or undefined if not found.
    */
   async loadWorkflowFile(phaseType: PhaseType): Promise<string | undefined> {
     const filename = PHASE_WORKFLOW_MAP[phaseType];
 
-    // Try installed GSD workflows first (complete versions)
+    // Try installed GTD workflows first (complete versions)
     const paths = [
       join(this.workflowsDir, filename),
+      join(resolveBundledWorkflowsDir(), filename),
       join(this.sdkPromptsDir, 'workflows', filename),
     ];
 
@@ -213,6 +210,7 @@ export class PromptFactory {
     }
 
     // SDK bundled copies are last resort only
+    paths.push(join(resolveBundledAgentsDir(), agentFilename));
     paths.push(join(this.sdkPromptsDir, 'agents', agentFilename));
 
     for (const p of paths) {

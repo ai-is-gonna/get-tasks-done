@@ -7,7 +7,7 @@
 /**
  * Regression test for #3489
  *
- *   `gsd state complete-phase --phase <N>` was non-idempotent. Re-invoking it
+ *   `gtd state complete-phase --phase <N>` was non-idempotent. Re-invoking it
  *   on a phase already marked complete in STATE.md silently rolled STATE.md
  *   back to that phase's moment-of-completion — overwriting Status, Last
  *   Activity, Current Position and the body Status/Phase with stale values
@@ -22,7 +22,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('bug #3489: state complete-phase must be idempotent', () => {
   let tmpDir;
@@ -39,7 +39,7 @@ describe('bug #3489: state complete-phase must be idempotent', () => {
     // STATE.md as it would appear AFTER phase 02.2 was legitimately completed
     // AND a follow-up Phase 02.2.1 has since been inserted as in-progress.
     // Re-invoking `state complete-phase --phase 02.2` from a downstream tool
-    // (e.g. a re-run of /gsd-execute-phase) must NOT regress this content.
+    // (e.g. a re-run of /gtd-work-task-issue) must NOT regress this content.
     const stateMd = [
       '---',
       'milestone: v1.0',
@@ -64,7 +64,7 @@ describe('bug #3489: state complete-phase must be idempotent', () => {
     fs.writeFileSync(statePath, stateMd, 'utf8');
     const before = fs.readFileSync(statePath, 'utf8');
 
-    const result = runGsdTools(['state', 'complete-phase', '--phase', '02.2'], tmpDir);
+    const result = runGtdTools(['state', 'complete-phase', '--phase', '02.2'], tmpDir);
     assert.ok(result.success, `command should not error, got: ${result.error || result.output}`);
 
     const after = fs.readFileSync(statePath, 'utf8');
@@ -108,7 +108,7 @@ describe('bug #3489: state complete-phase must be idempotent', () => {
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, stateMd, 'utf8');
 
-    const result = runGsdTools(['state', 'complete-phase', '--phase', '03'], tmpDir);
+    const result = runGtdTools(['state', 'complete-phase', '--phase', '03'], tmpDir);
     assert.ok(result.success, `command failed: ${result.error || result.output}`);
 
     const after = fs.readFileSync(statePath, 'utf8');

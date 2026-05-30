@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2839
  *
- * /gsd-code-review-fix cleanup tail is non-transactional. If the agent is
+ * /gtd-code-review-fix cleanup tail is non-transactional. If the agent is
  * interrupted (system restart, OOM kill) AFTER the last fix commit but
  * BEFORE `git worktree remove`, the worktree is orphaned in
  * `git worktree list`, the agent's branch is left with unmerged commits,
@@ -14,14 +14,14 @@
  * REMOVED only after `git worktree remove` completes, so the cleanup
  * tail is transactional from the orchestrator's perspective. If the
  * process dies in between, the sentinel is left behind pointing at the
- * orphan worktree and branch — a future run, /gsd-resume-work, or
- * /gsd-progress can detect and complete the recovery.
+ * orphan worktree and branch — a future run, /gtd-resume-work, or
+ * /gtd-progress can detect and complete the recovery.
  */
 
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// The gsd-code-fixer agent's working instructions ARE the product — Claude
+// The gtd-code-fixer agent's working instructions ARE the product — Claude
 // follows them at runtime. Structural assertions over the markdown source
 // test the deployed contract. See bug-2686 for the same pattern.
 
@@ -50,14 +50,14 @@ function extractStep(content, stepName) {
   return m ? m[1] : null;
 }
 
-describe('bug-2839: /gsd-code-review-fix cleanup is transactional', () => {
+describe('bug-2839: /gtd-code-review-fix cleanup is transactional', () => {
   let agentPath;
   let agentContent;
   let frontmatter;
 
   before(() => {
-    agentPath = path.join(__dirname, '..', 'agents', 'gsd-code-fixer.md');
-    assert.ok(fs.existsSync(agentPath), 'agents/gsd-code-fixer.md must exist');
+    agentPath = path.join(__dirname, '..', 'agents', 'gtd-code-fixer.md');
+    assert.ok(fs.existsSync(agentPath), 'agents/gtd-code-fixer.md must exist');
     agentContent = fs.readFileSync(agentPath, 'utf-8');
     frontmatter = parseFrontmatter(agentContent);
     assert.ok(frontmatter, 'agent must have YAML frontmatter');
@@ -66,7 +66,7 @@ describe('bug-2839: /gsd-code-review-fix cleanup is transactional', () => {
   test('agent declares a recovery sentinel filename', () => {
     assert.ok(
       agentContent.includes(SENTINEL_NAME),
-      `gsd-code-fixer.md must reference the recovery sentinel ${SENTINEL_NAME} so an interrupted cleanup tail is discoverable (#2839)`
+      `gtd-code-fixer.md must reference the recovery sentinel ${SENTINEL_NAME} so an interrupted cleanup tail is discoverable (#2839)`
     );
   });
 
@@ -115,7 +115,7 @@ describe('bug-2839: /gsd-code-review-fix cleanup is transactional', () => {
     for (const key of ['worktree_path', 'branch', 'padded_phase']) {
       assert.ok(
         agentContent.includes(key),
-        `recovery sentinel must record \`${key}\` so a future /gsd-resume-work or /gsd-progress can locate the orphan state (#2839)`
+        `recovery sentinel must record \`${key}\` so a future /gtd-resume-work or /gtd-progress can locate the orphan state (#2839)`
       );
     }
   });

@@ -27,7 +27,7 @@ const path = require('path');
 const INSTALL_PATH = path.join(__dirname, '..', 'bin', 'install.js');
 
 function loadInstaller() {
-  process.env.GSD_TEST_MODE = '1';
+  process.env.GTD_TEST_MODE = '1';
   delete require.cache[require.resolve(INSTALL_PATH)];
   return require(INSTALL_PATH);
 }
@@ -35,10 +35,10 @@ function loadInstaller() {
 function makeTempSdk({ npxCache = false } = {}) {
   let root;
   if (npxCache) {
-    root = path.join(os.tmpdir(), `gsd-npx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, 'npm-cache', '_npx', 'deadbeefcafe0001', 'node_modules', 'get-shit-done-cc');
+    root = path.join(os.tmpdir(), `gtd-npx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, 'npm-cache', '_npx', 'deadbeefcafe0001', 'node_modules', 'get-tasks-done');
     fs.mkdirSync(root, { recursive: true });
   } else {
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-clone-'));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-clone-'));
   }
   const sdkDir = path.join(root, 'sdk');
   fs.mkdirSync(sdkDir, { recursive: true });
@@ -155,7 +155,7 @@ describe('installer SDK dist-missing fail-fast (#2649)', () => {
       assert.strictEqual(ir.reason, 'sdk_fail_fast');
       assert.strictEqual(ir.context, 'npx-cache');
       assert.strictEqual(ir.missing_artifact, 'sdk/dist');
-      assert.strictEqual(ir.fix_command, 'npm install -g get-shit-done-cc@latest');
+      assert.strictEqual(ir.fix_command, 'npm install -g @ai-is-gonna/get-tasks-done@latest');
       assert.strictEqual(ir.attempted_nested_install, false,
         'IR contract: nested-install must always be false (this is a hard invariant)');
     } finally {

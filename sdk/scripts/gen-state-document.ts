@@ -5,7 +5,7 @@
  * Reads the compiled ESM output from sdk/dist/query/state-document.js,
  * extracts function source via Function.prototype.toString() for exports
  * and via source-text extraction for internal helpers, then emits
- * get-shit-done/bin/lib/state-document.generated.cjs.
+ * get-tasks-done/bin/lib/state-document.generated.cjs.
  *
  * Run: cd sdk && npx tsx scripts/gen-state-document.ts
  * Freshness check: node sdk/scripts/check-state-document-fresh.mjs
@@ -125,7 +125,7 @@ export async function buildStateDocumentCjs(): Promise<string> {
 async function main(): Promise<void> {
   const content = await buildStateDocumentCjs();
   const outPath = fileURLToPath(
-    new URL('../../get-shit-done/bin/lib/state-document.generated.cjs', import.meta.url),
+    new URL('../../get-tasks-done/bin/lib/state-document.generated.cjs', import.meta.url),
   );
   await writeFile(outPath, content, 'utf-8');
   console.log(`Written: ${outPath}`);

@@ -1,16 +1,16 @@
 /**
- * GSD Tools Tests — update workflow custom file backup detection (#1997)
+ * GTD Tools Tests — update workflow custom file backup detection (#1997)
  *
- * The update workflow must detect user-added files inside GSD-managed
- * directories (get-shit-done/, agents/, commands/gsd/, hooks/) before the
+ * The update workflow must detect user-added files inside GTD-managed
+ * directories (get-tasks-done/, agents/, commands/gtd/, hooks/) before the
  * installer wipes those directories.
  *
- * This tests the `detect-custom-files` subcommand of gsd-tools.cjs, which is
+ * This tests the `detect-custom-files` subcommand of gtd-tools.cjs, which is
  * the correct fix for the bash path-stripping failure described in #1997.
  *
  * The bash pattern `${filepath#$RUNTIME_DIR/}` is unreliable because
  * $RUNTIME_DIR may not be set and the stripped relative path may not match
- * manifest key format. Moving the logic into gsd-tools.cjs eliminates the
+ * manifest key format. Moving the logic into gtd-tools.cjs eliminates the
  * shell variable expansion failure entirely.
  *
  * Closes: #1997
@@ -21,14 +21,14 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { runGsdTools, createTempDir, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempDir, cleanup } = require('./helpers.cjs');
 
 function sha256(content) {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
 /**
- * Write a fake gsd-file-manifest.json into configDir with the given file entries.
+ * Write a fake gtd-file-manifest.json into configDir with the given file entries.
  */
 function writeManifest(configDir, files) {
   const manifest = {
@@ -43,7 +43,7 @@ function writeManifest(configDir, files) {
     manifest.files[relPath] = sha256(content);
   }
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify(manifest, null, 2)
   );
 }
@@ -52,24 +52,24 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-custom-detect-');
+    tmpDir = createTempDir('gtd-custom-detect-');
   });
 
   afterEach(() => {
     cleanup(tmpDir);
   });
 
-  test('detects a custom file added inside get-shit-done/workflows/', () => {
+  test('detects a custom file added inside get-tasks-done/workflows/', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\n',
-      'get-shit-done/workflows/plan-phase.md': '# Plan Phase\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\n',
+      'get-tasks-done/workflows/plan-phase.md': '# Plan Phase\n',
     });
 
     // Add a custom file NOT in the manifest
-    const customFile = path.join(tmpDir, 'get-shit-done/workflows/my-custom-workflow.md');
+    const customFile = path.join(tmpDir, 'get-tasks-done/workflows/my-custom-workflow.md');
     fs.writeFileSync(customFile, '# My Custom Workflow\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -80,22 +80,22 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
     assert.ok(Array.isArray(json.custom_files), 'should return custom_files array');
     assert.ok(json.custom_files.length > 0, 'should detect at least one custom file');
     assert.ok(
-      json.custom_files.includes('get-shit-done/workflows/my-custom-workflow.md'),
+      json.custom_files.includes('get-tasks-done/workflows/my-custom-workflow.md'),
       `custom file should be listed; got: ${JSON.stringify(json.custom_files)}`
     );
   });
 
   test('detects custom files added inside agents/', () => {
     writeManifest(tmpDir, {
-      'agents/gsd-executor.md': '# GSD Executor\n',
+      'agents/gtd-task-executor.md': '# GTD Executor\n',
     });
 
-    // Add a user's custom agent (not prefixed with gsd-)
+    // Add a user's custom agent (not prefixed with gtd-)
     const customAgent = path.join(tmpDir, 'agents/my-custom-agent.md');
     fs.mkdirSync(path.dirname(customAgent), { recursive: true });
     fs.writeFileSync(customAgent, '# My Custom Agent\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -109,13 +109,13 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
 
   test('reports zero custom files when all files are in manifest', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\n',
-      'get-shit-done/references/gates.md': '# Gates\n',
-      'agents/gsd-executor.md': '# Executor\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\n',
+      'get-tasks-done/references/gates.md': '# Gates\n',
+      'agents/gtd-task-executor.md': '# Executor\n',
     });
     // No extra files added
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -130,20 +130,20 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
 
   test('returns custom_count equal to custom_files length', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\n',
     });
 
     // Add two custom files
     fs.writeFileSync(
-      path.join(tmpDir, 'get-shit-done/workflows/custom-a.md'),
+      path.join(tmpDir, 'get-tasks-done/workflows/custom-a.md'),
       '# Custom A\n'
     );
     fs.writeFileSync(
-      path.join(tmpDir, 'get-shit-done/workflows/custom-b.md'),
+      path.join(tmpDir, 'get-tasks-done/workflows/custom-b.md'),
       '# Custom B\n'
     );
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -158,16 +158,16 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
 
   test('does not flag manifest files as custom even if content was modified', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\nOriginal\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\nOriginal\n',
     });
 
     // Modify the content of an existing manifest file
     fs.writeFileSync(
-      path.join(tmpDir, 'get-shit-done/workflows/execute-phase.md'),
+      path.join(tmpDir, 'get-tasks-done/workflows/work-task-issue.md'),
       '# Execute Phase\nModified by user\n'
     );
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -178,18 +178,18 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
     // Modified manifest files are handled by saveLocalPatches (in install.js).
     // detect-custom-files only finds files NOT in the manifest at all.
     assert.ok(
-      !json.custom_files.includes('get-shit-done/workflows/execute-phase.md'),
+      !json.custom_files.includes('get-tasks-done/workflows/work-task-issue.md'),
       'modified manifest files should NOT be listed as custom (that is saveLocalPatches territory)'
     );
   });
 
-  test('handles missing manifest gracefully — treats all GSD-dir files as custom', () => {
-    // No manifest. Add a file in a GSD-managed dir.
-    const workflowDir = path.join(tmpDir, 'get-shit-done/workflows');
+  test('handles missing manifest gracefully — treats all GTD-dir files as custom', () => {
+    // No manifest. Add a file in a GTD-managed dir.
+    const workflowDir = path.join(tmpDir, 'get-tasks-done/workflows');
     fs.mkdirSync(workflowDir, { recursive: true });
     fs.writeFileSync(path.join(workflowDir, 'my-workflow.md'), '# My Workflow\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -197,22 +197,22 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const json = JSON.parse(result.output);
-    // Without a manifest, we cannot determine what is custom vs GSD-owned.
+    // Without a manifest, we cannot determine what is custom vs GTD-owned.
     // The command should return an empty list (no manifest = skip detection,
     // which is safe since saveLocalPatches also does nothing without a manifest).
     assert.ok(Array.isArray(json.custom_files), 'should return custom_files array');
     assert.ok(typeof json.custom_count === 'number', 'should return numeric custom_count');
   });
 
-  test('detects custom files inside get-shit-done/references/', () => {
+  test('detects custom files inside get-tasks-done/references/', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/references/gates.md': '# Gates\n',
+      'get-tasks-done/references/gates.md': '# Gates\n',
     });
 
-    const customRef = path.join(tmpDir, 'get-shit-done/references/my-domain-probes.md');
+    const customRef = path.join(tmpDir, 'get-tasks-done/references/my-domain-probes.md');
     fs.writeFileSync(customRef, '# My Domain Probes\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -221,19 +221,19 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
 
     const json = JSON.parse(result.output);
     assert.ok(
-      json.custom_files.includes('get-shit-done/references/my-domain-probes.md'),
+      json.custom_files.includes('get-tasks-done/references/my-domain-probes.md'),
       `should detect custom reference; got: ${JSON.stringify(json.custom_files)}`
     );
   });
 
   // After v1.39.0 skill consolidation (#2790), the installer wipes skills/ on
-  // update. skills/ is now a GSD-managed directory and must be scanned so that
+  // update. skills/ is now a GTD-managed directory and must be scanned so that
   // user-added skill directories are backed up before the wipe (#2942).
-  // GSD-owned skills (tracked in manifest) must NOT be flagged as custom.
+  // GTD-owned skills (tracked in manifest) must NOT be flagged as custom.
   test('scans skills/ directory and detects user-added skills not in manifest (#2942)', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\n',
-      'skills/gsd-planner/SKILL.md': '# GSD Planner\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\n',
+      'skills/gtd-planner/SKILL.md': '# GTD Planner\n',
     });
 
     // Simulate user having a custom skill installed — NOT in manifest
@@ -241,7 +241,7 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
     fs.mkdirSync(customSkillDir, { recursive: true });
     fs.writeFileSync(path.join(customSkillDir, 'SKILL.md'), '# My Custom Skill\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );
@@ -256,16 +256,16 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
       `custom skill should be detected; got: ${JSON.stringify(json.custom_files)}`
     );
 
-    // The GSD-owned skill (in manifest) should NOT be flagged as custom
+    // The GTD-owned skill (in manifest) should NOT be flagged as custom
     assert.ok(
-      !json.custom_files.includes('skills/gsd-planner/SKILL.md'),
-      `GSD-owned skill should not be flagged as custom; got: ${JSON.stringify(json.custom_files)}`
+      !json.custom_files.includes('skills/gtd-planner/SKILL.md'),
+      `GTD-owned skill should not be flagged as custom; got: ${JSON.stringify(json.custom_files)}`
     );
   });
 
   test('does not scan command/ directory (installer does not wipe it)', () => {
     writeManifest(tmpDir, {
-      'get-shit-done/workflows/execute-phase.md': '# Execute Phase\n',
+      'get-tasks-done/workflows/work-task-issue.md': '# Execute Phase\n',
     });
 
     // Simulate files in command/ dir not wiped by installer
@@ -273,7 +273,7 @@ describe('detect-custom-files — update workflow backup detection (#1997)', () 
     fs.mkdirSync(commandDir, { recursive: true });
     fs.writeFileSync(path.join(commandDir, 'user-command.md'), '# User Command\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['detect-custom-files', '--config-dir', tmpDir],
       tmpDir
     );

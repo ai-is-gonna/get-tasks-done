@@ -1,4 +1,4 @@
-// allow-test-rule: source-text-is-the-product — commands/gsd/*.md files ARE the
+// allow-test-rule: source-text-is-the-product — commands/gtd/*.md files ARE the
 // deployed skill surface. Testing their contract tests the runtime behaviour.
 
 'use strict';
@@ -6,12 +6,12 @@
 /**
  * Command Contract tests  (ADR-0002)
  *
- * Authoritative behavioral contract for every commands/gsd/*.md file.
+ * Authoritative behavioral contract for every commands/gtd/*.md file.
  * Replaces scattered coverage in enh-2790-skill-consolidation and
  * bug-3135-capture-backlog-workflow for the full-surface contract checks.
  *
  * Contract:
- *   1. name:          present, non-empty, starts with gsd: or gsd-
+ *   1. name:          present, non-empty, starts with gtd: or gtd-
  *   2. description:   present, non-empty
  *   3. allowed-tools: present, non-empty, all entries from CANONICAL_TOOLS
  *   4. execution_context @-refs: every reference resolves to an existing file
@@ -24,8 +24,8 @@ const fs   = require('node:fs');
 const path = require('node:path');
 
 const ROOT         = path.join(__dirname, '..');
-const COMMANDS_DIR = path.join(ROOT, 'commands', 'gsd');
-const GSD_ROOT     = path.join(ROOT, 'get-shit-done');
+const COMMANDS_DIR = path.join(ROOT, 'commands', 'gtd');
+const GTD_ROOT     = path.join(ROOT, 'get-tasks-done');
 
 const {
   CANONICAL_TOOLS,
@@ -42,12 +42,12 @@ const commandFiles = fs
 
 describe('command contract: name field (ADR-0002)', () => {
   for (const { name, full } of commandFiles) {
-    test(`${name}: name: present and starts with gsd: or gsd-`, () => {
+    test(`${name}: name: present and starts with gtd: or gtd-`, () => {
       const fm = parseFrontmatter(fs.readFileSync(full, 'utf-8'));
       assert.ok(fm.name && fm.name.trim(), `${name}: name: field missing or empty`);
       assert.ok(
-        /^gsd[:-]/.test(fm.name.trim()),
-        `${name}: name: must start with "gsd:" or "gsd-", got "${fm.name.trim()}"`,
+        /^gtd[:-]/.test(fm.name.trim()),
+        `${name}: name: must start with "gtd:" or "gtd-", got "${fm.name.trim()}"`,
       );
     });
   }
@@ -90,7 +90,7 @@ describe('command contract: execution_context @-refs resolve (ADR-0002)', () => 
       const refs = executionContextRefs(fs.readFileSync(full, 'utf-8'));
       for (const { normalized } of refs) {
         assert.ok(
-          fs.existsSync(path.join(GSD_ROOT, normalized)),
+          fs.existsSync(path.join(GTD_ROOT, normalized)),
           `${name}: execution_context @-ref "${normalized}" does not exist — ` +
           'create the file or remove the reference',
         );

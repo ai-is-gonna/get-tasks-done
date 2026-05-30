@@ -7,14 +7,14 @@ import { mkdtemp, writeFile, mkdir, rm, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { GSDError, ErrorClassification, exitCodeFor } from '../errors.js';
+import { GTDError, ErrorClassification, exitCodeFor } from '../errors.js';
 
 // ─── Test setup ─────────────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-cfg-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-cfg-'));
   await mkdir(join(tmpDir, '.planning'), { recursive: true });
 });
 
@@ -45,21 +45,21 @@ describe('configGet', () => {
     expect(result.data).toBe(true);
   });
 
-  it('throws GSDError when no key provided', async () => {
+  it('throws GTDError when no key provided', async () => {
     const { configGet } = await import('./config-query.js');
-    await expect(configGet([], tmpDir)).rejects.toThrow(GSDError);
+    await expect(configGet([], tmpDir)).rejects.toThrow(GTDError);
   });
 
-  it('throws GSDError for nonexistent key', async () => {
+  it('throws GTDError for nonexistent key', async () => {
     const { configGet } = await import('./config-query.js');
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({ model_profile: 'quality' }),
     );
-    await expect(configGet(['nonexistent.key'], tmpDir)).rejects.toThrow(GSDError);
+    await expect(configGet(['nonexistent.key'], tmpDir)).rejects.toThrow(GTDError);
   });
 
-  it('throws GSDError that maps to exit code 1 for missing key (bug #2544)', async () => {
+  it('throws GTDError that maps to exit code 1 for missing key (bug #2544)', async () => {
     const { configGet } = await import('./config-query.js');
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
@@ -69,16 +69,16 @@ describe('configGet', () => {
       await configGet(['nonexistent.key'], tmpDir);
       throw new Error('expected configGet to throw for missing key');
     } catch (err) {
-      expect(err).toBeInstanceOf(GSDError);
-      const gsdErr = err as GSDError;
+      expect(err).toBeInstanceOf(GTDError);
+      const gtdErr = err as GTDError;
       // UNIX convention: missing config key should exit 1 (like `git config --get`).
       // Validation (exit 10) is the previous buggy classification — see issue #2544.
-      expect(gsdErr.classification).toBe(ErrorClassification.Execution);
-      expect(exitCodeFor(gsdErr.classification)).toBe(1);
+      expect(gtdErr.classification).toBe(ErrorClassification.Execution);
+      expect(exitCodeFor(gtdErr.classification)).toBe(1);
     }
   });
 
-  it('throws GSDError that maps to exit code 1 when traversing into non-object (bug #2544)', async () => {
+  it('throws GTDError that maps to exit code 1 when traversing into non-object (bug #2544)', async () => {
     const { configGet } = await import('./config-query.js');
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
@@ -88,9 +88,9 @@ describe('configGet', () => {
       await configGet(['model_profile.subkey'], tmpDir);
       throw new Error('expected configGet to throw');
     } catch (err) {
-      expect(err).toBeInstanceOf(GSDError);
-      const gsdErr = err as GSDError;
-      expect(exitCodeFor(gsdErr.classification)).toBe(1);
+      expect(err).toBeInstanceOf(GTDError);
+      const gtdErr = err as GTDError;
+      expect(exitCodeFor(gtdErr.classification)).toBe(1);
     }
   });
 
@@ -102,7 +102,7 @@ describe('configGet', () => {
       JSON.stringify({ model_profile: 'balanced' }),
     );
     // Accessing workflow should fail (not merged with defaults)
-    await expect(configGet(['workflow.auto_advance'], tmpDir)).rejects.toThrow(GSDError);
+    await expect(configGet(['workflow.auto_advance'], tmpDir)).rejects.toThrow(GTDError);
   });
 });
 
@@ -115,7 +115,7 @@ describe('resolveModel', () => {
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({ model_profile: 'balanced' }),
     );
-    const result = await resolveModel(['gsd-planner'], tmpDir);
+    const result = await resolveModel(['gtd-planner'], tmpDir);
     const data = result.data as Record<string, unknown>;
     expect(data).toHaveProperty('model');
     expect(data).toHaveProperty('profile', 'balanced');
@@ -128,7 +128,7 @@ describe('resolveModel', () => {
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({ model_profile: 'quality' }),
     );
-    const result = await resolveModel(['gsd-code-reviewer'], tmpDir);
+    const result = await resolveModel(['gtd-code-reviewer'], tmpDir);
     const data = result.data as Record<string, unknown>;
     expect(data).toHaveProperty('model', 'opus');
     expect(data).toHaveProperty('profile', 'quality');
@@ -154,9 +154,9 @@ describe('resolveModel', () => {
     expect(budget).toHaveProperty('unknown_agent', true);
   });
 
-  it('throws GSDError when no agent type provided', async () => {
+  it('throws GTDError when no agent type provided', async () => {
     const { resolveModel } = await import('./config-query.js');
-    await expect(resolveModel([], tmpDir)).rejects.toThrow(GSDError);
+    await expect(resolveModel([], tmpDir)).rejects.toThrow(GTDError);
   });
 
   it('respects model_overrides from config', async () => {
@@ -165,10 +165,10 @@ describe('resolveModel', () => {
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({
         model_profile: 'balanced',
-        model_overrides: { 'gsd-planner': 'openai/gpt-5.4' },
+        model_overrides: { 'gtd-planner': 'openai/gpt-5.4' },
       }),
     );
-    const result = await resolveModel(['gsd-planner'], tmpDir);
+    const result = await resolveModel(['gtd-planner'], tmpDir);
     const data = result.data as Record<string, unknown>;
     expect(data).toHaveProperty('model', 'openai/gpt-5.4');
   });
@@ -182,7 +182,7 @@ describe('resolveModel', () => {
         resolve_model_ids: 'omit',
       }),
     );
-    const result = await resolveModel(['gsd-planner'], tmpDir);
+    const result = await resolveModel(['gtd-planner'], tmpDir);
     const data = result.data as Record<string, unknown>;
     expect(data).toHaveProperty('model', '');
   });
@@ -198,18 +198,18 @@ describe('resolveModel', () => {
         model_profile_overrides: {
           codex: {
             opus: { model: 'gpt-5.5', reasoning_effort: 'high' },
-            sonnet: 'gpt-5.3-codex',
+            sonnet: 'gpt-5.4',
             haiku: 'gpt-5.4-mini',
           },
         },
       }),
     );
 
-    const planner = (await resolveModel(['gsd-planner'], tmpDir)).data as Record<string, unknown>;
-    const executor = (await resolveModel(['gsd-executor'], tmpDir)).data as Record<string, unknown>;
+    const planner = (await resolveModel(['gtd-planner'], tmpDir)).data as Record<string, unknown>;
+    const executor = (await resolveModel(['gtd-task-executor'], tmpDir)).data as Record<string, unknown>;
 
     expect(planner).toMatchObject({ model: 'gpt-5.5', profile: 'balanced', reasoning_effort: 'high' });
-    expect(executor).toMatchObject({ model: 'gpt-5.3-codex', profile: 'balanced', reasoning_effort: 'medium' });
+    expect(executor).toMatchObject({ model: 'gpt-5.4', profile: 'balanced', reasoning_effort: 'medium' });
   });
 
   it('returns runtime reasoning_effort from the same phase-tier source as model', async () => {
@@ -225,10 +225,10 @@ describe('resolveModel', () => {
       }),
     );
 
-    const executor = (await resolveModel(['gsd-executor'], tmpDir)).data as Record<string, unknown>;
+    const executor = (await resolveModel(['gtd-task-executor'], tmpDir)).data as Record<string, unknown>;
 
     expect(executor).toMatchObject({
-      model: 'gpt-5.4',
+      model: opusCodexTier?.model,
       profile: 'budget',
       reasoning_effort: opusCodexTier?.reasoning_effort,
     });
@@ -250,7 +250,7 @@ describe('resolveModel', () => {
       }),
     );
 
-    const planner = (await resolveModel(['gsd-planner'], tmpDir)).data as Record<string, unknown>;
+    const planner = (await resolveModel(['gtd-planner'], tmpDir)).data as Record<string, unknown>;
 
     expect(planner).toMatchObject({
       model: 'openrouter/openai/gpt-5.5',
@@ -261,24 +261,24 @@ describe('resolveModel', () => {
 
   it('resolveModel uses workstream config when --ws is specified', async () => {
     const { resolveModel } = await import('./config-query.js');
-    // Root config: balanced profile → gsd-executor resolves to 'sonnet'
+    // Root config: balanced profile → gtd-task-executor resolves to 'sonnet'
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({ model_profile: 'balanced' }),
     );
-    // Workstream config: quality profile → gsd-executor resolves to 'opus'
+    // Workstream config: quality profile → gtd-task-executor resolves to 'opus'
     await mkdir(join(tmpDir, '.planning', 'workstreams', 'frontend'), { recursive: true });
     await writeFile(
       join(tmpDir, '.planning', 'workstreams', 'frontend', 'config.json'),
       JSON.stringify({ model_profile: 'quality' }),
     );
 
-    const rootResult = await resolveModel(['gsd-executor'], tmpDir);
+    const rootResult = await resolveModel(['gtd-task-executor'], tmpDir);
     const rootData = rootResult.data as Record<string, unknown>;
     expect(rootData.profile).toBe('balanced');
     expect(rootData.model).toBe('sonnet');
 
-    const wsResult = await resolveModel(['gsd-executor'], tmpDir, 'frontend');
+    const wsResult = await resolveModel(['gtd-task-executor'], tmpDir, 'frontend');
     const wsData = wsResult.data as Record<string, unknown>;
     expect(wsData.profile).toBe('quality');
     expect(wsData.model).toBe('opus');
@@ -288,12 +288,12 @@ describe('resolveModel', () => {
 // ─── MODEL_PROFILES ─────────────────────────────────────────────────────────
 
 describe('MODEL_PROFILES', () => {
-  it('contains every shipped gsd agent file on disk (#3229)', async () => {
+  it('contains every shipped gtd agent file on disk (#3229)', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     // config-query.test.ts lives at sdk/src/query/ — three levels from repo root
     const repoRoot = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
     const agentFiles = (await readdir(join(repoRoot, 'agents')))
-      .filter((f) => /^gsd-.*\.md$/.test(f))
+      .filter((f) => /^gtd-.*\.md$/.test(f))
       .map((f) => f.replace(/\.md$/, ''))
       .sort();
     expect(Object.keys(MODEL_PROFILES).sort()).toEqual(agentFiles);

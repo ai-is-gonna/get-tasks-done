@@ -7,8 +7,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const COMMAND_PATH = path.join(ROOT, 'commands', 'gsd', 'plan-phase.md');
-const WORKFLOW_PATH = path.join(ROOT, 'get-shit-done', 'workflows', 'plan-phase.md');
+const COMMAND_PATH = path.join(ROOT, 'commands', 'gtd', 'plan-phase.md');
+const WORKFLOW_PATH = path.join(ROOT, 'get-tasks-done', 'workflows', 'plan-phase.md');
 const DOCS_COMMANDS_PATH = path.join(ROOT, 'docs', 'COMMANDS.md');
 
 function read(filePath) {
@@ -72,9 +72,9 @@ describe('enh #3209: plan-phase ADR ingest express path', () => {
     );
   });
 
-  test('docs COMMANDS advertises --ingest flag for /gsd-plan-phase', () => {
+  test('docs COMMANDS advertises --ingest flag for /gtd-plan-phase', () => {
     const commands = read(DOCS_COMMANDS_PATH);
     assert.ok(commands.includes('--ingest <path-or-glob>'),
-      'docs/COMMANDS.md must document --ingest for /gsd-plan-phase');
+      'docs/COMMANDS.md must document --ingest for /gtd-plan-phase');
   });
 });

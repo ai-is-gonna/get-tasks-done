@@ -128,7 +128,7 @@ describe('workstream-inventory-builder generator parity (ESM dist vs generated C
     const distPath = path.resolve(__dirname, '..', 'sdk', 'dist', 'workstream-inventory', 'builder.js');
     sdkBuild = await import(pathToFileURL(distPath).href);
     // CJS require of the generated artifact
-    cjsModule = require('../get-shit-done/bin/lib/workstream-inventory-builder.generated.cjs');
+    cjsModule = require('../get-tasks-done/bin/lib/workstream-inventory-builder.generated.cjs');
   });
 
   describe('buildWorkstreamInventory', () => {

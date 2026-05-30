@@ -1,12 +1,12 @@
-// Migrated to typed-IR (#2974): the gsd-session-state.sh and
-// gsd-phase-boundary.sh hooks now emit Claude Code SessionStart/PostToolUse
+// Migrated to typed-IR (#2974): the gtd-session-state.sh and
+// gtd-phase-boundary.sh hooks now emit Claude Code SessionStart/PostToolUse
 // JSON envelopes ({ hookSpecificOutput: { hookEventName, additionalContext,
 // state_present, config_mode | planning_modified, file_path } }) instead of
-// plain text. gsd-validate-commit.sh already emitted JSON ({ decision,
+// plain text. gtd-validate-commit.sh already emitted JSON ({ decision,
 // reason }). Tests parse the JSON and assert on typed fields.
 
 /**
- * GSD Tools Tests - Community Hooks (opt-in)
+ * GTD Tools Tests - Community Hooks (opt-in)
  *
  * Tests for feat/hooks-opt-in-1473d:
  *   - Hook file existence and permissions
@@ -39,7 +39,7 @@ function spawnHook(hookPath, options) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function createTempProject(prefix = 'gsd-hook-test-') {
+function createTempProject(prefix = 'gtd-hook-test-') {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
   return tmpDir;
@@ -72,37 +72,37 @@ function writeMinimalStateMd(tmpDir, content) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('hook file validation', () => {
-  test('gsd-session-state.sh exists', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-session-state.sh');
-    assert.ok(fs.existsSync(hookPath), 'gsd-session-state.sh should exist');
+  test('gtd-session-state.sh exists', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-session-state.sh');
+    assert.ok(fs.existsSync(hookPath), 'gtd-session-state.sh should exist');
   });
 
-  test('gsd-validate-commit.sh exists', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
-    assert.ok(fs.existsSync(hookPath), 'gsd-validate-commit.sh should exist');
+  test('gtd-validate-commit.sh exists', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
+    assert.ok(fs.existsSync(hookPath), 'gtd-validate-commit.sh should exist');
   });
 
-  test('gsd-phase-boundary.sh exists', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-phase-boundary.sh');
-    assert.ok(fs.existsSync(hookPath), 'gsd-phase-boundary.sh should exist');
+  test('gtd-phase-boundary.sh exists', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-phase-boundary.sh');
+    assert.ok(fs.existsSync(hookPath), 'gtd-phase-boundary.sh should exist');
   });
 
-  test('gsd-session-state.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-session-state.sh');
+  test('gtd-session-state.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-session-state.sh');
     const stat = fs.statSync(hookPath);
-    assert.ok((stat.mode & 0o111) !== 0, 'gsd-session-state.sh should be executable');
+    assert.ok((stat.mode & 0o111) !== 0, 'gtd-session-state.sh should be executable');
   });
 
-  test('gsd-validate-commit.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+  test('gtd-validate-commit.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const stat = fs.statSync(hookPath);
-    assert.ok((stat.mode & 0o111) !== 0, 'gsd-validate-commit.sh should be executable');
+    assert.ok((stat.mode & 0o111) !== 0, 'gtd-validate-commit.sh should be executable');
   });
 
-  test('gsd-phase-boundary.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-phase-boundary.sh');
+  test('gtd-phase-boundary.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
+    const hookPath = path.join(HOOKS_DIR, 'gtd-phase-boundary.sh');
     const stat = fs.statSync(hookPath);
-    assert.ok((stat.mode & 0o111) !== 0, 'gsd-phase-boundary.sh should be executable');
+    assert.ok((stat.mode & 0o111) !== 0, 'gtd-phase-boundary.sh should be executable');
   });
 });
 
@@ -118,10 +118,10 @@ describe('installer hook registration', () => {
     installSource = fs.readFileSync(installJsPath, 'utf-8');
   });
 
-  test('install.js contains gsd-validate-commit registration block', () => {
+  test('install.js contains gtd-validate-commit registration block', () => {
     assert.ok(
-      installSource.includes('gsd-validate-commit'),
-      'install.js should contain gsd-validate-commit hook registration'
+      installSource.includes('gtd-validate-commit'),
+      'install.js should contain gtd-validate-commit hook registration'
     );
     assert.ok(
       installSource.includes('validateCommitCommand'),
@@ -133,10 +133,10 @@ describe('installer hook registration', () => {
     );
   });
 
-  test('install.js contains gsd-session-state registration block', () => {
+  test('install.js contains gtd-session-state registration block', () => {
     assert.ok(
-      installSource.includes('gsd-session-state'),
-      'install.js should contain gsd-session-state hook registration'
+      installSource.includes('gtd-session-state'),
+      'install.js should contain gtd-session-state hook registration'
     );
     assert.ok(
       installSource.includes('sessionStateCommand'),
@@ -148,10 +148,10 @@ describe('installer hook registration', () => {
     );
   });
 
-  test('install.js contains gsd-phase-boundary registration block', () => {
+  test('install.js contains gtd-phase-boundary registration block', () => {
     assert.ok(
-      installSource.includes('gsd-phase-boundary'),
-      'install.js should contain gsd-phase-boundary hook registration'
+      installSource.includes('gtd-phase-boundary'),
+      'install.js should contain gtd-phase-boundary hook registration'
     );
     assert.ok(
       installSource.includes('phaseBoundaryCommand'),
@@ -183,21 +183,21 @@ describe('installer hook registration', () => {
   });
 
   test('install.js adds all 3 new hooks to the uninstall cleanup list', () => {
-    const gsdHooksMatch = installSource.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'install.js should define gsdHooks array for uninstall cleanup');
+    const gtdHooksMatch = installSource.match(/const gtdHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(gtdHooksMatch, 'install.js should define gtdHooks array for uninstall cleanup');
 
-    const gsdHooksContent = gsdHooksMatch[1];
+    const gtdHooksContent = gtdHooksMatch[1];
     assert.ok(
-      gsdHooksContent.includes('gsd-session-state.sh'),
-      'gsdHooks should include gsd-session-state.sh'
+      gtdHooksContent.includes('gtd-session-state.sh'),
+      'gtdHooks should include gtd-session-state.sh'
     );
     assert.ok(
-      gsdHooksContent.includes('gsd-validate-commit.sh'),
-      'gsdHooks should include gsd-validate-commit.sh'
+      gtdHooksContent.includes('gtd-validate-commit.sh'),
+      'gtdHooks should include gtd-validate-commit.sh'
     );
     assert.ok(
-      gsdHooksContent.includes('gsd-phase-boundary.sh'),
-      'gsdHooks should include gsd-phase-boundary.sh'
+      gtdHooksContent.includes('gtd-phase-boundary.sh'),
+      'gtdHooks should include gtd-phase-boundary.sh'
     );
   });
 
@@ -226,7 +226,7 @@ describe('opt-in gating behavior', { skip: isWindows ? 'bash hooks require unix 
 
   test('validate-commit is a no-op when hooks.community is false', () => {
     writeConfigWithHooks(tmpDir, false);
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "WIP save"' }
     });
@@ -243,9 +243,9 @@ describe('opt-in gating behavior', { skip: isWindows ? 'bash hooks require unix 
 
   test('validate-commit is a no-op when config.json is absent', (t) => {
     // No config.json at all
-    const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-hook-bare-'));
+    const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-hook-bare-'));
     t.after(() => { fs.rmSync(bareDir, { recursive: true, force: true }); });
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "WIP save"' }
     });
@@ -262,7 +262,7 @@ describe('opt-in gating behavior', { skip: isWindows ? 'bash hooks require unix 
   test('session-state is a no-op when hooks.community is false', () => {
     writeConfigWithHooks(tmpDir, false);
     writeMinimalStateMd(tmpDir);
-    const hookPath = path.join(HOOKS_DIR, 'gsd-session-state.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-session-state.sh');
 
     const result = spawnHook(hookPath, {
       input: '',
@@ -280,7 +280,7 @@ describe('opt-in gating behavior', { skip: isWindows ? 'bash hooks require unix 
 
   test('phase-boundary is a no-op when hooks.community is false', () => {
     writeConfigWithHooks(tmpDir, false);
-    const hookPath = path.join(HOOKS_DIR, 'gsd-phase-boundary.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-phase-boundary.sh');
     const input = JSON.stringify({
       tool_input: { file_path: '.planning/STATE.md' }
     });
@@ -315,7 +315,7 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
   });
 
   test('validate-commit allows valid conventional commit', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "fix(core): add locking mechanism"' }
     });
@@ -330,7 +330,7 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
   });
 
   test('validate-commit blocks non-conventional commit', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "WIP save"' }
     });
@@ -357,7 +357,7 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
   });
 
   test('validate-commit allows non-commit commands', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git push origin main' }
     });
@@ -373,7 +373,7 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
 
   test('session-state outputs state info when enabled', () => {
     writeMinimalStateMd(tmpDir);
-    const hookPath = path.join(HOOKS_DIR, 'gsd-session-state.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-session-state.sh');
 
     const result = spawnHook(hookPath, {
       input: '',
@@ -393,11 +393,11 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
 
   test('session-state exits 0 without .planning/ (in enabled project)', (t) => {
     // Create a dir with config but no STATE.md
-    const noStateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-hook-nostate-'));
+    const noStateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-hook-nostate-'));
     t.after(() => { fs.rmSync(noStateDir, { recursive: true, force: true }); });
     fs.mkdirSync(path.join(noStateDir, '.planning'), { recursive: true });
     writeConfigWithHooks(noStateDir, true);
-    const hookPath = path.join(HOOKS_DIR, 'gsd-session-state.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-session-state.sh');
 
     const result = spawnHook(hookPath, {
       input: '',
@@ -414,7 +414,7 @@ describe('hook execution when enabled', { skip: isWindows ? 'bash hooks require 
   });
 
   test('phase-boundary detects .planning/ writes when enabled', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-phase-boundary.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-phase-boundary.sh');
     const input = JSON.stringify({
       tool_input: { file_path: '.planning/STATE.md' }
     });
@@ -453,7 +453,7 @@ describe('hook security tests', { skip: isWindows ? 'bash hooks require unix she
   });
 
   test('validate-commit blocks message with shell metacharacters', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "$(rm -rf /)"' }
     });
@@ -470,7 +470,7 @@ describe('hook security tests', { skip: isWindows ? 'bash hooks require unix she
   });
 
   test('validate-commit blocks message with backtick injection', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "`whoami`"' }
     });
@@ -487,7 +487,7 @@ describe('hook security tests', { skip: isWindows ? 'bash hooks require unix she
   });
 
   test('validate-commit allows commit with scope containing special chars', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "fix(api/v2): handle edge case"' }
     });
@@ -502,7 +502,7 @@ describe('hook security tests', { skip: isWindows ? 'bash hooks require unix she
   });
 
   test('phase-boundary handles malformed JSON input gracefully', () => {
-    const hookPath = path.join(HOOKS_DIR, 'gsd-phase-boundary.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-phase-boundary.sh');
     const input = 'not json at all';
 
     const result = spawnHook(hookPath, {
@@ -521,7 +521,7 @@ describe('hook security tests', { skip: isWindows ? 'bash hooks require unix she
       '{ broken json'
     );
 
-    const hookPath = path.join(HOOKS_DIR, 'gsd-validate-commit.sh');
+    const hookPath = path.join(HOOKS_DIR, 'gtd-validate-commit.sh');
     const input = JSON.stringify({
       tool_input: { command: 'git commit -m "WIP save"' }
     });

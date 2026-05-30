@@ -17,14 +17,14 @@ const assert = require('node:assert/strict');
 let computePathPrefix;
 
 before(() => {
-  process.env.GSD_TEST_MODE = '1';
+  process.env.GTD_TEST_MODE = '1';
   // Re-require fresh in case other tests already loaded it.
   delete require.cache[require.resolve('../bin/install.js')];
   ({ computePathPrefix } = require('../bin/install.js'));
 });
 
 after(() => {
-  delete process.env.GSD_TEST_MODE;
+  delete process.env.GTD_TEST_MODE;
 });
 
 describe('bug-2376: OpenCode on Windows must use absolute path, not $HOME', () => {

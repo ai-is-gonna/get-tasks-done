@@ -13,7 +13,7 @@
  * that bypasses gitignore entirely.
  *
  * This test file:
- *   1. Extracts the rescue block from each workflow file (parsed structurally
+ *   1. Extracts the rescue block from quick.md (parsed structurally
  *      by locating the labeled comment + closing fence — not free-form regex
  *      over file contents).
  *   2. Runs the extracted block against a real temp repo whose .planning/
@@ -57,8 +57,7 @@ const os = require('os');
 const { execFileSync, spawnSync } = require('child_process');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const EXECUTE_PHASE_PATH = path.join(REPO_ROOT, 'get-shit-done', 'workflows', 'execute-phase.md');
-const QUICK_PATH = path.join(REPO_ROOT, 'get-shit-done', 'workflows', 'quick.md');
+const QUICK_PATH = path.join(REPO_ROOT, 'get-tasks-done', 'workflows', 'quick.md');
 
 /**
  * Extract the rescue block (the bash lines that detect+rescue the
@@ -120,7 +119,7 @@ function sh(cwd, cmd) {
  * the rescue block against it. Returns { tmp, wt, summaryFinalPath }.
  */
 function runRescueScenario(rescueBlock) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2838-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2838-'));
   const wt = path.join(tmp, 'wt');
 
   sh(tmp, 'git init -q -b main');
@@ -167,23 +166,6 @@ function cleanup(tmp) {
 }
 
 describe('bug-2838: SUMMARY rescue handles gitignored .planning/', () => {
-  test('execute-phase.md rescue block recovers SUMMARY when .planning/ is gitignored', () => {
-    const block = extractRescueBlock(EXECUTE_PHASE_PATH);
-    const { tmp, summaryFinalPath, rescueOut } = runRescueScenario(block);
-    try {
-      assert.ok(
-        fs.existsSync(summaryFinalPath),
-        `SUMMARY was lost — rescue did not surface the file into main repo.\nRescue output:\n${rescueOut}`
-      );
-      const content = fs.readFileSync(summaryFinalPath, 'utf-8');
-      const footer = parseRescueFooter(content);
-      assert.equal(footer.rescued, 'yes',
-        `expected typed footer.rescued === 'yes', got ${JSON.stringify(footer)}`);
-    } finally {
-      cleanup(tmp);
-    }
-  });
-
   test('quick.md rescue block recovers SUMMARY when .planning/ is gitignored', () => {
     const block = extractRescueBlock(QUICK_PATH);
     const { tmp, summaryFinalPath, rescueOut } = runRescueScenario(block);
@@ -202,8 +184,8 @@ describe('bug-2838: SUMMARY rescue handles gitignored .planning/', () => {
   });
 
   test('rescue is idempotent when SUMMARY already present in main repo', () => {
-    const block = extractRescueBlock(EXECUTE_PHASE_PATH);
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2838-idem-'));
+    const block = extractRescueBlock(QUICK_PATH);
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2838-idem-'));
     const wt = path.join(tmp, 'wt');
     try {
       sh(tmp, 'git init -q -b main');

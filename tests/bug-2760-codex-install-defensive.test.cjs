@@ -4,17 +4,17 @@
  * Three defects, three fixes (defensive triple):
  *
  *   Defect 3 (confirmed real) — Hooks AoT downgrade. When the user already has
- *     `[[hooks.SessionStart]]` (namespaced AoT) entries in their config, GSD
+ *     `[[hooks.SessionStart]]` (namespaced AoT) entries in their config, GTD
  *     used to append a `[[hooks]]` (top-level AoT) block that confuses
  *     round-trip writers and produces a config Codex refuses to load.
- *     Fix: detect the user's preferred shape and emit GSD's hook in the same
+ *     Fix: detect the user's preferred shape and emit GTD's hook in the same
  *     namespaced form so both coexist cleanly.
  *
  *   Defects 1+2 (defensive) — Strip-step robustness. Pre-existing legacy
  *     `[agents]` (single-bracket) and `[[agents]]` (sequence) blocks are
- *     invalid in current Codex schema and break Codex even though GSD now
+ *     invalid in current Codex schema and break Codex even though GTD now
  *     emits the correct `[agents.<name>]` struct form. Fix: install-time
- *     stripping always purges these forms regardless of GSD marker presence
+ *     stripping always purges these forms regardless of GTD marker presence
  *     so reinstall self-heals files where the marker was edited out or never
  *     existed (third-party tools).
  *
@@ -24,11 +24,11 @@
  *     backup and abort so the user never gets a broken Codex CLI.
  */
 
-// Scope GSD_TEST_MODE to module load only — restore prior value (or unset) so
+// Scope GTD_TEST_MODE to module load only — restore prior value (or unset) so
 // downstream tests in the same node process never see test-only behaviour
 // leak through (#2760 CR4 finding 5).
-const previousGsdTestMode = process.env.GSD_TEST_MODE;
-process.env.GSD_TEST_MODE = '1';
+const previousGtdTestMode = process.env.GTD_TEST_MODE;
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -40,15 +40,15 @@ const {
   install,
   validateCodexConfigSchema,
   hasUserNamespacedAotHooks,
-  stripGsdFromCodexConfig,
+  stripGtdFromCodexConfig,
   installCodexConfig,
   parseTomlToObject,
 } = require('../bin/install.js');
 
-if (previousGsdTestMode === undefined) {
-  delete process.env.GSD_TEST_MODE;
+if (previousGtdTestMode === undefined) {
+  delete process.env.GTD_TEST_MODE;
 } else {
-  process.env.GSD_TEST_MODE = previousGsdTestMode;
+  process.env.GTD_TEST_MODE = previousGtdTestMode;
 }
 
 function runCodexInstall(codexHome, cwd = path.join(__dirname, '..')) {
@@ -103,7 +103,7 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-d3-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-d3-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -121,17 +121,17 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
     const parsed = parseTomlToObject(content);
 
     const sessionStartCommands = readHooksSessionStartCommands(codexHome);
-    const managed = sessionStartCommands.filter((cmd) => /gsd-check-update\.js/.test(cmd));
-    assert.equal(managed.length, 1, 'hooks.json must contain exactly one managed gsd-check-update command');
+    const managed = sessionStartCommands.filter((cmd) => /gtd-check-update\.js/.test(cmd));
+    assert.equal(managed.length, 1, 'hooks.json must contain exactly one managed gtd-check-update command');
     assert.ok(
       !parsed.hooks || !Array.isArray(parsed.hooks.SessionStart),
-      'config.toml should not carry managed SessionStart hooks for GSD'
+      'config.toml should not carry managed SessionStart hooks for GTD'
     );
   });
 
-  test('preserves user [[hooks.SessionStart]] entries and registers managed GSD handler in hooks.json', () => {
+  test('preserves user [[hooks.SessionStart]] entries and registers managed GTD handler in hooks.json', () => {
     // Users may have their own [[hooks.SessionStart]] entries using the new schema.
-    // GSD must append its own two-level block without disturbing theirs.
+    // GTD must append its own two-level block without disturbing theirs.
     const userConfig = [
       '[[hooks.SessionStart]]',
       '',
@@ -172,22 +172,22 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
     );
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
     assert.ok(
-      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gsd-check-update\.js/.test(cmd)),
-      'GSD handler must appear in hooks.json SessionStart entries: ' + JSON.stringify(hooksJsonCommands)
+      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gtd-check-update\.js/.test(cmd)),
+      'GTD handler must appear in hooks.json SessionStart entries: ' + JSON.stringify(hooksJsonCommands)
     );
     assert.ok(!Array.isArray(parsed.hooks), 'no flat [[hooks]] entries');
   });
 
   test('reinstall replaces flat [[hooks]] + event form with nested schema', () => {
-    // Upgrade path: user has a config written by GSD 1.38.x (flat [[hooks]] form).
+    // Upgrade path: user has a config written by GTD 1.38.x (flat [[hooks]] form).
     const legacyConfig = [
       '[features]',
       'codex_hooks = true',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
       'event = "SessionStart"',
-      'command = "node /old/path/to/gsd-check-update.js"',
+      'command = "node /old/path/to/gtd-check-update.js"',
       '',
     ].join('\n');
     writeCodexConfig(codexHome, legacyConfig);
@@ -198,10 +198,10 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
 
     // Old flat form must be gone.
     assert.ok(!Array.isArray(parsed.hooks), 'flat [[hooks]] must be stripped on upgrade');
-    // Only one GSD hook entry must exist (no duplication) in hooks.json.
+    // Only one GTD hook entry must exist (no duplication) in hooks.json.
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
-    const gsdHandlers = hooksJsonCommands.filter((cmd) => /gsd-check-update\.js/.test(cmd));
-    assert.strictEqual(gsdHandlers.length, 1, 'exactly one managed handler after upgrade');
+    const gtdHandlers = hooksJsonCommands.filter((cmd) => /gtd-check-update\.js/.test(cmd));
+    assert.strictEqual(gtdHandlers.length, 1, 'exactly one managed handler after upgrade');
   });
 
   test('reinstall replaces single-block [[hooks.SessionStart]] (no .hooks sub-table) with nested schema', () => {
@@ -211,9 +211,9 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
       '[features]',
       'codex_hooks = true',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
-      'command = "node /old/path/to/gsd-check-update.js"',
+      'command = "node /old/path/to/gtd-check-update.js"',
       '',
     ].join('\n');
     writeCodexConfig(codexHome, prBranchConfig);
@@ -223,8 +223,8 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
     const parsed = parseTomlToObject(content);
 
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
-    const gsdHandlers = hooksJsonCommands.filter((cmd) => /gsd-check-update\.js/.test(cmd));
-    assert.strictEqual(gsdHandlers.length, 1, 'exactly one managed handler after upgrade from PR-#2802-shape');
+    const gtdHandlers = hooksJsonCommands.filter((cmd) => /gtd-check-update\.js/.test(cmd));
+    assert.strictEqual(gtdHandlers.length, 1, 'exactly one managed handler after upgrade from PR-#2802-shape');
   });
 
   test('reinstall is idempotent: correct nested schema is stripped and re-emitted cleanly', () => {
@@ -234,8 +234,8 @@ describe('#2760 defect 3 — Hooks AoT preservation across install/uninstall/rei
     const content = readCodexConfig(codexHome);
 
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
-    const gsdHandlers = hooksJsonCommands.filter((cmd) => /gsd-check-update\.js/.test(cmd));
-    assert.strictEqual(gsdHandlers.length, 1, 'exactly one managed SessionStart handler after double install');
+    const gtdHandlers = hooksJsonCommands.filter((cmd) => /gtd-check-update\.js/.test(cmd));
+    assert.strictEqual(gtdHandlers.length, 1, 'exactly one managed SessionStart handler after double install');
   });
 });
 
@@ -244,7 +244,7 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-f2-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-f2-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -252,7 +252,7 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('strips bare [agents] single-bracket block (no GSD marker, arbitrary user keys)', () => {
+  test('strips bare [agents] single-bracket block (no GTD marker, arbitrary user keys)', () => {
     writeCodexConfig(codexHome, [
       '[agents]',
       'default = "custom-agent"',
@@ -269,17 +269,17 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
 
     // Bare [agents] would have left { default, extra_key } as scalar leaves
     // on parsed.agents. After strip + struct emit, every key under agents
-    // must itself be a table (the gsd-* struct form).
+    // must itself be a table (the gtd-* struct form).
     assert.ok(
       parsed.agents && typeof parsed.agents === 'object' && !Array.isArray(parsed.agents),
       'agents must be a table-of-tables in parsed structure, got: ' + typeof parsed.agents
     );
     assert.equal(parsed.agents.default, undefined, 'bare [agents] default key must be stripped');
     assert.equal(parsed.agents.extra_key, undefined, 'bare [agents] extra_key must be stripped');
-    const gsdAgents = Object.keys(parsed.agents).filter((k) => k.startsWith('gsd-'));
+    const gtdAgents = Object.keys(parsed.agents).filter((k) => k.startsWith('gtd-'));
     assert.ok(
-      gsdAgents.length > 0 && gsdAgents.every((k) => typeof parsed.agents[k] === 'object'),
-      'agents.gsd-* struct form must be present: ' + JSON.stringify(Object.keys(parsed.agents))
+      gtdAgents.length > 0 && gtdAgents.every((k) => typeof parsed.agents[k] === 'object'),
+      'agents.gtd-* struct form must be present: ' + JSON.stringify(Object.keys(parsed.agents))
     );
 
     // User's unrelated [model] section preserved structurally.
@@ -289,7 +289,7 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
     );
   });
 
-  test('strips [[agents]] sequence-form block without GSD marker (third-party / marker-edited-out)', () => {
+  test('strips [[agents]] sequence-form block without GTD marker (third-party / marker-edited-out)', () => {
     writeCodexConfig(codexHome, [
       '[[agents]]',
       'name = "user-helper"',
@@ -309,16 +309,16 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
     const parsed = parseTomlToObject(content);
 
     // [[agents]] sequence form would parse to Array — after strip it must be
-    // a table-of-tables with gsd-* struct keys.
+    // a table-of-tables with gtd-* struct keys.
     assert.ok(
       parsed.agents && typeof parsed.agents === 'object' && !Array.isArray(parsed.agents),
       'agents must be a table-of-tables in parsed structure (sequence form must be stripped), got: '
         + (Array.isArray(parsed.agents) ? 'array' : typeof parsed.agents)
     );
-    const gsdAgents = Object.keys(parsed.agents).filter((k) => k.startsWith('gsd-'));
+    const gtdAgents = Object.keys(parsed.agents).filter((k) => k.startsWith('gtd-'));
     assert.ok(
-      gsdAgents.length > 0,
-      'agents.gsd-* struct form must be present: ' + JSON.stringify(Object.keys(parsed.agents))
+      gtdAgents.length > 0,
+      'agents.gtd-* struct form must be present: ' + JSON.stringify(Object.keys(parsed.agents))
     );
 
     // User's unrelated [projects."/tmp/x"] section preserved structurally.
@@ -336,14 +336,14 @@ describe('#2760 fix 2 — Strip purges invalid legacy [agents] / [[agents]] rega
 // node:test ran them in parallel. Serializing this describe block keeps the
 // seam mutation invisible to siblings.
 describe('#2760 fix 3 — Post-write Codex schema validation', { concurrency: false }, () => {
-  test('passes a clean config produced by GSD install', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-f3a-'));
+  test('passes a clean config produced by GTD install', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-f3a-'));
     try {
       const codexHome = path.join(tmpDir, 'codex-home');
       runCodexInstall(codexHome);
       const content = readCodexConfig(codexHome);
       const result = validateCodexConfigSchema(content);
-      assert.equal(result.ok, true, 'GSD-emitted config passes schema validation');
+      assert.equal(result.ok, true, 'GTD-emitted config passes schema validation');
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -372,7 +372,7 @@ describe('#2760 fix 3 — Post-write Codex schema validation', { concurrency: fa
   });
 
   test('aborts install and restores pre-install backup when post-write validation fails', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-f3b-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-f3b-'));
     const installModule = require('../bin/install.js');
     try {
       const codexHome = path.join(tmpDir, 'codex-home');
@@ -465,7 +465,7 @@ describe('#2760 fix 4 — Write-failure rollback (atomic write + snapshot restor
   let originalRenameSync;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-f4-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-f4-'));
     codexHome = path.join(tmpDir, 'codex-home');
     originalWriteFileSync = fs.writeFileSync;
     originalRenameSync = fs.renameSync;
@@ -533,12 +533,12 @@ describe('#2760 fix 4 — Write-failure rollback (atomic write + snapshot restor
     );
 
     // And the parsed structure of the surviving file must still be the
-    // user's [model] section, not a half-written GSD block.
+    // user's [model] section, not a half-written GTD block.
     const parsed = parseTomlToObject(afterBytes.toString('utf8'));
     assert.equal(parsed.model && parsed.model.name, 'o3',
       'surviving file must still be the user pre-install content');
     assert.equal(parsed.agents, undefined,
-      'no GSD agents block may have leaked into the surviving file');
+      'no GTD agents block may have leaked into the surviving file');
 
     // No stray .tmp-* siblings left behind in the codex home.
     const stray = fs.readdirSync(codexHome).filter((f) => tempPattern.test(path.join(codexHome, f)));
@@ -595,7 +595,7 @@ describe('#2760 fix 4 — Write-failure rollback (atomic write + snapshot restor
     assert.equal(parsed.model && parsed.model.name, 'o3',
       'surviving file must still be the user pre-install content');
     assert.equal(parsed.agents, undefined,
-      'no GSD agents block may have leaked into the surviving file');
+      'no GTD agents block may have leaked into the surviving file');
 
     const stray = fs.readdirSync(codexHome).filter((f) => tempPattern.test(path.join(codexHome, f)));
     assert.equal(stray.length, 0,
@@ -611,7 +611,7 @@ describe('#2760 CR4 finding 2 — Legacy flat [[hooks]] block migrates to namesp
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-cr4-f2-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-cr4-f2-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -619,21 +619,21 @@ describe('#2760 CR4 finding 2 — Legacy flat [[hooks]] block migrates to namesp
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('pre-install legacy flat [[hooks]] gsd-check-update + user namespaced [[hooks.SessionStart]] → post-install converges on namespaced AoT', () => {
+  test('pre-install legacy flat [[hooks]] gtd-check-update + user namespaced [[hooks.SessionStart]] → post-install converges on namespaced AoT', () => {
     // Reproduce the upgrade scenario:
-    //   - User has [[hooks.SessionStart]] entry of their own (signal that GSD
+    //   - User has [[hooks.SessionStart]] entry of their own (signal that GTD
     //     should emit in the namespaced shape).
-    //   - A previous GSD install left the legacy flat [[hooks]] managed block
-    //     for gsd-check-update. The pre-CR4 strip step would short-circuit
+    //   - A previous GTD install left the legacy flat [[hooks]] managed block
+    //     for gtd-check-update. The pre-CR4 strip step would short-circuit
     //     the namespaced emit and leave the user stuck in the mixed layout.
     const userPlusLegacy = [
       '[[hooks.SessionStart]]',
       'command = "echo user hook"',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
       'event = "SessionStart"',
-      'command = "node /old/path/hooks/gsd-check-update.js"',
+      'command = "node /old/path/hooks/gtd-check-update.js"',
       '',
     ].join('\n');
     writeCodexConfig(codexHome, userPlusLegacy);
@@ -643,7 +643,7 @@ describe('#2760 CR4 finding 2 — Legacy flat [[hooks]] block migrates to namesp
     const parsed = parseTomlToObject(afterInstall);
 
     // After CR4 finding 2: the legacy flat [[hooks]] managed block is stripped
-    // and the GSD entry is re-emitted in the namespaced AoT shape so the two
+    // and the GTD entry is re-emitted in the namespaced AoT shape so the two
     // forms do not coexist.
     assert.ok(
       parsed.hooks && Array.isArray(parsed.hooks.SessionStart),
@@ -668,8 +668,8 @@ describe('#2760 CR4 finding 2 — Legacy flat [[hooks]] block migrates to namesp
     );
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
     assert.ok(
-      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gsd-check-update\.js/.test(cmd)),
-      'GSD entry must appear in hooks.json SessionStart entries: '
+      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gtd-check-update\.js/.test(cmd)),
+      'GTD entry must appear in hooks.json SessionStart entries: '
         + JSON.stringify(hooksJsonCommands)
     );
 
@@ -681,16 +681,16 @@ describe('#2760 CR4 finding 2 — Legacy flat [[hooks]] block migrates to namesp
         + JSON.stringify(parsed.hooks)
     );
 
-    // No duplicate gsd-check-update entries — exactly one managed entry.
-    const gsdEntries = hooksJsonCommands.filter((cmd) => typeof cmd === 'string' && /gsd-check-update\.js/.test(cmd));
-    assert.equal(gsdEntries.length, 1,
-      'exactly one gsd-check-update entry after migration, got: ' + gsdEntries.length);
+    // No duplicate gtd-check-update entries — exactly one managed entry.
+    const gtdEntries = hooksJsonCommands.filter((cmd) => typeof cmd === 'string' && /gtd-check-update\.js/.test(cmd));
+    assert.equal(gtdEntries.length, 1,
+      'exactly one gtd-check-update entry after migration, got: ' + gtdEntries.length);
   });
 });
 
 describe('#2760 CR4 finding 3 / #3245 — parseTomlToObject handles edge-case value types (floats accepted; dates/trailing-garbage rejected)', () => {
   // #3245 inverts the float-rejection requirement: Codex CLI's serde schema
-  // requires f64 for tool_timeout_sec/startup_timeout_sec, so GSD's parser
+  // requires f64 for tool_timeout_sec/startup_timeout_sec, so GTD's parser
   // must now ACCEPT floats. The original guard (from #2760 CR4 finding 3) was
   // "don't silently truncate 0.5 to integer 0" — that goal is still met
   // because we parse the full float as a JS Number (not truncate to prefix).
@@ -755,7 +755,7 @@ describe('#2760 CR4 finding 1 — atomicWriteFileSync failure aborts install (po
   let consoleOutput;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-cr4-f1-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-cr4-f1-'));
     codexHome = path.join(tmpDir, 'codex-home');
     originalRenameSync = fs.renameSync;
     originalConsoleLog = console.log;
@@ -788,7 +788,7 @@ describe('#2760 CR4 finding 1 — atomicWriteFileSync failure aborts install (po
         let isHookWrite = false;
         try {
           const data = fs.readFileSync(src, 'utf8');
-          isHookWrite = /GSD codex_hooks ownership/.test(data);
+          isHookWrite = /GTD codex_hooks ownership/.test(data);
         } catch (_) { /* ignore */ }
         if (isHookWrite) {
           throw new Error('simulated rename failure');
@@ -836,7 +836,7 @@ describe('#2760 CR5 finding 1 — pre-write failures abort install (outer catch 
   const installModule = require('../bin/install.js');
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-cr5-f1-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-cr5-f1-'));
     codexHome = path.join(tmpDir, 'codex-home');
     originalConsoleLog = console.log;
     consoleOutput = [];
@@ -991,7 +991,7 @@ describe('#2760 CR5 finding 3 — migration emits namespaced AoT (no flat/namesp
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2760-cr5-f3-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2760-cr5-f3-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -1007,7 +1007,7 @@ describe('#2760 CR5 finding 3 — migration emits namespaced AoT (no flat/namesp
     //    with event="SessionStart", leaving a mixed flat+namespaced layout.
     //  - Post-CR5 migration emits [[hooks.SessionStart]] directly so both
     //    of the user's hooks coexist in the namespaced shape, and the
-    //    GSD-managed entry converges on namespaced too.
+    //    GTD-managed entry converges on namespaced too.
     const userPlusLegacy = [
       '[[hooks.AfterTool]]',
       'command = "x"',
@@ -1061,11 +1061,11 @@ describe('#2760 CR5 finding 3 — migration emits namespaced AoT (no flat/namesp
       'user SessionStart command "y" must be preserved in namespaced array: ' +
         JSON.stringify(ssCommands)
     );
-    // GSD's managed gsd-check-update entry also lives in the namespaced array.
+    // GTD's managed gtd-check-update entry also lives in the namespaced array.
     const hooksJsonCommands = readHooksSessionStartCommands(codexHome);
     assert.ok(
-      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gsd-check-update\.js/.test(cmd)),
-      'managed gsd-check-update entry must appear in hooks.json SessionStart entries: ' +
+      hooksJsonCommands.some((cmd) => typeof cmd === 'string' && /gtd-check-update\.js/.test(cmd)),
+      'managed gtd-check-update entry must appear in hooks.json SessionStart entries: ' +
         JSON.stringify(hooksJsonCommands)
     );
 

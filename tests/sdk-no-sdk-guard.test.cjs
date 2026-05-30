@@ -5,7 +5,7 @@
 
 /**
  * Static guard: every subprocess installer invocation inside a test file
- * (i.e. with GSD_TEST_MODE deleted so the real installer runs) MUST include
+ * (i.e. with GTD_TEST_MODE deleted so the real installer runs) MUST include
  * '--no-sdk' in its argument list.
  *
  * Why: installSdkIfNeeded() is now fatal on failure (#2439). Tests that
@@ -65,10 +65,10 @@ describe('sdk no-sdk guard: installer subprocess calls must include --no-sdk', (
     for (const file of files) {
       const src = fs.readFileSync(file, 'utf8');
 
-      // Only check files that explicitly delete GSD_TEST_MODE — those run
+      // Only check files that explicitly delete GTD_TEST_MODE — those run
       // the real installer (not the test-mode export).
-      if (!src.includes('delete env.GSD_TEST_MODE') &&
-          !src.includes('delete process.env.GSD_TEST_MODE')) {
+      if (!src.includes('delete env.GTD_TEST_MODE') &&
+          !src.includes('delete process.env.GTD_TEST_MODE')) {
         continue;
       }
 

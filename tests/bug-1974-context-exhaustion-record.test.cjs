@@ -1,8 +1,8 @@
 /**
- * Integration tests for gsd-context-monitor.js auto-record on CRITICAL (#1974).
+ * Integration tests for gtd-context-monitor.js auto-record on CRITICAL (#1974).
  *
  * Verifies:
- * 1. On CRITICAL + active GSD project, subprocess is spawned and STATE.md
+ * 1. On CRITICAL + active GTD project, subprocess is spawned and STATE.md
  *    receives the "Stopped At" field.
  * 2. Subsequent CRITICAL firings within the same session do NOT re-fire
  *    the subprocess (sentinel guard prevents repeated overwrites).
@@ -19,7 +19,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 
-const HOOK_PATH = path.resolve(__dirname, '..', 'hooks', 'gsd-context-monitor.js');
+const HOOK_PATH = path.resolve(__dirname, '..', 'hooks', 'gtd-context-monitor.js');
 
 /**
  * Run the hook with a given session id and context percentage.
@@ -74,7 +74,7 @@ describe('#1974 context exhaustion auto-record', () => {
   let sessionId;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-1974-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-1974-'));
     const planningDir = path.join(tmpDir, '.planning');
     fs.mkdirSync(planningDir, { recursive: true });
 
@@ -92,7 +92,7 @@ describe('#1974 context exhaustion auto-record', () => {
       '',
     ].join('\n'));
 
-    // Minimal config.json required by gsd-tools
+    // Minimal config.json required by gtd-tools
     fs.writeFileSync(path.join(planningDir, 'config.json'), JSON.stringify({ project_code: 'TEST' }));
 
     sessionId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -109,7 +109,7 @@ describe('#1974 context exhaustion auto-record', () => {
     } catch { /* noop */ }
   });
 
-  test('spawns subprocess and writes Stopped At field on CRITICAL with active GSD', () => {
+  test('spawns subprocess and writes Stopped At field on CRITICAL with active GTD', () => {
     // Trigger CRITICAL — remaining <= 25
     const result = runHook(sessionId, 20, tmpDir);
     assert.strictEqual(result.exitCode, 0, `hook should exit 0: ${result.stderr}`);
@@ -121,7 +121,7 @@ describe('#1974 context exhaustion auto-record', () => {
   });
 
   test('does NOT spawn subprocess when .planning/STATE.md is absent', () => {
-    // Delete STATE.md to simulate non-GSD project
+    // Delete STATE.md to simulate non-GTD project
     fs.unlinkSync(statePath);
     const originalMtime = Date.now();
 
@@ -167,12 +167,12 @@ describe('#1974 context exhaustion auto-record', () => {
     const hookSource = fs.readFileSync(HOOK_PATH, 'utf-8');
     assert.match(
       hookSource,
-      /path\.join\(__dirname,\s*'\.\.',\s*'get-shit-done'/,
-      'hook must use __dirname-based path resolution for gsd-tools.cjs'
+      /path\.join\(__dirname,\s*'\.\.',\s*'get-tasks-done'/,
+      'hook must use __dirname-based path resolution for gtd-tools.cjs'
     );
     assert.doesNotMatch(
       hookSource,
-      /process\.env\.HOME.*\.claude.*get-shit-done.*gsd-tools\.cjs/,
+      /process\.env\.HOME.*\.claude.*get-tasks-done.*gtd-tools\.cjs/,
       'hook must not hardcode ~/.claude/ path'
     );
   });

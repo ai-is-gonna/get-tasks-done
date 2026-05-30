@@ -1,7 +1,7 @@
 /**
  * Template handlers — template selection and fill operations.
  *
- * Ported from get-shit-done/bin/lib/template.cjs.
+ * Ported from get-tasks-done/bin/lib/template.cjs.
  * Provides templateSelect (heuristic template type selection) and
  * templateFill (create file from template with auto-generated frontmatter).
  *
@@ -19,7 +19,7 @@
 
 import { readdir, writeFile } from 'node:fs/promises';
 import { join, resolve, relative } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { reconstructFrontmatter, spliceFrontmatter } from './frontmatter-mutation.js';
 import { normalizeMd, planningPaths, normalizePhaseName, phaseTokenMatches } from './helpers.js';
 import type { QueryHandler } from './utils.js';
@@ -111,13 +111,13 @@ export const templateFill: QueryHandler = async (args, projectDir) => {
   const outputPath = args[1];
 
   if (!templateType) {
-    throw new GSDError(
+    throw new GTDError(
       'template type required: summary, plan, or verification',
       ErrorClassification.Validation,
     );
   }
   if (!outputPath) {
-    throw new GSDError(
+    throw new GTDError(
       'output path required',
       ErrorClassification.Validation,
     );
@@ -127,7 +127,7 @@ export const templateFill: QueryHandler = async (args, projectDir) => {
   const resolvedOut = resolve(projectDir, outputPath);
   const rel = relative(projectDir, resolvedOut);
   if (rel.startsWith('..') || rel.includes('..')) {
-    throw new GSDError(
+    throw new GTDError(
       `Output path escapes project directory: ${outputPath}`,
       ErrorClassification.Validation,
     );
@@ -223,7 +223,7 @@ export const templateFill: QueryHandler = async (args, projectDir) => {
       break;
     }
     default:
-      throw new GSDError(
+      throw new GTDError(
         `Unknown template type: ${templateType}. Available: summary, plan, verification`,
         ErrorClassification.Validation,
       );

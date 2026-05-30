@@ -1,13 +1,13 @@
 /**
- * Next slash-command suggestion for `/gsd-next`-style routing (`route.next-action`).
+ * Next slash-command suggestion for `/gtd-next`-style routing (`route.next-action`).
  *
  * Deterministic routing from STATE.md, ROADMAP, and phase directories.
- * See `.planning/research/decision-routing-audit.md` §3.1 and `get-shit-done/workflows/next.md`.
+ * See `.planning/research/decision-routing-audit.md` §3.1 and `get-tasks-done/workflows/next.md`.
  */
 
 import { readFile, readdir } from 'node:fs/promises';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { planningPaths, normalizePhaseName, comparePhaseNum } from './helpers.js';
 import { stateJson } from './state.js';
 import { roadmapAnalyze } from './roadmap.js';
@@ -52,6 +52,12 @@ async function verificationPassed(phaseDirAbs: string): Promise<boolean> {
   }
 }
 
+function phaseIssueManifestExists(planning: string, phaseDirectory: string | null): boolean {
+  if (!phaseDirectory) return false;
+  const phaseSlug = basename(phaseDirectory).toLowerCase();
+  return existsSync(join(planning, 'github', `phase-${phaseSlug}-issues.json`));
+}
+
 export const routeNextAction: QueryHandler = async (_args, projectDir, workstream) => {
   const planning = planningPaths(projectDir, workstream).planning;
   const continueHere = existsSync(join(planning, '.continue-here.md'));
@@ -61,9 +67,9 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
   if (sjd.error) {
     return {
       data: {
-        command: '/gsd-new-project',
+        command: '/gtd-new-project',
         args: '',
-        reason: 'No STATE.md — initialize a GSD project first',
+        reason: 'No STATE.md — initialize a GTD project first',
         current_phase: null,
         phase_name: null,
         gates: {
@@ -146,7 +152,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(currentPhase);
     return {
       data: {
-        command: '/gsd-resume-work',
+        command: '/gtd-resume-work',
         args: '',
         reason: 'Paused — resume work before other routing',
         current_phase: currentPhase,
@@ -182,7 +188,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(first);
     return {
       data: {
-        command: '/gsd-discuss-phase',
+        command: '/gtd-discuss-phase',
         args: first,
         reason: 'ROADMAP has phases but no phase directories on disk yet',
         current_phase: first,
@@ -226,7 +232,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(currentPhase);
     return {
       data: {
-        command: '/gsd-discuss-phase',
+        command: '/gtd-discuss-phase',
         args: cp,
         reason: 'Phase directory not found — start with discuss',
         current_phase: currentPhase,
@@ -248,7 +254,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(currentPhase);
     return {
       data: {
-        command: '/gsd-discuss-phase',
+        command: '/gtd-discuss-phase',
         args: cp,
         reason: 'No CONTEXT.md or RESEARCH.md for this phase',
         current_phase: currentPhase,
@@ -264,7 +270,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(currentPhase);
     return {
       data: {
-        command: '/gsd-plan-phase',
+        command: '/gtd-plan-phase',
         args: cp,
         reason: 'Context exists but no PLAN.md files',
         current_phase: currentPhase,
@@ -278,11 +284,15 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
   // Route 4
   if (incomplete.length > 0) {
     const ctx = await buildContext(currentPhase);
+    const phaseDirectory = (pd.directory as string) || null;
+    const hasManifest = phaseIssueManifestExists(planning, phaseDirectory);
     return {
       data: {
-        command: '/gsd-execute-phase',
-        args: cp,
-        reason: `${incomplete.length} plan(s) still need SUMMARY.md`,
+        command: hasManifest ? '/gtd-work-task-issue' : '/gtd-export-phase-issues',
+        args: hasManifest ? `--phase ${cp}` : cp,
+        reason: hasManifest
+          ? `${incomplete.length} plan(s) still need task issue execution or reconciliation`
+          : `${incomplete.length} plan(s) need exported task issues before execution`,
         current_phase: currentPhase,
         phase_name: displayName,
         gates,
@@ -295,11 +305,26 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
   const verPassed = phaseDirAbs ? await verificationPassed(phaseDirAbs) : false;
   const hasVerFile = Boolean(pd.has_verification);
 
-  if (!hasVerFile || !verPassed) {
+  if (!hasVerFile) {
     const ctx = await buildContext(currentPhase);
     return {
       data: {
-        command: '/gsd-verify-work',
+        command: '/gtd-work-task-issue',
+        args: `--complete-phase ${cp} --execute`,
+        reason: 'All plans have summaries — run task-flow phase finalization',
+        current_phase: currentPhase,
+        phase_name: displayName,
+        gates,
+        context: ctx,
+      },
+    };
+  }
+
+  if (!verPassed) {
+    const ctx = await buildContext(currentPhase);
+    return {
+      data: {
+        command: '/gtd-verify-work',
         args: '',
         reason: 'All plans have summaries — run verification',
         current_phase: currentPhase,
@@ -319,7 +344,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
     const ctx = await buildContext(nextNum);
     return {
       data: {
-        command: '/gsd-discuss-phase',
+        command: '/gtd-discuss-phase',
         args: nextNum,
         reason: 'Current phase verified — advance to next phase',
         current_phase: nextNum,
@@ -333,7 +358,7 @@ export const routeNextAction: QueryHandler = async (_args, projectDir, workstrea
   const ctx = await buildContext(currentPhase);
   return {
     data: {
-      command: '/gsd-complete-milestone',
+      command: '/gtd-complete-milestone',
       args: '',
       reason: 'Verified phase with no further phases — complete milestone',
       current_phase: currentPhase,

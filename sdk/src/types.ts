@@ -1,8 +1,8 @@
 /**
- * Core type definitions for GSD-1 PLAN.md structures.
+ * Core type definitions for GTD-1 PLAN.md structures.
  *
  * These types model the YAML frontmatter + XML task bodies
- * that make up a GSD plan file.
+ * that make up a GTD plan file.
  */
 
 // ─── Frontmatter types ───────────────────────────────────────────────────────
@@ -68,6 +68,7 @@ export interface PlanTask {
   name: string;
   files: string[];
   read_first: string[];
+  boundaries: string;
   action: string;
   verify: string;
   acceptance_criteria: string[];
@@ -88,15 +89,15 @@ export interface ParsedPlan {
 // ─── Init command types ──────────────────────────────────────────────────────
 
 /**
- * JSON output from `gsd-tools.cjs init new-project`.
+ * JSON output from `gtd-tools.cjs init new-project`.
  * Describes project state and model configuration for the init workflow.
  */
 export interface InitNewProjectInfo {
-  /** Model resolved for the gsd-project-researcher agent. */
+  /** Model resolved for the gtd-project-researcher agent. */
   researcher_model: string;
-  /** Model resolved for the gsd-research-synthesizer agent. */
+  /** Model resolved for the gtd-research-synthesizer agent. */
   synthesizer_model: string;
-  /** Model resolved for the gsd-roadmapper agent. */
+  /** Model resolved for the gtd-roadmapper agent. */
   roadmapper_model: string;
 
   /** Whether docs should be committed after generation. */
@@ -134,7 +135,7 @@ export interface InitNewProjectInfo {
   /** Absolute project root path (injected by withProjectRoot). */
   project_root?: string;
 
-  /** Allow additional fields from gsd-tools evolution. */
+  /** Allow additional fields from gtd-tools evolution. */
   [key: string]: unknown;
 }
 
@@ -192,15 +193,15 @@ export interface PlanResult {
 }
 
 /**
- * Options for creating a GSD instance.
+ * Options for creating a GTD instance.
  */
-export interface GSDOptions {
+export interface GTDOptions {
   /** Root directory of the project. */
   projectDir: string;
-  /** Path to gsd-tools.cjs. Falls back to the bundled repo path, then <projectDir>/.claude/, then ~/.claude/. */
-  gsdToolsPath?: string;
+  /** Path to gtd-tools.cjs. Falls back to the bundled repo path, then <projectDir>/.claude/, then ~/.claude/. */
+  gtdToolsPath?: string;
   /**
-   * Optional session correlation id for query mutation events when using {@link GSD.createTools}.
+   * Optional session correlation id for query mutation events when using {@link GTD.createTools}.
    */
   sessionId?: string;
   /** Strict SDK runtime bridge mode: fail fast when a query command has no native adapter. */
@@ -222,7 +223,7 @@ export interface GSDOptions {
 // ─── S02: Event stream types ─────────────────────────────────────────────────
 
 /**
- * Phase types for GSD execution workflow.
+ * Phase types for GTD execution workflow.
  */
 export enum PhaseType {
   Discuss = 'discuss',
@@ -234,10 +235,10 @@ export enum PhaseType {
 }
 
 /**
- * Event types emitted by the GSD event stream.
+ * Event types emitted by the GTD event stream.
  * Maps from SDKMessage variants to domain-meaningful events.
  */
-export enum GSDEventType {
+export enum GTDEventType {
   SessionInit = 'session_init',
   SessionComplete = 'session_complete',
   SessionError = 'session_error',
@@ -275,10 +276,10 @@ export enum GSDEventType {
 }
 
 /**
- * Base fields present on every GSD event.
+ * Base fields present on every GTD event.
  */
-export interface GSDEventBase {
-  type: GSDEventType;
+export interface GTDEventBase {
+  type: GTDEventType;
   timestamp: string;
   sessionId: string;
   phase?: PhaseType;
@@ -288,8 +289,8 @@ export interface GSDEventBase {
 /**
  * Session initialized — emitted on SDKSystemMessage subtype 'init'.
  */
-export interface GSDSessionInitEvent extends GSDEventBase {
-  type: GSDEventType.SessionInit;
+export interface GTDSessionInitEvent extends GTDEventBase {
+  type: GTDEventType.SessionInit;
   model: string;
   tools: string[];
   cwd: string;
@@ -298,8 +299,8 @@ export interface GSDSessionInitEvent extends GSDEventBase {
 /**
  * Session completed successfully — emitted on SDKResultSuccess.
  */
-export interface GSDSessionCompleteEvent extends GSDEventBase {
-  type: GSDEventType.SessionComplete;
+export interface GTDSessionCompleteEvent extends GTDEventBase {
+  type: GTDEventType.SessionComplete;
   success: true;
   totalCostUsd: number;
   durationMs: number;
@@ -310,8 +311,8 @@ export interface GSDSessionCompleteEvent extends GSDEventBase {
 /**
  * Session ended with an error — emitted on SDKResultError.
  */
-export interface GSDSessionErrorEvent extends GSDEventBase {
-  type: GSDEventType.SessionError;
+export interface GTDSessionErrorEvent extends GTDEventBase {
+  type: GTDEventType.SessionError;
   success: false;
   totalCostUsd: number;
   durationMs: number;
@@ -323,16 +324,16 @@ export interface GSDSessionErrorEvent extends GSDEventBase {
 /**
  * Assistant produced text output.
  */
-export interface GSDAssistantTextEvent extends GSDEventBase {
-  type: GSDEventType.AssistantText;
+export interface GTDAssistantTextEvent extends GTDEventBase {
+  type: GTDEventType.AssistantText;
   text: string;
 }
 
 /**
  * Tool invocation detected in assistant response.
  */
-export interface GSDToolCallEvent extends GSDEventBase {
-  type: GSDEventType.ToolCall;
+export interface GTDToolCallEvent extends GTDEventBase {
+  type: GTDEventType.ToolCall;
   toolName: string;
   toolUseId: string;
   input: Record<string, unknown>;
@@ -341,8 +342,8 @@ export interface GSDToolCallEvent extends GSDEventBase {
 /**
  * Tool execution progress update.
  */
-export interface GSDToolProgressEvent extends GSDEventBase {
-  type: GSDEventType.ToolProgress;
+export interface GTDToolProgressEvent extends GTDEventBase {
+  type: GTDEventType.ToolProgress;
   toolName: string;
   toolUseId: string;
   elapsedSeconds: number;
@@ -351,8 +352,8 @@ export interface GSDToolProgressEvent extends GSDEventBase {
 /**
  * Tool use summary after completion.
  */
-export interface GSDToolUseSummaryEvent extends GSDEventBase {
-  type: GSDEventType.ToolUseSummary;
+export interface GTDToolUseSummaryEvent extends GTDEventBase {
+  type: GTDEventType.ToolUseSummary;
   summary: string;
   toolUseIds: string[];
 }
@@ -360,8 +361,8 @@ export interface GSDToolUseSummaryEvent extends GSDEventBase {
 /**
  * Subagent task started.
  */
-export interface GSDTaskStartedEvent extends GSDEventBase {
-  type: GSDEventType.TaskStarted;
+export interface GTDTaskStartedEvent extends GTDEventBase {
+  type: GTDEventType.TaskStarted;
   taskId: string;
   description: string;
   taskType?: string;
@@ -370,8 +371,8 @@ export interface GSDTaskStartedEvent extends GSDEventBase {
 /**
  * Subagent task progress.
  */
-export interface GSDTaskProgressEvent extends GSDEventBase {
-  type: GSDEventType.TaskProgress;
+export interface GTDTaskProgressEvent extends GTDEventBase {
+  type: GTDEventType.TaskProgress;
   taskId: string;
   description: string;
   totalTokens: number;
@@ -383,8 +384,8 @@ export interface GSDTaskProgressEvent extends GSDEventBase {
 /**
  * Subagent task completed/failed/stopped.
  */
-export interface GSDTaskNotificationEvent extends GSDEventBase {
-  type: GSDEventType.TaskNotification;
+export interface GTDTaskNotificationEvent extends GTDEventBase {
+  type: GTDEventType.TaskNotification;
   taskId: string;
   status: 'completed' | 'failed' | 'stopped';
   summary: string;
@@ -393,8 +394,8 @@ export interface GSDTaskNotificationEvent extends GSDEventBase {
 /**
  * Cost updated (emitted on session_complete and periodically).
  */
-export interface GSDCostUpdateEvent extends GSDEventBase {
-  type: GSDEventType.CostUpdate;
+export interface GTDCostUpdateEvent extends GTDEventBase {
+  type: GTDEventType.CostUpdate;
   sessionCostUsd: number;
   cumulativeCostUsd: number;
 }
@@ -402,8 +403,8 @@ export interface GSDCostUpdateEvent extends GSDEventBase {
 /**
  * API retry in progress.
  */
-export interface GSDAPIRetryEvent extends GSDEventBase {
-  type: GSDEventType.APIRetry;
+export interface GTDAPIRetryEvent extends GTDEventBase {
+  type: GTDEventType.APIRetry;
   attempt: number;
   maxRetries: number;
   retryDelayMs: number;
@@ -413,8 +414,8 @@ export interface GSDAPIRetryEvent extends GSDEventBase {
 /**
  * Rate limit information updated.
  */
-export interface GSDRateLimitEvent extends GSDEventBase {
-  type: GSDEventType.RateLimit;
+export interface GTDRateLimitEvent extends GTDEventBase {
+  type: GTDEventType.RateLimit;
   status: string;
   resetsAt?: number;
   utilization?: number;
@@ -423,16 +424,16 @@ export interface GSDRateLimitEvent extends GSDEventBase {
 /**
  * System status change (e.g., compacting).
  */
-export interface GSDStatusChangeEvent extends GSDEventBase {
-  type: GSDEventType.StatusChange;
+export interface GTDStatusChangeEvent extends GTDEventBase {
+  type: GTDEventType.StatusChange;
   status: string | null;
 }
 
 /**
  * Compact boundary — context window was compacted.
  */
-export interface GSDCompactBoundaryEvent extends GSDEventBase {
-  type: GSDEventType.CompactBoundary;
+export interface GTDCompactBoundaryEvent extends GTDEventBase {
+  type: GTDEventType.CompactBoundary;
   trigger: 'manual' | 'auto';
   preTokens: number;
 }
@@ -440,16 +441,16 @@ export interface GSDCompactBoundaryEvent extends GSDEventBase {
 /**
  * Raw stream event from SDK (partial assistant messages).
  */
-export interface GSDStreamEvent extends GSDEventBase {
-  type: GSDEventType.StreamEvent;
+export interface GTDStreamEvent extends GTDEventBase {
+  type: GTDEventType.StreamEvent;
   event: unknown;
 }
 
 /**
  * Phase execution started.
  */
-export interface GSDPhaseStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStart;
+export interface GTDPhaseStartEvent extends GTDEventBase {
+  type: GTDEventType.PhaseStart;
   phaseNumber: string;
   phaseName: string;
 }
@@ -457,8 +458,8 @@ export interface GSDPhaseStartEvent extends GSDEventBase {
 /**
  * A single phase step (discuss, research, etc.) started.
  */
-export interface GSDPhaseStepStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepStart;
+export interface GTDPhaseStepStartEvent extends GTDEventBase {
+  type: GTDEventType.PhaseStepStart;
   phaseNumber: string;
   step: PhaseStepType;
 }
@@ -466,8 +467,8 @@ export interface GSDPhaseStepStartEvent extends GSDEventBase {
 /**
  * A single phase step completed.
  */
-export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepComplete;
+export interface GTDPhaseStepCompleteEvent extends GTDEventBase {
+  type: GTDEventType.PhaseStepComplete;
   phaseNumber: string;
   step: PhaseStepType;
   success: boolean;
@@ -478,8 +479,8 @@ export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
 /**
  * Full phase execution completed.
  */
-export interface GSDPhaseCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseComplete;
+export interface GTDPhaseCompleteEvent extends GTDEventBase {
+  type: GTDEventType.PhaseComplete;
   phaseNumber: string;
   phaseName: string;
   success: boolean;
@@ -523,8 +524,8 @@ export interface PhasePlanIndex {
 /**
  * Wave execution started — emitted before concurrent plans launch.
  */
-export interface GSDWaveStartEvent extends GSDEventBase {
-  type: GSDEventType.WaveStart;
+export interface GTDWaveStartEvent extends GTDEventBase {
+  type: GTDEventType.WaveStart;
   phaseNumber: string;
   waveNumber: number;
   planCount: number;
@@ -534,8 +535,8 @@ export interface GSDWaveStartEvent extends GSDEventBase {
 /**
  * Wave execution completed — emitted after all plans in a wave settle.
  */
-export interface GSDWaveCompleteEvent extends GSDEventBase {
-  type: GSDEventType.WaveComplete;
+export interface GTDWaveCompleteEvent extends GTDEventBase {
+  type: GTDEventType.WaveComplete;
   phaseNumber: string;
   waveNumber: number;
   successCount: number;
@@ -546,7 +547,7 @@ export interface GSDWaveCompleteEvent extends GSDEventBase {
 // ─── S05: Milestone-level types ──────────────────────────────────────────────
 
 /**
- * Single phase entry from `gsd-tools.cjs roadmap analyze`.
+ * Single phase entry from `gtd-tools.cjs roadmap analyze`.
  */
 export interface RoadmapPhaseInfo {
   number: string;
@@ -556,7 +557,7 @@ export interface RoadmapPhaseInfo {
 }
 
 /**
- * Structured output from `gsd-tools.cjs roadmap analyze`.
+ * Structured output from `gtd-tools.cjs roadmap analyze`.
  */
 export interface RoadmapAnalysis {
   phases: RoadmapPhaseInfo[];
@@ -585,8 +586,8 @@ export interface MilestoneRunnerResult {
 /**
  * Milestone execution started.
  */
-export interface GSDMilestoneStartEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneStart;
+export interface GTDMilestoneStartEvent extends GTDEventBase {
+  type: GTDEventType.MilestoneStart;
   phaseCount: number;
   prompt: string;
 }
@@ -594,8 +595,8 @@ export interface GSDMilestoneStartEvent extends GSDEventBase {
 /**
  * Milestone execution completed.
  */
-export interface GSDMilestoneCompleteEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneComplete;
+export interface GTDMilestoneCompleteEvent extends GTDEventBase {
+  type: GTDEventType.MilestoneComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -623,7 +624,7 @@ export type InitStepName =
  * Configuration overrides for InitRunner.
  */
 export interface InitConfig {
-  /** Model for research sessions (overrides gsd-tools detected model). */
+  /** Model for research sessions (overrides gtd-tools detected model). */
   researchModel?: string;
   /** Model for synthesis/roadmap sessions. */
   orchestratorModel?: string;
@@ -659,8 +660,8 @@ export interface InitResult {
 /**
  * Init workflow started.
  */
-export interface GSDInitStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStart;
+export interface GTDInitStartEvent extends GTDEventBase {
+  type: GTDEventType.InitStart;
   input: string;
   projectDir: string;
 }
@@ -668,16 +669,16 @@ export interface GSDInitStartEvent extends GSDEventBase {
 /**
  * Init workflow step started.
  */
-export interface GSDInitStepStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStepStart;
+export interface GTDInitStepStartEvent extends GTDEventBase {
+  type: GTDEventType.InitStepStart;
   step: InitStepName;
 }
 
 /**
  * Init workflow step completed.
  */
-export interface GSDInitStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitStepComplete;
+export interface GTDInitStepCompleteEvent extends GTDEventBase {
+  type: GTDEventType.InitStepComplete;
   step: InitStepName;
   success: boolean;
   durationMs: number;
@@ -688,8 +689,8 @@ export interface GSDInitStepCompleteEvent extends GSDEventBase {
 /**
  * Init workflow completed.
  */
-export interface GSDInitCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitComplete;
+export interface GTDInitCompleteEvent extends GTDEventBase {
+  type: GTDEventType.InitComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -699,8 +700,8 @@ export interface GSDInitCompleteEvent extends GSDEventBase {
 /**
  * Research sessions spawned in parallel during init.
  */
-export interface GSDInitResearchSpawnEvent extends GSDEventBase {
-  type: GSDEventType.InitResearchSpawn;
+export interface GTDInitResearchSpawnEvent extends GTDEventBase {
+  type: GTDEventType.InitResearchSpawn;
   sessionCount: number;
   researchTypes: string[];
 }
@@ -708,8 +709,8 @@ export interface GSDInitResearchSpawnEvent extends GSDEventBase {
 /**
  * State mutation completed — emitted after STATE.md write operations.
  */
-export interface GSDStateMutationEvent extends GSDEventBase {
-  type: GSDEventType.StateMutation;
+export interface GTDStateMutationEvent extends GTDEventBase {
+  type: GTDEventType.StateMutation;
   command: string;
   fields: string[];
   success: boolean;
@@ -718,8 +719,8 @@ export interface GSDStateMutationEvent extends GSDEventBase {
 /**
  * Config mutation completed — emitted after config.json write operations.
  */
-export interface GSDConfigMutationEvent extends GSDEventBase {
-  type: GSDEventType.ConfigMutation;
+export interface GTDConfigMutationEvent extends GTDEventBase {
+  type: GTDEventType.ConfigMutation;
   command: string;
   key: string;
   success: boolean;
@@ -728,8 +729,8 @@ export interface GSDConfigMutationEvent extends GSDEventBase {
 /**
  * Frontmatter mutation completed — emitted after frontmatter write operations.
  */
-export interface GSDFrontmatterMutationEvent extends GSDEventBase {
-  type: GSDEventType.FrontmatterMutation;
+export interface GTDFrontmatterMutationEvent extends GTDEventBase {
+  type: GTDEventType.FrontmatterMutation;
   command: string;
   file: string;
   fields: string[];
@@ -739,8 +740,8 @@ export interface GSDFrontmatterMutationEvent extends GSDEventBase {
 /**
  * Git commit completed — emitted after commit or check-commit operations.
  */
-export interface GSDGitCommitEvent extends GSDEventBase {
-  type: GSDEventType.GitCommit;
+export interface GTDGitCommitEvent extends GTDEventBase {
+  type: GTDEventType.GitCommit;
   hash: string | null;
   committed: boolean;
   reason: string;
@@ -749,59 +750,59 @@ export interface GSDGitCommitEvent extends GSDEventBase {
 /**
  * Template fill completed — emitted after template.fill or template.select operations.
  */
-export interface GSDTemplateFillEvent extends GSDEventBase {
-  type: GSDEventType.TemplateFill;
+export interface GTDTemplateFillEvent extends GTDEventBase {
+  type: GTDEventType.TemplateFill;
   templateType: string;
   path: string;
   created: boolean;
 }
 
 /**
- * Discriminated union of all GSD events.
+ * Discriminated union of all GTD events.
  */
-export type GSDEvent =
-  | GSDSessionInitEvent
-  | GSDSessionCompleteEvent
-  | GSDSessionErrorEvent
-  | GSDAssistantTextEvent
-  | GSDToolCallEvent
-  | GSDToolProgressEvent
-  | GSDToolUseSummaryEvent
-  | GSDTaskStartedEvent
-  | GSDTaskProgressEvent
-  | GSDTaskNotificationEvent
-  | GSDCostUpdateEvent
-  | GSDAPIRetryEvent
-  | GSDRateLimitEvent
-  | GSDStatusChangeEvent
-  | GSDCompactBoundaryEvent
-  | GSDStreamEvent
-  | GSDPhaseStartEvent
-  | GSDPhaseStepStartEvent
-  | GSDPhaseStepCompleteEvent
-  | GSDPhaseCompleteEvent
-  | GSDWaveStartEvent
-  | GSDWaveCompleteEvent
-  | GSDMilestoneStartEvent
-  | GSDMilestoneCompleteEvent
-  | GSDInitStartEvent
-  | GSDInitStepStartEvent
-  | GSDInitStepCompleteEvent
-  | GSDInitCompleteEvent
-  | GSDInitResearchSpawnEvent
-  | GSDStateMutationEvent
-  | GSDConfigMutationEvent
-  | GSDFrontmatterMutationEvent
-  | GSDGitCommitEvent
-  | GSDTemplateFillEvent;
+export type GTDEvent =
+  | GTDSessionInitEvent
+  | GTDSessionCompleteEvent
+  | GTDSessionErrorEvent
+  | GTDAssistantTextEvent
+  | GTDToolCallEvent
+  | GTDToolProgressEvent
+  | GTDToolUseSummaryEvent
+  | GTDTaskStartedEvent
+  | GTDTaskProgressEvent
+  | GTDTaskNotificationEvent
+  | GTDCostUpdateEvent
+  | GTDAPIRetryEvent
+  | GTDRateLimitEvent
+  | GTDStatusChangeEvent
+  | GTDCompactBoundaryEvent
+  | GTDStreamEvent
+  | GTDPhaseStartEvent
+  | GTDPhaseStepStartEvent
+  | GTDPhaseStepCompleteEvent
+  | GTDPhaseCompleteEvent
+  | GTDWaveStartEvent
+  | GTDWaveCompleteEvent
+  | GTDMilestoneStartEvent
+  | GTDMilestoneCompleteEvent
+  | GTDInitStartEvent
+  | GTDInitStepStartEvent
+  | GTDInitStepCompleteEvent
+  | GTDInitCompleteEvent
+  | GTDInitResearchSpawnEvent
+  | GTDStateMutationEvent
+  | GTDConfigMutationEvent
+  | GTDFrontmatterMutationEvent
+  | GTDGitCommitEvent
+  | GTDTemplateFillEvent;
 
 /**
- * Transport handler interface for consuming GSD events.
+ * Transport handler interface for consuming GTD events.
  * Transports receive all events and can write to files, WebSockets, etc.
  */
 export interface TransportHandler {
   /** Called for each event. Must not throw. */
-  onEvent(event: GSDEvent): void;
+  onEvent(event: GTDEvent): void;
   /** Called when the stream is closing. Clean up resources. */
   close(): void;
 }
@@ -859,7 +860,7 @@ export enum PhaseStepType {
 }
 
 /**
- * Structured output from `gsd-tools.cjs init phase-op <N>`.
+ * Structured output from `gtd-tools.cjs init phase-op <N>`.
  * Describes the current state of a phase on disk.
  */
 export interface PhaseOpInfo {

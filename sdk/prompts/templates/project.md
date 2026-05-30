@@ -23,7 +23,7 @@ One sentence that drives prioritization when tradeoffs arise.]
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+(None yet — validate through task PRs)
 
 ### Active
 

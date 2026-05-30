@@ -16,7 +16,7 @@ function writeExec(filePath, content) {
 
 describe('.githooks/pre-push enterprise email guard', () => {
   test('blocks push when any to-be-pushed commit matches local blocked regex', (t) => {
-    const tmpDir = createTempDir('gsd-prepush-hook-');
+    const tmpDir = createTempDir('gtd-prepush-hook-');
     t.after(() => cleanup(tmpDir));
 
     const binDir = path.join(tmpDir, 'bin');
@@ -47,7 +47,7 @@ exit 1
         env: {
           ...process.env,
           PATH: `${binDir}:${process.env.PATH}`,
-          GSD_BLOCKED_AUTHOR_REGEX: '@example-corp\\.com$',
+          GTD_BLOCKED_AUTHOR_REGEX: '@example-corp\\.com$',
         },
         input: 'refs/heads/pr refs-local-sha refs/heads/pr refs-remote-sha\n',
         stdio: 'pipe',
@@ -56,7 +56,7 @@ exit 1
   });
 
   test('allows push when to-be-pushed commits are non-enterprise emails', (t) => {
-    const tmpDir = createTempDir('gsd-prepush-hook-');
+    const tmpDir = createTempDir('gtd-prepush-hook-');
     t.after(() => cleanup(tmpDir));
 
     const binDir = path.join(tmpDir, 'bin');
@@ -81,7 +81,7 @@ exit 1
       env: {
         ...process.env,
         PATH: `${binDir}:${process.env.PATH}`,
-        GSD_BLOCKED_AUTHOR_REGEX: '@example-corp\\.com$',
+        GTD_BLOCKED_AUTHOR_REGEX: '@example-corp\\.com$',
       },
       input: 'refs/heads/pr refs-local-sha refs/heads/pr refs-remote-sha\n',
       stdio: 'pipe',

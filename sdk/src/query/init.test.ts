@@ -11,7 +11,6 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   withProjectRoot,
-  initExecutePhase,
   initPlanPhase,
   initNewMilestone,
   initQuick,
@@ -30,7 +29,7 @@ import {
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-init-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-init-'));
   // Create minimal .planning structure
   await mkdir(join(tmpDir, '.planning', 'phases', '09-foundation'), { recursive: true });
   await mkdir(join(tmpDir, '.planning', 'phases', '10-read-only-queries'), { recursive: true });
@@ -40,8 +39,8 @@ beforeEach(async () => {
     commit_docs: false,
     git: {
       branching_strategy: 'none',
-      phase_branch_template: 'gsd/phase-{phase}-{slug}',
-      milestone_branch_template: 'gsd/{milestone}-{slug}',
+      phase_branch_template: 'gtd/phase-{phase}-{slug}',
+      milestone_branch_template: 'gtd/{milestone}-{slug}',
       quick_branch_template: null,
     },
     workflow: { research: true, plan_check: true, verifier: true, nyquist_validation: true },
@@ -119,46 +118,46 @@ describe('withProjectRoot', () => {
   });
 
   // Regression: #2400 — checkAgentsInstalled was looking at the wrong default
-  // directory (~/.claude/get-shit-done/agents) while the installer writes to
+  // directory (~/.claude/get-tasks-done/agents) while the installer writes to
   // ~/.claude/agents, causing agents_installed: false even on clean installs.
-  it('reports agents_installed: true when all expected agents exist in GSD_AGENTS_DIR', async () => {
+  it('reports agents_installed: true when all expected agents exist in GTD_AGENTS_DIR', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const agentsDir = join(tmpDir, 'fake-agents');
     await mkdir(agentsDir, { recursive: true });
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(agentsDir, `${name}.md`), '# stub');
     }
-    const prev = process.env.GSD_AGENTS_DIR;
-    process.env.GSD_AGENTS_DIR = agentsDir;
+    const prev = process.env.GTD_AGENTS_DIR;
+    process.env.GTD_AGENTS_DIR = agentsDir;
     try {
       const enriched = withProjectRoot(tmpDir, {});
       expect(enriched.agents_installed).toBe(true);
       expect(enriched.missing_agents).toEqual([]);
     } finally {
-      if (prev === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prev;
+      if (prev === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prev;
     }
   });
 
-  it('reports missing agents when GSD_AGENTS_DIR is empty', async () => {
+  it('reports missing agents when GTD_AGENTS_DIR is empty', async () => {
     const agentsDir = join(tmpDir, 'empty-agents');
     await mkdir(agentsDir, { recursive: true });
-    const prev = process.env.GSD_AGENTS_DIR;
-    process.env.GSD_AGENTS_DIR = agentsDir;
+    const prev = process.env.GTD_AGENTS_DIR;
+    process.env.GTD_AGENTS_DIR = agentsDir;
     try {
       const enriched = withProjectRoot(tmpDir, {}) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(false);
       expect((enriched.missing_agents as string[]).length).toBeGreaterThan(0);
     } finally {
-      if (prev === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prev;
+      if (prev === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prev;
     }
   });
 
   // Regression: #2400 follow-up — installer honors CLAUDE_CONFIG_DIR for custom
   // Claude install roots. The SDK check must follow the same precedence or it
   // false-negatives agent presence on non-default installs.
-  it('honors CLAUDE_CONFIG_DIR when GSD_AGENTS_DIR is unset', async () => {
+  it('honors CLAUDE_CONFIG_DIR when GTD_AGENTS_DIR is unset', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const configDir = join(tmpDir, 'custom-claude');
     const agentsDir = join(configDir, 'agents');
@@ -166,26 +165,26 @@ describe('withProjectRoot', () => {
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(agentsDir, `${name}.md`), '# stub');
     }
-    const prevAgents = process.env.GSD_AGENTS_DIR;
+    const prevAgents = process.env.GTD_AGENTS_DIR;
     const prevClaude = process.env.CLAUDE_CONFIG_DIR;
-    delete process.env.GSD_AGENTS_DIR;
+    delete process.env.GTD_AGENTS_DIR;
     process.env.CLAUDE_CONFIG_DIR = configDir;
     try {
       const enriched = withProjectRoot(tmpDir, {}) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(true);
       expect(enriched.missing_agents).toEqual([]);
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
       if (prevClaude === undefined) delete process.env.CLAUDE_CONFIG_DIR;
       else process.env.CLAUDE_CONFIG_DIR = prevClaude;
     }
   });
 
-  // #2402 — runtime-aware resolution: GSD_RUNTIME selects which runtime's
+  // #2402 — runtime-aware resolution: GTD_RUNTIME selects which runtime's
   // config-dir env chain to consult, so non-Claude installs stop
   // false-negating.
-  it('GSD_RUNTIME=codex resolves agents under CODEX_HOME/agents', async () => {
+  it('GTD_RUNTIME=codex resolves agents under CODEX_HOME/agents', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const codexHome = join(tmpDir, 'codex-home');
     const agentsDir = join(codexHome, 'agents');
@@ -193,27 +192,27 @@ describe('withProjectRoot', () => {
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(agentsDir, `${name}.md`), '# stub');
     }
-    const prevAgents = process.env.GSD_AGENTS_DIR;
-    const prevRuntime = process.env.GSD_RUNTIME;
+    const prevAgents = process.env.GTD_AGENTS_DIR;
+    const prevRuntime = process.env.GTD_RUNTIME;
     const prevCodex = process.env.CODEX_HOME;
-    delete process.env.GSD_AGENTS_DIR;
-    process.env.GSD_RUNTIME = 'codex';
+    delete process.env.GTD_AGENTS_DIR;
+    process.env.GTD_RUNTIME = 'codex';
     process.env.CODEX_HOME = codexHome;
     try {
       const enriched = withProjectRoot(tmpDir, {}) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(true);
       expect(enriched.missing_agents).toEqual([]);
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
-      if (prevRuntime === undefined) delete process.env.GSD_RUNTIME;
-      else process.env.GSD_RUNTIME = prevRuntime;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
+      if (prevRuntime === undefined) delete process.env.GTD_RUNTIME;
+      else process.env.GTD_RUNTIME = prevRuntime;
       if (prevCodex === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = prevCodex;
     }
   });
 
-  it('config.runtime drives detection when GSD_RUNTIME is unset', async () => {
+  it('config.runtime drives detection when GTD_RUNTIME is unset', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const geminiHome = join(tmpDir, 'gemini-home');
     const agentsDir = join(geminiHome, 'agents');
@@ -221,26 +220,26 @@ describe('withProjectRoot', () => {
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(agentsDir, `${name}.md`), '# stub');
     }
-    const prevAgents = process.env.GSD_AGENTS_DIR;
-    const prevRuntime = process.env.GSD_RUNTIME;
+    const prevAgents = process.env.GTD_AGENTS_DIR;
+    const prevRuntime = process.env.GTD_RUNTIME;
     const prevGemini = process.env.GEMINI_CONFIG_DIR;
-    delete process.env.GSD_AGENTS_DIR;
-    delete process.env.GSD_RUNTIME;
+    delete process.env.GTD_AGENTS_DIR;
+    delete process.env.GTD_RUNTIME;
     process.env.GEMINI_CONFIG_DIR = geminiHome;
     try {
       const enriched = withProjectRoot(tmpDir, {}, { runtime: 'gemini' }) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(true);
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
-      if (prevRuntime === undefined) delete process.env.GSD_RUNTIME;
-      else process.env.GSD_RUNTIME = prevRuntime;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
+      if (prevRuntime === undefined) delete process.env.GTD_RUNTIME;
+      else process.env.GTD_RUNTIME = prevRuntime;
       if (prevGemini === undefined) delete process.env.GEMINI_CONFIG_DIR;
       else process.env.GEMINI_CONFIG_DIR = prevGemini;
     }
   });
 
-  it('GSD_RUNTIME wins over config.runtime', async () => {
+  it('GTD_RUNTIME wins over config.runtime', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const codexHome = join(tmpDir, 'codex-win');
     const agentsDir = join(codexHome, 'agents');
@@ -248,44 +247,44 @@ describe('withProjectRoot', () => {
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(agentsDir, `${name}.md`), '# stub');
     }
-    const prevAgents = process.env.GSD_AGENTS_DIR;
-    const prevRuntime = process.env.GSD_RUNTIME;
+    const prevAgents = process.env.GTD_AGENTS_DIR;
+    const prevRuntime = process.env.GTD_RUNTIME;
     const prevCodex = process.env.CODEX_HOME;
-    delete process.env.GSD_AGENTS_DIR;
-    process.env.GSD_RUNTIME = 'codex';
+    delete process.env.GTD_AGENTS_DIR;
+    process.env.GTD_RUNTIME = 'codex';
     process.env.CODEX_HOME = codexHome;
     try {
       // config says gemini, env says codex — codex should win and find agents.
       const enriched = withProjectRoot(tmpDir, {}, { runtime: 'gemini' }) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(true);
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
-      if (prevRuntime === undefined) delete process.env.GSD_RUNTIME;
-      else process.env.GSD_RUNTIME = prevRuntime;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
+      if (prevRuntime === undefined) delete process.env.GTD_RUNTIME;
+      else process.env.GTD_RUNTIME = prevRuntime;
       if (prevCodex === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = prevCodex;
     }
   });
 
-  it('unknown GSD_RUNTIME falls through to config/Claude default', () => {
-    const prevAgents = process.env.GSD_AGENTS_DIR;
-    const prevRuntime = process.env.GSD_RUNTIME;
-    delete process.env.GSD_AGENTS_DIR;
-    process.env.GSD_RUNTIME = 'not-a-runtime';
+  it('unknown GTD_RUNTIME falls through to config/Claude default', () => {
+    const prevAgents = process.env.GTD_AGENTS_DIR;
+    const prevRuntime = process.env.GTD_RUNTIME;
+    delete process.env.GTD_AGENTS_DIR;
+    process.env.GTD_RUNTIME = 'not-a-runtime';
     try {
       // Should not throw; falls back to Claude — missing_agents on a blank tmpDir.
       const enriched = withProjectRoot(tmpDir, {}) as Record<string, unknown>;
       expect(typeof enriched.agents_installed).toBe('boolean');
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
-      if (prevRuntime === undefined) delete process.env.GSD_RUNTIME;
-      else process.env.GSD_RUNTIME = prevRuntime;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
+      if (prevRuntime === undefined) delete process.env.GTD_RUNTIME;
+      else process.env.GTD_RUNTIME = prevRuntime;
     }
   });
 
-  it('GSD_AGENTS_DIR takes precedence over CLAUDE_CONFIG_DIR', async () => {
+  it('GTD_AGENTS_DIR takes precedence over CLAUDE_CONFIG_DIR', async () => {
     const { MODEL_PROFILES } = await import('./config-query.js');
     const winningDir = join(tmpDir, 'winning-agents');
     const losingDir = join(tmpDir, 'losing-config', 'agents');
@@ -295,116 +294,18 @@ describe('withProjectRoot', () => {
     for (const name of Object.keys(MODEL_PROFILES)) {
       await writeFile(join(winningDir, `${name}.md`), '# stub');
     }
-    const prevAgents = process.env.GSD_AGENTS_DIR;
+    const prevAgents = process.env.GTD_AGENTS_DIR;
     const prevClaude = process.env.CLAUDE_CONFIG_DIR;
-    process.env.GSD_AGENTS_DIR = winningDir;
+    process.env.GTD_AGENTS_DIR = winningDir;
     process.env.CLAUDE_CONFIG_DIR = join(tmpDir, 'losing-config');
     try {
       const enriched = withProjectRoot(tmpDir, {}) as Record<string, unknown>;
       expect(enriched.agents_installed).toBe(true);
     } finally {
-      if (prevAgents === undefined) delete process.env.GSD_AGENTS_DIR;
-      else process.env.GSD_AGENTS_DIR = prevAgents;
+      if (prevAgents === undefined) delete process.env.GTD_AGENTS_DIR;
+      else process.env.GTD_AGENTS_DIR = prevAgents;
       if (prevClaude === undefined) delete process.env.CLAUDE_CONFIG_DIR;
       else process.env.CLAUDE_CONFIG_DIR = prevClaude;
-    }
-  });
-});
-
-describe('initExecutePhase', () => {
-  it('returns flat JSON with expected keys for existing phase', async () => {
-    const result = await initExecutePhase(['9'], tmpDir);
-    const data = result.data as Record<string, unknown>;
-    expect(data.phase_found).toBe(true);
-    expect(data.phase_number).toBe('09');
-    expect(data.executor_model).toBeDefined();
-    expect(data.commit_docs).toBeDefined();
-    expect(data.project_root).toBe(tmpDir);
-    expect(data.plans).toBeDefined();
-    expect(data.summaries).toBeDefined();
-    expect(data.milestone_version).toBeDefined();
-  });
-
-  it('accepts --phase flag form for existing phase (#3387)', async () => {
-    const result = await initExecutePhase(['--phase', '9'], tmpDir);
-    const data = result.data as Record<string, unknown>;
-    expect(data.phase_found).toBe(true);
-    expect(data.phase_number).toBe('09');
-  });
-
-  it('accepts --phase=value flag form for existing phase (#3387)', async () => {
-    const result = await initExecutePhase(['--phase=9'], tmpDir);
-    const data = result.data as Record<string, unknown>;
-    expect(data.phase_found).toBe(true);
-    expect(data.phase_number).toBe('09');
-  });
-
-  it('returns error when phase arg missing', async () => {
-    const result = await initExecutePhase([], tmpDir);
-    const data = result.data as Record<string, unknown>;
-    expect(data.error).toBeDefined();
-  });
-
-  it('honors legacy top-level branching_strategy in config for execute-phase init (#3055)', async () => {
-    await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({
-      model_profile: 'balanced',
-      commit_docs: false,
-      branching_strategy: 'phase',
-      workflow: { research: true, plan_check: true, verifier: true, nyquist_validation: true },
-    }));
-
-    const result = await initExecutePhase(['9'], tmpDir);
-    const data = result.data as Record<string, unknown>;
-    expect(data.branching_strategy).toBe('phase');
-    expect(typeof data.branch_name).toBe('string');
-  });
-
-  it('keeps same-milestone archived phase directory instead of nulling it (#3469)', async () => {
-    const tmp = await mkdtemp(join(tmpdir(), 'gsd-init-3469-'));
-    try {
-      await mkdir(join(tmp, '.planning', 'milestones', 'v2.0-phases', '02-auth'), { recursive: true });
-      await writeFile(join(tmp, '.planning', 'PROJECT.md'), '# Project\n\n## What This Is\n\nA project.\n\n## Core Value\n\nValue here.\n\n## Requirements\n\n- Req 1\n');
-      await writeFile(join(tmp, '.planning', 'ROADMAP.md'), [
-        '# Roadmap',
-        '',
-        '## v2.0: Current',
-        '',
-        '### Phase 2: Auth',
-        '',
-        '**Goal:** Implement auth',
-        '',
-      ].join('\n'));
-      await writeFile(join(tmp, '.planning', 'STATE.md'), [
-        '---',
-        'milestone: v2.0',
-        'status: executing',
-        '---',
-        '',
-        '# Session State',
-      ].join('\n'));
-      await writeFile(join(tmp, '.planning', 'config.json'), JSON.stringify({
-        model_profile: 'balanced',
-        commit_docs: false,
-        git: {
-          branching_strategy: 'none',
-          phase_branch_template: 'gsd/phase-{phase}-{slug}',
-          milestone_branch_template: 'gsd/{milestone}-{slug}',
-          quick_branch_template: null,
-        },
-        workflow: { research: true, plan_check: true, verifier: true, nyquist_validation: true },
-      }));
-      await writeFile(
-        join(tmp, '.planning', 'milestones', 'v2.0-phases', '02-auth', '02-01-PLAN.md'),
-        '# Plan\n',
-      );
-
-      const result = await initExecutePhase(['2'], tmp);
-      const data = result.data as Record<string, unknown>;
-      expect(data.phase_found).toBe(true);
-      expect(data.phase_dir).toBe('.planning/milestones/v2.0-phases/02-auth');
-      expect(data.plan_count).toBe(1);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
     }
   });
 });
@@ -634,7 +535,7 @@ describe('initMilestoneOp', () => {
     // Custom fixture overriding the shared beforeEach: simulate post-cleanup
     // start of v1.1 where roadmap declares phases 3, 4, 5 but only 03 and 04
     // have been materialized on disk (both with summaries).
-    const fresh = await mkdtemp(join(tmpdir(), 'gsd-init-2633-'));
+    const fresh = await mkdtemp(join(tmpdir(), 'gtd-init-2633-'));
     try {
       await mkdir(join(fresh, '.planning', 'phases', '03-alpha'), { recursive: true });
       await mkdir(join(fresh, '.planning', 'phases', '04-beta'), { recursive: true });

@@ -3,7 +3,7 @@
 /**
  * Regression test for #2659.
  *
- * The `audit-open` dispatch case in bin/gsd-tools.cjs previously called bare
+ * The `audit-open` dispatch case in bin/gtd-tools.cjs previously called bare
  * `output(...)` on both the --json and text branches. `output` is never in
  * local scope — the entire core module is imported as `const core`, so every
  * other case uses `core.output(...)`. The bare calls therefore crashed with
@@ -17,13 +17,13 @@
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('audit-open — does not crash with ReferenceError (#2659)', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-bug-2659-');
+    tmpDir = createTempProject('gtd-bug-2659-');
   });
 
   afterEach(() => {
@@ -31,7 +31,7 @@ describe('audit-open — does not crash with ReferenceError (#2659)', () => {
   });
 
   test('audit-open (text output) succeeds and produces stdout', () => {
-    const result = runGsdTools('audit-open', tmpDir);
+    const result = runGtdTools('audit-open', tmpDir);
     assert.ok(
       result.success,
       `audit-open must not crash. stderr: ${result.error}`
@@ -47,7 +47,7 @@ describe('audit-open — does not crash with ReferenceError (#2659)', () => {
   });
 
   test('audit-open --json succeeds and produces stdout', () => {
-    const result = runGsdTools(['audit-open', '--json'], tmpDir);
+    const result = runGtdTools(['audit-open', '--json'], tmpDir);
     assert.ok(
       result.success,
       `audit-open --json must not crash. stderr: ${result.error}`

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Tests for loadSkillsManifest — parses requires: frontmatter from commands/gsd/*.md
+ * Tests for loadSkillsManifest — parses requires: frontmatter from commands/gtd/*.md
  * and returns a Map<stem, string[]>.
  */
 
@@ -12,10 +12,10 @@ const os = require('os');
 
 const {
   loadSkillsManifest,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
 function createFixtureDir() {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-manifest-fixture-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-manifest-fixture-'));
   return tmp;
 }
 
@@ -38,7 +38,7 @@ describe('loadSkillsManifest', () => {
   test('skill with no requires: frontmatter maps to empty array', () => {
     const dir = createFixtureDir();
     try {
-      writeSkill(dir, 'help', 'name: gsd:help\ndescription: Help text');
+      writeSkill(dir, 'help', 'name: gtd:help\ndescription: Help text');
       const m = loadSkillsManifest(dir);
       assert.ok(m.has('help'), 'help should be in manifest');
       assert.deepStrictEqual(m.get('help'), []);
@@ -50,7 +50,7 @@ describe('loadSkillsManifest', () => {
   test('skill with requires: single value maps to array of one', () => {
     const dir = createFixtureDir();
     try {
-      writeSkill(dir, 'add-tests', 'name: gsd:add-tests\ndescription: Add tests\nrequires: [phase]');
+      writeSkill(dir, 'add-tests', 'name: gtd:add-tests\ndescription: Add tests\nrequires: [phase]');
       const m = loadSkillsManifest(dir);
       assert.ok(m.has('add-tests'));
       assert.deepStrictEqual(m.get('add-tests'), ['phase']);
@@ -62,7 +62,7 @@ describe('loadSkillsManifest', () => {
   test('skill with requires: multiple values maps to full array', () => {
     const dir = createFixtureDir();
     try {
-      writeSkill(dir, 'plan-phase', 'name: gsd:plan-phase\ndescription: Plan\nrequires: [discuss-phase, phase, review, update]');
+      writeSkill(dir, 'plan-phase', 'name: gtd:plan-phase\ndescription: Plan\nrequires: [discuss-phase, phase, review, update]');
       const m = loadSkillsManifest(dir);
       assert.deepStrictEqual(m.get('plan-phase'), ['discuss-phase', 'phase', 'review', 'update']);
     } finally {
@@ -73,7 +73,7 @@ describe('loadSkillsManifest', () => {
   test('ignores non-.md files in the dir', () => {
     const dir = createFixtureDir();
     try {
-      writeSkill(dir, 'help', 'name: gsd:help\ndescription: Help');
+      writeSkill(dir, 'help', 'name: gtd:help\ndescription: Help');
       fs.writeFileSync(path.join(dir, 'README.txt'), 'not a skill');
       fs.writeFileSync(path.join(dir, 'notes.json'), '{}');
       const m = loadSkillsManifest(dir);
@@ -98,7 +98,7 @@ describe('loadSkillsManifest', () => {
   test('skill with requires: empty array maps to empty array', () => {
     const dir = createFixtureDir();
     try {
-      writeSkill(dir, 'explore', 'name: gsd:explore\ndescription: Explore\nrequires: []');
+      writeSkill(dir, 'explore', 'name: gtd:explore\ndescription: Explore\nrequires: []');
       const m = loadSkillsManifest(dir);
       assert.deepStrictEqual(m.get('explore'), []);
     } finally {
@@ -106,8 +106,8 @@ describe('loadSkillsManifest', () => {
     }
   });
 
-  test('loads real commands/gsd/ directory without throwing', () => {
-    const realDir = path.join(__dirname, '..', 'commands', 'gsd');
+  test('loads real commands/gtd/ directory without throwing', () => {
+    const realDir = path.join(__dirname, '..', 'commands', 'gtd');
     const m = loadSkillsManifest(realDir);
     assert.ok(m.size >= 60, `expected >=60 skills, got ${m.size}`);
     // discuss-phase requires [config, phase]

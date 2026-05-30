@@ -4,8 +4,8 @@
  * Validates:
  * - CLI parsing of --ws flag
  * - Workstream name validation
- * - GSDOptions.workstream propagation
- * - GSDTools workstream-aware invocation
+ * - GTDOptions.workstream propagation
+ * - GTDTools workstream-aware invocation
  * - Config path resolution with workstream
  * - ContextEngine workstream-aware planning dir
  */
@@ -108,29 +108,29 @@ describe('parseCliArgs --ws flag', () => {
   });
 });
 
-// ─── GSDOptions.workstream ──────────────────────────────────────────────────
+// ─── GTDOptions.workstream ──────────────────────────────────────────────────
 
-describe('GSDOptions.workstream', () => {
-  it('GSD class accepts workstream option', async () => {
+describe('GTDOptions.workstream', () => {
+  it('GTD class accepts workstream option', async () => {
     // This is a compile-time check -- if the type is wrong, TS will fail
-    const { GSD } = await import('./index.js');
-    const gsd = new GSD({
+    const { GTD } = await import('./index.js');
+    const gtd = new GTD({
       projectDir: '/tmp/test-ws',
       workstream: 'frontend',
     });
     // If we get here without a type error, the option is accepted
-    expect(gsd).toBeDefined();
+    expect(gtd).toBeDefined();
   });
 });
 
-// ─── GSDTools workstream injection ──────────────────────────────────────────
+// ─── GTDTools workstream injection ──────────────────────────────────────────
 
-describe('GSDTools workstream injection', () => {
+describe('GTDTools workstream injection', () => {
   let tmpDir: string;
   let fixtureDir: string;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-ws-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gtd-ws-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     fixtureDir = join(tmpDir, 'fixtures');
     await mkdir(fixtureDir, { recursive: true });
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
@@ -146,8 +146,8 @@ describe('GSDTools workstream injection', () => {
     return scriptPath;
   }
 
-  it('passes --ws flag to gsd-tools.cjs when workstream is set', async () => {
-    const { GSDTools } = await import('./gsd-tools.js');
+  it('passes --ws flag to gtd-tools.cjs when workstream is set', async () => {
+    const { GTDTools } = await import('./gtd-tools.js');
 
     // Script echoes its arguments as JSON
     const scriptPath = await createScript(
@@ -155,9 +155,9 @@ describe('GSDTools workstream injection', () => {
       'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
     );
 
-    const tools = new GSDTools({
+    const tools = new GTDTools({
       projectDir: tmpDir,
-      gsdToolsPath: scriptPath,
+      gtdToolsPath: scriptPath,
       workstream: 'frontend',
     });
 
@@ -169,16 +169,16 @@ describe('GSDTools workstream injection', () => {
   });
 
   it('does not pass --ws when workstream is undefined', async () => {
-    const { GSDTools } = await import('./gsd-tools.js');
+    const { GTDTools } = await import('./gtd-tools.js');
 
     const scriptPath = await createScript(
       'echo-args-no-ws.cjs',
       'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
     );
 
-    const tools = new GSDTools({
+    const tools = new GTDTools({
       projectDir: tmpDir,
-      gsdToolsPath: scriptPath,
+      gtdToolsPath: scriptPath,
     });
 
     const result = await tools.exec('state', ['load']) as string[];
@@ -195,7 +195,7 @@ describe('loadConfig with workstream', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-config-ws-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gtd-config-ws-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(tmpDir, { recursive: true });
   });
 
@@ -248,7 +248,7 @@ describe('ContextEngine with workstream', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-ctx-ws-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gtd-ctx-ws-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(tmpDir, { recursive: true });
   });
 

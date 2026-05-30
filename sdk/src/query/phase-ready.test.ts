@@ -31,13 +31,13 @@ milestone: v1.0
 
 describe('checkPhaseReady', () => {
   it('throws when phase is missing', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-pr-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-pr-'));
     await mkdir(join(dir, '.planning'), { recursive: true });
     await expect(checkPhaseReady([], dir)).rejects.toThrow(/phase number required/);
   });
 
   it('returns discuss next_step when phase directory is missing', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-pr-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-pr-'));
     await writeMinimalRoadmap(dir);
     const { data } = await checkPhaseReady(['3'], dir);
     expect(data).toMatchObject({
@@ -48,7 +48,7 @@ describe('checkPhaseReady', () => {
   });
 
   it('returns plan when context exists but no plans', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-pr-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-pr-'));
     await writeMinimalRoadmap(dir);
     const phaseDir = join(dir, '.planning', 'phases', '03-sample-phase');
     await mkdir(phaseDir, { recursive: true });

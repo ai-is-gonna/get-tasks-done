@@ -11,33 +11,36 @@ const {
   PROFILES,
   resolveProfile,
   loadSkillsManifest,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
-const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 describe('PROFILES map', () => {
   test('PROFILES is frozen', () => {
     assert.ok(Object.isFrozen(PROFILES));
   });
 
-  test('PROFILES has core, standard, full keys', () => {
+  test('PROFILES has core, standard, issue-tasks, full keys', () => {
     assert.ok('core' in PROFILES, 'PROFILES.core missing');
     assert.ok('standard' in PROFILES, 'PROFILES.standard missing');
+    assert.ok('issue-tasks' in PROFILES, 'PROFILES.issue-tasks missing');
     assert.ok('full' in PROFILES, 'PROFILES.full missing');
   });
 
-  test('PROFILES.core contains the 7 main-loop skills (including phase)', () => {
+  test('PROFILES.core contains the task-based main-loop skills (including phase)', () => {
     const core = PROFILES.core;
     assert.ok(Array.isArray(core), 'core should be an array');
     const sorted = [...core].sort();
     assert.deepStrictEqual(sorted, [
       'discuss-phase',
-      'execute-phase',
+      'export-phase-issues',
       'help',
       'new-project',
+      'orchestrate-tasks',
       'phase',
       'plan-phase',
       'update',
+      'work-task-issue',
     ]);
   });
 
@@ -57,6 +60,15 @@ describe('PROFILES map', () => {
   test('PROFILES.standard has at least 10 skills', () => {
     assert.ok(PROFILES.standard.length >= 10, `standard should have >=10 skills, got ${PROFILES.standard.length}`);
   });
+
+  test('PROFILES.issue-tasks exposes issue-driven flow only', () => {
+    const issueTasks = PROFILES['issue-tasks'];
+    assert.ok(Array.isArray(issueTasks), 'issue-tasks should be an array');
+    for (const skill of ['export-phase-issues', 'work-task-issue', 'orchestrate-tasks', 'verify-work', 'progress']) {
+      assert.ok(issueTasks.includes(skill), `issue-tasks should include ${skill}`);
+    }
+    assert.equal(issueTasks.includes('work-task-issue'), true);
+  });
 });
 
 describe('resolveProfile', () => {
@@ -67,13 +79,12 @@ describe('resolveProfile', () => {
     assert.strictEqual(result.skills, '*');
   });
 
-  test('resolves core profile — returns 7+ skills', () => {
+  test('resolves core profile — returns task-based main-loop skills', () => {
     const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
     const result = resolveProfile({ modes: ['core'], manifest });
     assert.strictEqual(result.name, 'core');
     assert.ok(result.skills instanceof Set, 'skills should be a Set');
-    // core has 7 base skills.
-    assert.ok(result.skills.size >= 7, `core closure should have >=7 skills, got ${result.skills.size}`);
+    assert.ok(result.skills.size >= PROFILES.core.length, `core closure should have >=${PROFILES.core.length} skills, got ${result.skills.size}`);
     // All base skills must be present
     for (const s of PROFILES.core) {
       assert.ok(result.skills.has(s), `core closure should include ${s}`);
@@ -148,14 +159,14 @@ describe('resolveProfile', () => {
     assert.ok(result.agents instanceof Set, 'result should have agents Set');
   });
 
-  test('resolveProfile standard — agents Set is non-empty (plan-phase pulls gsd-planner etc)', () => {
+  test('resolveProfile standard — agents Set is non-empty (plan-phase pulls gtd-planner etc)', () => {
     const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
     const result = resolveProfile({ modes: ['standard'], manifest });
     assert.ok(result.agents instanceof Set, 'agents should be a Set');
     assert.ok(result.agents.size > 0, `standard profile should have >0 agents, got ${result.agents.size}`);
-    // plan-phase is in standard and calls gsd-planner, gsd-plan-checker, gsd-phase-researcher
-    assert.ok(result.agents.has('gsd-planner'), 'standard should include gsd-planner (called by plan-phase)');
-    assert.ok(result.agents.has('gsd-plan-checker'), 'standard should include gsd-plan-checker (called by plan-phase)');
+    // plan-phase is in standard and calls gtd-planner, gtd-plan-checker, gtd-phase-researcher
+    assert.ok(result.agents.has('gtd-planner'), 'standard should include gtd-planner (called by plan-phase)');
+    assert.ok(result.agents.has('gtd-plan-checker'), 'standard should include gtd-plan-checker (called by plan-phase)');
   });
 
   test('resolveProfile full — agents is empty Set (full staging uses srcDir directly)', () => {
@@ -167,7 +178,7 @@ describe('resolveProfile', () => {
   });
 
   test('agents are derived from skill body text — synthetic manifest', () => {
-    // Build a synthetic manifest where plan-phase calls gsd-planner
+    // Build a synthetic manifest where plan-phase calls gtd-planner
     const manifest = new Map([
       ['plan-phase', []],
       ['phase', []],
@@ -182,15 +193,15 @@ describe('resolveProfile', () => {
     // This test validates that the real manifest has agent mappings for plan-phase
     // by checking resolveProfile computes agents correctly
     const result = resolveProfile({ modes: ['standard'], manifest: realManifest });
-    assert.ok(result.agents.has('gsd-planner'), 'gsd-planner should be derived from plan-phase body');
+    assert.ok(result.agents.has('gtd-planner'), 'gtd-planner should be derived from plan-phase body');
   });
 
   test('agents transitively closed — skill requiring plan-phase also gets its agents', () => {
     const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
-    // quick requires plan-phase (via requires: field or direct) and also calls gsd-planner directly
+    // quick requires plan-phase (via requires: field or direct) and also calls gtd-planner directly
     // new-project requires plan-phase so inherits its agents
     const result = resolveProfile({ modes: ['standard'], manifest });
-    // Since plan-phase is in standard, and plan-phase calls gsd-planner, gsd-planner must be present
-    assert.ok(result.agents.has('gsd-planner'));
+    // Since plan-phase is in standard, and plan-phase calls gtd-planner, gtd-planner must be present
+    assert.ok(result.agents.has('gtd-planner'));
   });
 });

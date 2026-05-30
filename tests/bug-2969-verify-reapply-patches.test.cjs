@@ -1,9 +1,9 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
- * Bug #2969: /gsd-reapply-patches Step 5 hunk verification gate reports
+ * Bug #2969: /gtd-reapply-patches Step 5 hunk verification gate reports
  * success on lost content because the LLM-driven workflow fills in
  * "verified: yes" without actually checking content presence.
  *
@@ -29,10 +29,10 @@ const path = require('node:path');
 const cp = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
-// Script lives at get-shit-done/bin/ so the installer ships it under
-// `${GSD_HOME}/get-shit-done/bin/` (issue #2994). The top-level scripts/
+// Script lives at get-tasks-done/bin/ so the installer ships it under
+// `${GTD_HOME}/get-tasks-done/bin/` (issue #2994). The top-level scripts/
 // directory is not copied to user installs.
-const SCRIPT = path.join(ROOT, 'get-shit-done', 'bin', 'verify-reapply-patches.cjs');
+const SCRIPT = path.join(ROOT, 'get-tasks-done', 'bin', 'verify-reapply-patches.cjs');
 const { REASON } = require(SCRIPT);
 
 let tmpRoot;
@@ -71,7 +71,7 @@ function runVerifier({ includePristine = true } = {}) {
 }
 
 before(() => {
-  tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2969-'));
+  tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2969-'));
   patchesDir = path.join(tmpRoot, 'patches');
   configDir = path.join(tmpRoot, 'installed');
   pristineDir = path.join(tmpRoot, 'pristine');

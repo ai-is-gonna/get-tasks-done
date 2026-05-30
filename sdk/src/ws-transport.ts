@@ -1,12 +1,12 @@
 /**
- * WebSocket Transport — broadcasts GSD events as JSON over WebSocket.
+ * WebSocket Transport — broadcasts GTD events as JSON over WebSocket.
  *
  * Implements TransportHandler. Starts a WebSocketServer on a given port
  * and JSON-serializes each event to all connected clients.
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
-import type { GSDEvent, TransportHandler } from './types.js';
+import type { GTDEvent, TransportHandler } from './types.js';
 
 export interface WSTransportOptions {
   port: number;
@@ -40,10 +40,10 @@ export class WSTransport implements TransportHandler {
   }
 
   /**
-   * Broadcast a GSD event as JSON to all connected clients.
+   * Broadcast a GTD event as JSON to all connected clients.
    * Never throws — wraps each client.send in try/catch.
    */
-  onEvent(event: GSDEvent): void {
+  onEvent(event: GTDEvent): void {
     try {
       if (!this.server) return;
 

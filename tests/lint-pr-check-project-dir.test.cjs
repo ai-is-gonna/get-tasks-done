@@ -18,7 +18,7 @@ const {
 } = require(LINT_SCRIPT);
 
 function createFixtureDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-pr-check-lint-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-pr-check-lint-'));
 }
 
 function runLint(args = []) {

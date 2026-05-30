@@ -13,7 +13,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('pattern-mapper config key', () => {
   let tmpDir;
@@ -28,13 +28,13 @@ describe('pattern-mapper config key', () => {
 
   test('workflow.pattern_mapper is a valid config key', () => {
     // Setting an invalid key produces an error; a valid key succeeds
-    const result = runGsdTools('config-set workflow.pattern_mapper true', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('config-set workflow.pattern_mapper true', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
   });
 
   test('default value is true in CONFIG_DEFAULTS', () => {
     // Create a new project config and verify the default
-    const result = runGsdTools('config-new-project', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('config-new-project', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `config-new-project failed: ${result.error}`);
 
     const configPath = path.join(tmpDir, '.planning', 'config.json');
@@ -44,14 +44,14 @@ describe('pattern-mapper config key', () => {
 
   test('config round-trip set/get', () => {
     // Ensure config exists first
-    runGsdTools('config-new-project', tmpDir, { HOME: tmpDir });
+    runGtdTools('config-new-project', tmpDir, { HOME: tmpDir });
 
     // Set to false
-    const setResult = runGsdTools('config-set workflow.pattern_mapper false', tmpDir, { HOME: tmpDir });
+    const setResult = runGtdTools('config-set workflow.pattern_mapper false', tmpDir, { HOME: tmpDir });
     assert.ok(setResult.success, `config-set failed: ${setResult.error}`);
 
     // Get should return false
-    const getResult = runGsdTools('config-get workflow.pattern_mapper', tmpDir, { HOME: tmpDir });
+    const getResult = runGtdTools('config-get workflow.pattern_mapper', tmpDir, { HOME: tmpDir });
     assert.ok(getResult.success, `config-get failed: ${getResult.error}`);
     assert.strictEqual(getResult.output, 'false');
   });
@@ -89,7 +89,7 @@ describe('init plan-phase patterns_path', () => {
   });
 
   test('patterns_path is null when no PATTERNS.md exists', () => {
-    const result = runGsdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init plan-phase failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -101,7 +101,7 @@ describe('init plan-phase patterns_path', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-foundation');
     fs.writeFileSync(path.join(phaseDir, '01-PATTERNS.md'), '# Patterns\n');
 
-    const result = runGsdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init plan-phase failed: ${result.error}`);
 
     const data = JSON.parse(result.output);
@@ -111,8 +111,8 @@ describe('init plan-phase patterns_path', () => {
   });
 });
 
-describe('gsd-pattern-mapper agent prompt efficiency constraints (#2312)', () => {
-  const agentPath = path.join(__dirname, '..', 'agents', 'gsd-pattern-mapper.md');
+describe('gtd-pattern-mapper agent prompt efficiency constraints (#2312)', () => {
+  const agentPath = path.join(__dirname, '..', 'agents', 'gtd-pattern-mapper.md');
   let agentContent;
 
   beforeEach(() => {

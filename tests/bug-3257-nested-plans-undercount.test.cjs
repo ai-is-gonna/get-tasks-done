@@ -1,9 +1,9 @@
 /**
- * GSD Tools Tests — Bug #3257
+ * GTD Tools Tests — Bug #3257
  *
  * Regression guard: `buildStateFrontmatter` must count plan/summary files in
  * the nested `phases/<N>-<slug>/plans/<N>-PLAN-<NN>-<slug>.md` layout (written
- * by gsd-plan-phase post-#3139). Prior to this fix, the loop did a flat
+ * by gtd-plan-phase post-#3139). Prior to this fix, the loop did a flat
  * `readdirSync` on the phase directory and missed every file inside the
  * `plans/` subdirectory, so `progress.total_plans` and
  * `progress.completed_plans` were silently under-counted on every state
@@ -14,7 +14,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -94,10 +94,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1, 2]);
     writeStateFile(tmpDir, { phase: '02' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -119,10 +119,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -145,10 +145,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -176,10 +176,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -201,10 +201,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -226,10 +226,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -252,10 +252,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1]);
     writeStateFile(tmpDir, { phase: '01' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -289,10 +289,10 @@ describe('buildStateFrontmatter nested plans/ layout (#3257)', () => {
     writeRoadmap(tmpDir, [1, 2]);
     writeStateFile(tmpDir, { phase: '02' });
 
-    const result = runGsdTools('state update "Last Activity" "2026-05-08"', tmpDir);
+    const result = runGtdTools('state update "Last Activity" "2026-05-08"', tmpDir);
     assert.ok(result.success, `state update failed: ${result.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const progress = JSON.parse(jsonResult.output).progress;
@@ -346,7 +346,7 @@ describe('cmdStateValidate nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state validate', tmpDir);
+    const result = runGtdTools('state validate', tmpDir);
     assert.ok(result.success, `state validate failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -376,7 +376,7 @@ describe('cmdStateValidate nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state validate', tmpDir);
+    const result = runGtdTools('state validate', tmpDir);
     assert.ok(result.success, `state validate failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -407,7 +407,7 @@ describe('cmdStateValidate nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state validate', tmpDir);
+    const result = runGtdTools('state validate', tmpDir);
     assert.ok(result.success, `state validate failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -461,7 +461,7 @@ describe('cmdStateSync nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state sync', tmpDir);
+    const result = runGtdTools('state sync', tmpDir);
     assert.ok(result.success, `state sync failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -495,7 +495,7 @@ describe('cmdStateSync nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state sync --verify', tmpDir);
+    const result = runGtdTools('state sync --verify', tmpDir);
     assert.ok(result.success, `state sync --verify failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -507,7 +507,7 @@ describe('cmdStateSync nested plans/ layout (#3257)', () => {
     // STATE.md must be unchanged (dry-run): re-run sync --verify and confirm the
     // same pending change is still reported (if STATE.md had been written, the
     // change would have been applied and the second run would show no changes).
-    const result2 = runGsdTools('state sync --verify', tmpDir);
+    const result2 = runGtdTools('state sync --verify', tmpDir);
     assert.ok(result2.success, `second dry-run failed: ${result2.error}`);
     const parsed2 = JSON.parse(result2.output);
     const planCountChange2 = parsed2.changes.find(c => c.startsWith('Total Plans in Phase:'));
@@ -548,7 +548,7 @@ describe('cmdStateSync nested plans/ layout (#3257)', () => {
     ].join('\n');
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateContent, 'utf-8');
 
-    const result = runGsdTools('state sync', tmpDir);
+    const result = runGtdTools('state sync', tmpDir);
     assert.ok(result.success, `state sync failed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);

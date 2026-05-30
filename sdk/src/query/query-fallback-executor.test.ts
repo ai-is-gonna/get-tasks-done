@@ -28,7 +28,7 @@ describe('runCjsFallbackDispatch', () => {
     const script = await createScript('json.cjs', "process.stdout.write(JSON.stringify({ok:true}));");
     const result = await runCjsFallbackDispatch({
       projectDir: tmpDir,
-      gsdToolsPath: script,
+      gtdToolsPath: script,
       normCmd: 'state',
       normArgs: ['load'],
     });
@@ -41,7 +41,7 @@ describe('runCjsFallbackDispatch', () => {
     const script = await createScript('text.cjs', "process.stdout.write('USAGE: help text');");
     const result = await runCjsFallbackDispatch({
       projectDir: tmpDir,
-      gsdToolsPath: script,
+      gtdToolsPath: script,
       normCmd: 'phase',
       normArgs: ['add', '--help'],
     });
@@ -54,7 +54,7 @@ describe('runCjsFallbackDispatch', () => {
     const script = await createScript('ws.cjs', "const args=process.argv.slice(2); process.stdout.write(JSON.stringify({args}));");
     const result = await runCjsFallbackDispatch({
       projectDir: tmpDir,
-      gsdToolsPath: script,
+      gtdToolsPath: script,
       normCmd: 'state',
       normArgs: ['load'],
       ws: 'ws-1',
@@ -68,7 +68,7 @@ describe('runCjsFallbackDispatch', () => {
   it('returns structured error when subprocess fails', async () => {
     const result = await runCjsFallbackDispatch({
       projectDir: tmpDir,
-      gsdToolsPath: join(fixtureDir, 'missing.cjs'),
+      gtdToolsPath: join(fixtureDir, 'missing.cjs'),
       normCmd: 'state',
       normArgs: ['load'],
     });

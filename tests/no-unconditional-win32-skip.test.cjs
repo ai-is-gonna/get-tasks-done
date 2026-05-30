@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Behavior-based regression guard for #2962-class bugs.
@@ -8,7 +8,7 @@ process.env.GSD_TEST_MODE = '1';
  * "Nothing for Windows should be deferred — if it wasn't in, it was missed
  * not deferred." (maintainer guidance, 2026-05-01.)
  *
- * Specifically guards against trySelfLinkGsdSdk silently no-op'ing on
+ * Specifically guards against trySelfLinkGtdSdk silently no-op'ing on
  * Windows. Rather than regex-scanning bin/install.js source (which would
  * fail on harmless refactors and conflicts with the repo's no-source-grep
  * testing standard), this test exercises the function under a simulated
@@ -26,13 +26,13 @@ const cp = require('node:child_process');
 const ROOT = path.join(__dirname, '..');
 const installModule = require(path.join(ROOT, 'bin', 'install.js'));
 
-describe('Windows parity guard for trySelfLinkGsdSdk (#2962)', () => {
+describe('Windows parity guard for trySelfLinkGtdSdk (#2962)', () => {
   let tmpDir;
   let origPlatform;
   let origExecSync;
 
   before(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-win32-guard-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-win32-guard-'));
     origPlatform = process.platform;
     origExecSync = cp.execSync;
     // Override process.platform to simulate Windows. process.platform is a
@@ -52,19 +52,19 @@ describe('Windows parity guard for trySelfLinkGsdSdk (#2962)', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('trySelfLinkGsdSdk dispatches to the Windows handler and writes shims (does NOT silently return null)', () => {
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
-    const result = installModule.trySelfLinkGsdSdk(shimSrc);
+  test('trySelfLinkGtdSdk dispatches to the Windows handler and writes shims (does NOT silently return null)', () => {
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
+    const result = installModule.trySelfLinkGtdSdk(shimSrc);
 
     assert.notEqual(
       result,
       null,
-      'trySelfLinkGsdSdk must not silently return null on Windows; ' +
+      'trySelfLinkGtdSdk must not silently return null on Windows; ' +
         'a no-op skip is a missed-parity regression (see #2962, #2775).',
     );
     assert.ok(
-      fs.existsSync(path.join(tmpDir, 'gsd-sdk.cmd')),
-      'Windows dispatch must materialize gsd-sdk.cmd in the npm global bin',
+      fs.existsSync(path.join(tmpDir, 'gtd-sdk.cmd')),
+      'Windows dispatch must materialize gtd-sdk.cmd in the npm global bin',
     );
   });
 });

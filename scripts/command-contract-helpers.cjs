@@ -2,7 +2,7 @@
 /**
  * command-contract-helpers.cjs  (ADR-0002)
  *
- * Single source of truth for the commands/gsd/*.md contract constants and
+ * Single source of truth for the commands/gtd/*.md contract constants and
  * parsers shared by scripts/lint-command-contract.cjs and
  * tests/command-contract.test.cjs.
  *
@@ -51,7 +51,7 @@ function executionContextRefs(content) {
       const trailingProse = line.length > token.length;
       const normalized = token
         .replace(/^@(?:~|\$HOME)\//, '')
-        .replace(/^(?:\.claude\/)?(?:get-shit-done\/)?/, '');
+        .replace(/^(?:\.claude\/)?(?:get-tasks-done\/)?/, '');
       refs.push({ token, normalized, trailingProse });
     }
   }

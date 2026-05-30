@@ -6,12 +6,12 @@
 /**
  * Bug #3605: Stale slash command references in 5 agent files
  *
- * After #3042 deleted /gsd-research-phase (replaced by
- * /gsd-plan-phase --research-phase <N>) and v1.40.0 consolidated /gsd-insert-phase
- * into /gsd-phase insert, six occurrences survived in agents/*.md because none of
+ * After #3042 deleted /gtd-research-phase (replaced by
+ * /gtd-plan-phase --research-phase <N>) and v1.40.0 consolidated /gtd-insert-phase
+ * into /gtd-phase insert, six occurrences survived in agents/*.md because none of
  * the consolidation passes (#3029, #3044, #3131) included agents/ in their per-name
  * scrub scope. scripts/fix-slash-commands.cjs lists agents/ in SEARCH_DIRS but only
- * runs the /gsd- → /gsd: namespace transform, not retired-name replacement.
+ * runs the /gtd- → /gtd: namespace transform, not retired-name replacement.
  *
  * This guard fails when any retired command name reappears in agents/*.md.
  */
@@ -26,11 +26,11 @@ const path = require('node:path');
 const AGENTS_DIR = path.join(__dirname, '..', 'agents');
 
 const RETIRED_COMMANDS = [
-  '/gsd-research-phase',
-  '/gsd-insert-phase',
-  '/gsd-add-phase',
-  '/gsd-remove-phase',
-  '/gsd-analyze-dependencies',
+  '/gtd-research-phase',
+  '/gtd-insert-phase',
+  '/gtd-add-phase',
+  '/gtd-remove-phase',
+  '/gtd-analyze-dependencies',
 ];
 
 function listAgentFiles() {

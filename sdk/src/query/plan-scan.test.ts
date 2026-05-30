@@ -7,7 +7,7 @@ import { scanPhasePlans } from './plan-scan.js';
 
 describe('scanPhasePlans', () => {
   it('counts flat and nested plan files while excluding derivative files', async () => {
-    const tmpDir = await mkdtemp(join(tmpdir(), 'gsd-plan-scan-'));
+    const tmpDir = await mkdtemp(join(tmpdir(), 'gtd-plan-scan-'));
     try {
       const phaseDir = join(tmpDir, 'phases', '1');
       const nestedDir = join(phaseDir, 'plans');

@@ -37,7 +37,7 @@ test('runCli rejects missing cwd with TypeError', () => {
 test('runCli surfaces typed reason from a known failure path', (t) => {
   const projectDir = createTempProject('cli-neg-harness-');
   t.after(() => cleanup(projectDir));
-  // Unknown command — gsd-tools emits ERROR_REASON.SDK_UNKNOWN_COMMAND or
+  // Unknown command — gtd-tools emits ERROR_REASON.SDK_UNKNOWN_COMMAND or
   // USAGE depending on dispatch depth. Either is a real reason string;
   // the contract we pin here is just "the IR carries a reason from the
   // ERROR_REASON enum, never null".

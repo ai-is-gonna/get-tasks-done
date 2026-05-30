@@ -4,8 +4,8 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * Regression test for #2431: quick.md and execute-phase.md worktree teardown
- * silently accumulates locked worktrees via `2>/dev/null || true`.
+ * Regression test for #2431: quick.md worktree teardown silently accumulates
+ * locked worktrees via `2>/dev/null || true`.
  *
  * Fix: replace the silent-fail pattern with a lock-aware block that surfaces
  * the error and provides a user-visible recovery message.
@@ -18,8 +18,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
-const EXECUTE_PHASE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-phase.md');
+const QUICK_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'quick.md');
 
 function assertNoSilentWorktreeRemove(filePath, label) {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -65,39 +64,20 @@ describe('bug-2431: worktree teardown must surface locked-worktree errors', () =
     assert.ok(fs.existsSync(QUICK_PATH), 'quick.md should exist');
   });
 
-  test('execute-phase.md exists', () => {
-    assert.ok(fs.existsSync(EXECUTE_PHASE_PATH), 'execute-phase.md should exist');
-  });
-
   test('quick.md: no silent worktree remove pattern', () => {
     assertNoSilentWorktreeRemove(QUICK_PATH, 'quick.md');
-  });
-
-  test('execute-phase.md: no silent worktree remove pattern', () => {
-    assertNoSilentWorktreeRemove(EXECUTE_PHASE_PATH, 'execute-phase.md');
   });
 
   test('quick.md: has lock-aware detection block', () => {
     assertHasLockAwareBlock(QUICK_PATH, 'quick.md');
   });
 
-  test('execute-phase.md: has lock-aware detection block', () => {
-    assertHasLockAwareBlock(EXECUTE_PHASE_PATH, 'execute-phase.md');
-  });
-
   test('quick.md: has git worktree unlock retry', () => {
     assertHasWorktreeUnlock(QUICK_PATH, 'quick.md');
-  });
-
-  test('execute-phase.md: has git worktree unlock retry', () => {
-    assertHasWorktreeUnlock(EXECUTE_PHASE_PATH, 'execute-phase.md');
   });
 
   test('quick.md: has user-visible warning on residual worktree', () => {
     assertHasUserVisibleWarning(QUICK_PATH, 'quick.md');
   });
 
-  test('execute-phase.md: has user-visible warning on residual worktree', () => {
-    assertHasUserVisibleWarning(EXECUTE_PHASE_PATH, 'execute-phase.md');
-  });
 });

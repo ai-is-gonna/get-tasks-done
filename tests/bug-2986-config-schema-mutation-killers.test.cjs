@@ -1,10 +1,10 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Bug #2986: Layer-3 fault-detection audit found 4.62% Stryker mutation
- * score on get-shit-done/bin/lib/config-schema.cjs (6 killed, 124 survived).
+ * score on get-tasks-done/bin/lib/config-schema.cjs (6 killed, 124 survived).
  * Surviving mutants document tests that "exercise paths" but don't
  * "verify outputs" -- a polarity flip or predicate swap inside the lib
  * passed every existing test.
@@ -48,7 +48,7 @@ const {
   VALID_CONFIG_KEYS,
   DYNAMIC_KEY_PATTERNS,
   isValidConfigKey,
-} = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 describe('Bug #2986: M1/M4 -- isValidConfigKey returns true for EVERY static key in VALID_CONFIG_KEYS', () => {
   // Stryker mutants like `if (false) return true;` would silently flip
@@ -73,7 +73,7 @@ describe('Bug #2986: M2 -- DYNAMIC_KEY_PATTERNS.some semantic, not .every', () =
   // A reserved-prefix-style placeholder name is used for `features` so the
   // dynamic path is the only way to reach `true`.
   const patternRepresentatives = [
-    { key: 'agent_skills.gsd-planner',                           topLevel: 'agent_skills' },
+    { key: 'agent_skills.gtd-planner',                           topLevel: 'agent_skills' },
     { key: 'review.models.claude',                               topLevel: 'review' },
     { key: 'features.some_dynamic_feature',                      topLevel: 'features' },
     { key: 'claude_md_assembly.blocks.intro',                    topLevel: 'claude_md_assembly' },
@@ -128,7 +128,7 @@ describe('Bug #2986: anchor-tightening (catches mutants that loosen ^ or $ in re
   // accept too much. These keys differ from a valid one by ONE character
   // beyond the documented shape; they must be rejected.
   const overshoot = [
-    { key: 'agent_skills.gsd-planner.extra',                     reason: 'agent_skills regex must not allow trailing dot-segment' },
+    { key: 'agent_skills.gtd-planner.extra',                     reason: 'agent_skills regex must not allow trailing dot-segment' },
     { key: 'agent_skills.',                                      reason: 'agent_skills regex requires non-empty agent name' },
     { key: 'review.models.',                                     reason: 'review.models regex requires non-empty cli name' },
     { key: 'features.bad name with spaces',                      reason: 'features regex disallows spaces' },

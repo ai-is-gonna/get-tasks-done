@@ -17,7 +17,7 @@
  * future-proofing.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -27,7 +27,7 @@ const { execFileSync } = require('node:child_process');
 
 const { createTempDir, cleanup } = require('./helpers.cjs');
 
-const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gsd-read-guard.js');
+const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gtd-read-guard.js');
 
 /**
  * Spawn the hook with an env that mirrors the actual Claude Code hook
@@ -71,7 +71,7 @@ function runHookInClaudeCodeSubprocess(payload, envOverrides = {}) {
 describe('bug #2520: read guard detects Claude Code without relying on CLAUDECODE env', () => {
   let tmpDir;
 
-  beforeEach(() => { tmpDir = createTempDir('gsd-read-guard-2520-'); });
+  beforeEach(() => { tmpDir = createTempDir('gtd-read-guard-2520-'); });
   afterEach(() => { cleanup(tmpDir); });
 
   test('skips advisory when stdin payload includes session_id (Claude Code hook-subprocess env)', () => {

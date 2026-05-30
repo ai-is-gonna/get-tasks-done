@@ -28,7 +28,7 @@ describe('uatRenderCheckpoint', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-uat-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-uat-'));
   });
 
   afterEach(async () => {
@@ -56,7 +56,7 @@ describe('auditUat', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-uat-audit-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-uat-audit-'));
     await mkdir(join(tmpDir, '.planning', 'phases', '01-x'), { recursive: true });
   });
 

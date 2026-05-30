@@ -8,7 +8,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeStateMd(tmpDir, content) {
   fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), content);
@@ -52,7 +52,7 @@ describe('state prune (#1970)', () => {
       '',
     ].join('\n'));
 
-    const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+    const result = runGtdTools('state prune --keep-recent 3', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -86,7 +86,7 @@ describe('state prune (#1970)', () => {
     ].join('\n');
     writeStateMd(tmpDir, originalContent);
 
-    const result = runGsdTools('state prune --keep-recent 3 --dry-run', tmpDir);
+    const result = runGtdTools('state prune --keep-recent 3 --dry-run', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -116,7 +116,7 @@ describe('state prune (#1970)', () => {
       '',
     ].join('\n'));
 
-    const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+    const result = runGtdTools('state prune --keep-recent 3', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -143,7 +143,7 @@ describe('state prune (#1970)', () => {
       '',
     ].join('\n'));
 
-    const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+    const result = runGtdTools('state prune --keep-recent 3', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -170,7 +170,7 @@ describe('state prune (#1970)', () => {
         '',
       ].join('\n'));
 
-      const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+      const result = runGtdTools('state prune --keep-recent 3', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const output = JSON.parse(result.output);
@@ -208,7 +208,7 @@ describe('state prune (#1970)', () => {
         '',
       ].join('\n'));
 
-      const result = runGsdTools('state prune --keep-recent 3 --dry-run', tmpDir);
+      const result = runGtdTools('state prune --keep-recent 3 --dry-run', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const output = JSON.parse(result.output);
@@ -239,7 +239,7 @@ describe('state prune (#1970)', () => {
         '',
       ].join('\n'));
 
-      const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+      const result = runGtdTools('state prune --keep-recent 3', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const newState = readStateMd(tmpDir);
@@ -265,7 +265,7 @@ describe('state prune (#1970)', () => {
         '',
       ].join('\n'));
 
-      const result = runGsdTools('state prune --keep-recent 3', tmpDir);
+      const result = runGtdTools('state prune --keep-recent 3', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const newState = readStateMd(tmpDir);

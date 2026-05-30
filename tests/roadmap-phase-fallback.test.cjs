@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - roadmap get-phase fallback to full ROADMAP.md
+ * GTD Tools Tests - roadmap get-phase fallback to full ROADMAP.md
  *
  * Covers issue #1634: phases outside the current milestone slice should still
  * resolve by falling back to the full ROADMAP.md content.
@@ -9,7 +9,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 /**
  * Helper: write STATE.md with a milestone version so extractCurrentMilestone
@@ -54,7 +54,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 1', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -82,7 +82,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 999.60', tmpDir);
+    const result = runGtdTools('roadmap get-phase 999.60', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -114,7 +114,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 1025', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1025', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -144,7 +144,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 9999', tmpDir);
+    const result = runGtdTools('roadmap get-phase 9999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -169,7 +169,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 50', tmpDir);
+    const result = runGtdTools('roadmap get-phase 50', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -198,7 +198,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 50', tmpDir);
+    const result = runGtdTools('roadmap get-phase 50', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -211,7 +211,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
     // Regression: phase heading like "### Phase 12: v1.0 Tech-Debt Closure"
     // was incorrectly treated as a milestone boundary because the greedy
     // `.*v\d+\.\d+` subpattern in nextMilestonePattern matched it.
-    const core = require('../get-shit-done/bin/lib/core.cjs');
+    const core = require('../get-tasks-done/bin/lib/core.cjs');
     writeState(tmpDir, 'v1.1');
     const roadmap = `# Roadmap
 
@@ -242,7 +242,7 @@ describe('roadmap get-phase fallback to full ROADMAP.md (#1634)', () => {
   test('extractCurrentMilestone handles PHASE/phase (case-insensitive) containing vX.Y (#2619 follow-up)', () => {
     // CodeRabbit follow-up: the negative lookahead `(?!Phase\s+\S)` must be
     // case-insensitive so PHASE/phase variants are also excluded.
-    const core = require('../get-shit-done/bin/lib/core.cjs');
+    const core = require('../get-tasks-done/bin/lib/core.cjs');
     writeState(tmpDir, 'v1.1');
     const roadmap = `# Roadmap
 
@@ -300,7 +300,7 @@ This phase covers:
 `
     );
 
-    const result = runGsdTools('roadmap get-phase 10', tmpDir);
+    const result = runGtdTools('roadmap get-phase 10', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

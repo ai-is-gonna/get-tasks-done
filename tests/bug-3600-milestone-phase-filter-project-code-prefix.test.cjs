@@ -23,13 +23,13 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeRoadmap(tmpDir, body) {
   fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), body);
@@ -80,7 +80,7 @@ describe('bug #3600: milestone phase filter understands project-code-prefixed di
     ensurePhaseDir(tmpDir, 'CK-01-discovery');
     ensurePhaseDir(tmpDir, 'CK-02-build');
 
-    const r = runGsdTools(['init', 'new-milestone', '--json'], tmpDir);
+    const r = runGtdTools(['init', 'new-milestone', '--json'], tmpDir);
     assert.ok(r.success, `init new-milestone failed: ${r.error || r.output}`);
     const payload = JSON.parse(r.output);
     assert.strictEqual(
@@ -106,7 +106,7 @@ describe('bug #3600: milestone phase filter understands project-code-prefixed di
     );
     ensurePhaseDir(tmpDir, '01-first');
 
-    const r = runGsdTools(['init', 'new-milestone', '--json'], tmpDir);
+    const r = runGtdTools(['init', 'new-milestone', '--json'], tmpDir);
     assert.ok(r.success);
     const payload = JSON.parse(r.output);
     assert.strictEqual(payload.phase_dir_count, 1);
@@ -133,7 +133,7 @@ describe('bug #3600: milestone phase filter understands project-code-prefixed di
     );
     ensurePhaseDir(tmpDir, 'PROJ-42');
 
-    const r = runGsdTools(['init', 'new-milestone', '--json'], tmpDir);
+    const r = runGtdTools(['init', 'new-milestone', '--json'], tmpDir);
     assert.ok(r.success);
     const payload = JSON.parse(r.output);
     assert.strictEqual(
@@ -165,7 +165,7 @@ describe('bug #3600: milestone phase filter understands project-code-prefixed di
     ensurePhaseDir(tmpDir, 'CK-99-backlog');
     ensurePhaseDir(tmpDir, 'CK-100-future');
 
-    const r = runGsdTools(['init', 'new-milestone', '--json'], tmpDir);
+    const r = runGtdTools(['init', 'new-milestone', '--json'], tmpDir);
     assert.ok(r.success);
     const payload = JSON.parse(r.output);
     assert.strictEqual(

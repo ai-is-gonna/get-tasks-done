@@ -4,7 +4,7 @@ import {
   timeoutMessage,
   toFailureSignal,
 } from './query-failure-classification.js';
-import { GSDToolsError } from './gsd-tools-error.js';
+import { GTDToolsError } from './gtd-tools-error.js';
 
 describe('query failure classification', () => {
   it('extracts timeout metadata from message', () => {
@@ -16,8 +16,8 @@ describe('query failure classification', () => {
     expect(errorMessage(new Error('x'))).toBe('x');
   });
 
-  it('prefers typed classification from GSDToolsError', () => {
-    const err = GSDToolsError.timeout('x', 'state', ['load'], '', 2000);
+  it('prefers typed classification from GTDToolsError', () => {
+    const err = GTDToolsError.timeout('x', 'state', ['load'], '', 2000);
     expect(toFailureSignal(err)).toEqual({ kind: 'timeout', message: 'x', timeoutMs: 2000 });
   });
 });

@@ -19,8 +19,8 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const PLAN_PHASE = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'plan-phase.md');
-const VERIFY_PHASE = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'verify-phase.md');
+const PLAN_PHASE = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'plan-phase.md');
+const VERIFY_PHASE = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'verify-phase.md');
 const CONFIG_TS = path.join(__dirname, '..', 'sdk', 'src', 'config.ts');
 const CONFIG_MUTATION_TS = path.join(__dirname, '..', 'sdk', 'src', 'query', 'config-mutation.ts');
 // #2653 — allowlist moved to shared schema module.
@@ -42,7 +42,7 @@ describe('plan-phase decision-coverage gate (#2492)', () => {
   test('invokes the check.decision-coverage-plan handler', () => {
     assert.ok(
       md.includes('check.decision-coverage-plan'),
-      'plan-phase.md must call gsd-sdk query check.decision-coverage-plan',
+      'plan-phase.md must call gtd-sdk query check.decision-coverage-plan',
     );
   });
 
@@ -71,10 +71,10 @@ describe('plan-phase decision-coverage gate (#2492)', () => {
   });
 
   test('plan-phase Decision Coverage Gate uses CONTEXT_PATH variable defined in INIT extraction (review F1)', () => {
-    // The CONTEXT_PATH bash variable is defined at Step 4 (`CONTEXT_PATH=$(_gsd_field "$INIT" context_path)`).
+    // The CONTEXT_PATH bash variable is defined at Step 4 (`CONTEXT_PATH=$(_gtd_field "$INIT" context_path)`).
     // The plan-phase gate snippet must reference the same casing — `${CONTEXT_PATH}` — not `${context_path}`,
     // otherwise the BLOCKING gate is invoked with an empty path and silently skips.
-    const defIdx = md.indexOf('CONTEXT_PATH=$(_gsd_field "$INIT" context_path)');
+    const defIdx = md.indexOf('CONTEXT_PATH=$(_gtd_field "$INIT" context_path)');
     assert.ok(defIdx !== -1, 'CONTEXT_PATH must be defined from INIT JSON');
 
     const gateIdx = md.indexOf('check.decision-coverage-plan');
@@ -122,7 +122,7 @@ describe('verify-phase decision-coverage gate (#2492)', () => {
   test('invokes the check.decision-coverage-verify handler', () => {
     assert.ok(
       md.includes('check.decision-coverage-verify'),
-      'verify-phase.md must call gsd-sdk query check.decision-coverage-verify',
+      'verify-phase.md must call gtd-sdk query check.decision-coverage-verify',
     );
   });
 

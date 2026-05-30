@@ -1,4 +1,4 @@
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -80,7 +80,7 @@ describe('Qwen Code local install/uninstall', () => {
   let previousCwd;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-qwen-install-');
+    tmpDir = createTempDir('gtd-qwen-install-');
     previousCwd = process.cwd();
     process.chdir(tmpDir);
   });
@@ -90,24 +90,24 @@ describe('Qwen Code local install/uninstall', () => {
     cleanup(tmpDir);
   });
 
-  test('installs GSD into ./.qwen and removes it cleanly', () => {
+  test('installs GTD into ./.qwen and removes it cleanly', () => {
     const result = install(false, 'qwen');
     const targetDir = path.join(tmpDir, '.qwen');
 
     assert.strictEqual(result.runtime, 'qwen');
     assert.strictEqual(result.configDir, fs.realpathSync(targetDir));
 
-    assert.ok(fs.existsSync(path.join(targetDir, 'skills', 'gsd-help', 'SKILL.md')));
-    assert.ok(fs.existsSync(path.join(targetDir, 'get-shit-done', 'VERSION')));
+    assert.ok(fs.existsSync(path.join(targetDir, 'skills', 'gtd-help', 'SKILL.md')));
+    assert.ok(fs.existsSync(path.join(targetDir, 'get-tasks-done', 'VERSION')));
     assert.ok(fs.existsSync(path.join(targetDir, 'agents')));
 
     const manifest = writeManifest(targetDir, 'qwen');
-    assert.ok(Object.keys(manifest.files).some(file => file.startsWith('skills/gsd-help/')), manifest);
+    assert.ok(Object.keys(manifest.files).some(file => file.startsWith('skills/gtd-help/')), manifest);
 
     uninstall(false, 'qwen');
 
-    assert.ok(!fs.existsSync(path.join(targetDir, 'skills', 'gsd-help')), 'Qwen skill directory removed');
-    assert.ok(!fs.existsSync(path.join(targetDir, 'get-shit-done')), 'get-shit-done removed');
+    assert.ok(!fs.existsSync(path.join(targetDir, 'skills', 'gtd-help')), 'Qwen skill directory removed');
+    assert.ok(!fs.existsSync(path.join(targetDir, 'get-tasks-done')), 'get-tasks-done removed');
   });
 });
 
@@ -116,7 +116,7 @@ describe('E2E: Qwen Code uninstall skills cleanup', () => {
   let previousCwd;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-qwen-uninstall-');
+    tmpDir = createTempDir('gtd-qwen-uninstall-');
     previousCwd = process.cwd();
     process.chdir(tmpDir);
   });
@@ -126,7 +126,7 @@ describe('E2E: Qwen Code uninstall skills cleanup', () => {
     cleanup(tmpDir);
   });
 
-  test('removes all gsd-* skill directories on --qwen --uninstall', () => {
+  test('removes all gtd-* skill directories on --qwen --uninstall', () => {
     const targetDir = path.join(tmpDir, '.qwen');
     install(false, 'qwen');
 
@@ -134,20 +134,20 @@ describe('E2E: Qwen Code uninstall skills cleanup', () => {
     assert.ok(fs.existsSync(skillsDir), 'skills dir exists after install');
 
     const installedSkills = fs.readdirSync(skillsDir, { withFileTypes: true })
-      .filter(e => e.isDirectory() && e.name.startsWith('gsd-'));
-    assert.ok(installedSkills.length > 0, `found ${installedSkills.length} gsd-* skill dirs before uninstall`);
+      .filter(e => e.isDirectory() && e.name.startsWith('gtd-'));
+    assert.ok(installedSkills.length > 0, `found ${installedSkills.length} gtd-* skill dirs before uninstall`);
 
     uninstall(false, 'qwen');
 
     if (fs.existsSync(skillsDir)) {
-      const remainingGsd = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gsd-'));
-      assert.strictEqual(remainingGsd.length, 0,
-        `Expected 0 gsd-* skill dirs after uninstall, found: ${remainingGsd.map(e => e.name).join(', ')}`);
+      const remainingGtd = fs.readdirSync(skillsDir, { withFileTypes: true })
+        .filter(e => e.isDirectory() && e.name.startsWith('gtd-'));
+      assert.strictEqual(remainingGtd.length, 0,
+        `Expected 0 gtd-* skill dirs after uninstall, found: ${remainingGtd.map(e => e.name).join(', ')}`);
     }
   });
 
-  test('preserves non-GSD skill directories during --qwen --uninstall', () => {
+  test('preserves non-GTD skill directories during --qwen --uninstall', () => {
     const targetDir = path.join(tmpDir, '.qwen');
     install(false, 'qwen');
 
@@ -160,20 +160,20 @@ describe('E2E: Qwen Code uninstall skills cleanup', () => {
     uninstall(false, 'qwen');
 
     assert.ok(fs.existsSync(path.join(customSkillDir, 'SKILL.md')),
-      'Non-GSD skill directory should be preserved after Qwen uninstall');
+      'Non-GTD skill directory should be preserved after Qwen uninstall');
   });
 
   test('removes engine directory on --qwen --uninstall', () => {
     const targetDir = path.join(tmpDir, '.qwen');
     install(false, 'qwen');
 
-    assert.ok(fs.existsSync(path.join(targetDir, 'get-shit-done', 'VERSION')),
+    assert.ok(fs.existsSync(path.join(targetDir, 'get-tasks-done', 'VERSION')),
       'engine exists before uninstall');
 
     uninstall(false, 'qwen');
 
-    assert.ok(!fs.existsSync(path.join(targetDir, 'get-shit-done')),
-      'get-shit-done engine should be removed after Qwen uninstall');
+    assert.ok(!fs.existsSync(path.join(targetDir, 'get-tasks-done')),
+      'get-tasks-done engine should be removed after Qwen uninstall');
   });
 });
 
@@ -184,7 +184,7 @@ describe('Qwen install contains no leaked Claude references (#2112)', () => {
   let previousCwd;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-qwen-refs-');
+    tmpDir = createTempDir('gtd-qwen-refs-');
     previousCwd = process.cwd();
     process.chdir(tmpDir);
     install(false, 'qwen');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copy GSD hooks to dist for installation.
+ * Copy GTD hooks to dist for installation.
  * Validates JavaScript syntax before copying to prevent shipping broken hooks.
  * See #1107, #1109, #1125, #1161 — a duplicate const declaration shipped
  * in dist and caused PostToolUse hook errors for all users.
@@ -24,19 +24,19 @@ const STAGE_DIR = path.join(HOOKS_DIR, `.dist-staging-${process.pid}`);
 
 // Hooks to copy (pure Node.js, no bundling needed)
 const HOOKS_TO_COPY = [
-  'gsd-check-update-worker.js',
-  'gsd-check-update.js',
-  'gsd-context-monitor.js',
-  'gsd-prompt-guard.js',
-  'gsd-read-guard.js',
-  'gsd-read-injection-scanner.js',
-  'gsd-statusline.js',
-  'gsd-update-banner.js',
-  'gsd-workflow-guard.js',
+  'gtd-check-update-worker.js',
+  'gtd-check-update.js',
+  'gtd-context-monitor.js',
+  'gtd-prompt-guard.js',
+  'gtd-read-guard.js',
+  'gtd-read-injection-scanner.js',
+  'gtd-statusline.js',
+  'gtd-update-banner.js',
+  'gtd-workflow-guard.js',
   // Community hooks (bash, opt-in via .planning/config.json hooks.community)
-  'gsd-session-state.sh',
-  'gsd-validate-commit.sh',
-  'gsd-phase-boundary.sh'
+  'gtd-session-state.sh',
+  'gtd-validate-commit.sh',
+  'gtd-phase-boundary.sh'
 ];
 
 // Sync millisecond sleep using Atomics.wait on a throwaway SharedArrayBuffer.
@@ -153,7 +153,7 @@ function build() {
     // destination — readers (install.js subprocesses spawned by parallel
     // install tests) can observe the dest empty or partial mid-write,
     // producing flaky failures such as bug-2136 part 4 where installed .sh
-    // hooks lacked their "# gsd-hook-version:" header. POSIX rename(2)
+    // hooks lacked their "# gtd-hook-version:" header. POSIX rename(2)
     // makes the swap atomic so readers see either the old file or the new
     // file. The staging file lives outside DIST_DIR so readdirSync(DIST_DIR)
     // (in install.js and tests) never observes a transient ".tmp" sibling.

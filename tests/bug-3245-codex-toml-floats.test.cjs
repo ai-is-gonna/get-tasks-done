@@ -5,7 +5,7 @@
  *
  *   Defect 1 — parseTomlValue rejects TOML floats (e.g. tool_timeout_sec = 20.0).
  *     Codex CLI's serde schema requires f64 for tool_timeout_sec / startup_timeout_sec
- *     (integers fail with "invalid type: integer"). GSD's strict-integer-only parser
+ *     (integers fail with "invalid type: integer"). GTD's strict-integer-only parser
  *     was the inverse of what Codex requires — any float triggers the rejection branch.
  *     Fix: extend parseTomlValue to accept TOML 1.0 float literals and return them as
  *     JS Number. The merged config.toml preserves the float form verbatim so
@@ -20,10 +20,10 @@
  *     Codex-specific mutation, and extend the rollback to cover all of them.
  */
 
-// GSD_TEST_MODE must be set before require('../bin/install.js') so the module
+// GTD_TEST_MODE must be set before require('../bin/install.js') so the module
 // skips the main CLI entry point and exports its internals.
-const previousGsdTestMode = process.env.GSD_TEST_MODE;
-process.env.GSD_TEST_MODE = '1';
+const previousGtdTestMode = process.env.GTD_TEST_MODE;
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, before, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -35,10 +35,10 @@ const { execFileSync } = require('child_process');
 const { parseTomlToObject, validateCodexConfigSchema, install } = require('../bin/install.js');
 const installModule = require('../bin/install.js');
 
-if (previousGsdTestMode === undefined) {
-  delete process.env.GSD_TEST_MODE;
+if (previousGtdTestMode === undefined) {
+  delete process.env.GTD_TEST_MODE;
 } else {
-  process.env.GSD_TEST_MODE = previousGsdTestMode;
+  process.env.GTD_TEST_MODE = previousGtdTestMode;
 }
 
 // Ensure hooks/dist/ is populated — mirrors the pattern used by codex-config.test.cjs.
@@ -219,7 +219,7 @@ describe('#3245 — install succeeds with TOML float in pre-existing config', { 
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3245-float-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3245-float-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -347,7 +347,7 @@ describe('#3245 — idempotent rollback reverts skills/, agents/, and VERSION', 
   let codexHome;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3245-rollback-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3245-rollback-'));
     codexHome = path.join(tmpDir, 'codex-home');
   });
 
@@ -357,7 +357,7 @@ describe('#3245 — idempotent rollback reverts skills/, agents/, and VERSION', 
   });
 
   test('validation failure rolls back skills/, agents/, and VERSION to pre-install state', () => {
-    // Start from a clean codexHome with no pre-existing GSD content — the dirs
+    // Start from a clean codexHome with no pre-existing GTD content — the dirs
     // do not exist yet. After a failed install they must be absent (or contain
     // only what was there before, i.e. nothing).
     fs.mkdirSync(codexHome, { recursive: true });
@@ -377,32 +377,32 @@ describe('#3245 — idempotent rollback reverts skills/, agents/, and VERSION', 
     }
     assert.strictEqual(threw, true, 'install must throw when validation fails');
 
-    // skills/ — GSD writes gsd-* subdirs here. All must be absent after rollback.
+    // skills/ — GTD writes gtd-* subdirs here. All must be absent after rollback.
     const skillsDir = path.join(codexHome, 'skills');
     if (fs.existsSync(skillsDir)) {
-      const gsdSkills = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gsd-'));
+      const gtdSkills = fs.readdirSync(skillsDir, { withFileTypes: true })
+        .filter(e => e.isDirectory() && e.name.startsWith('gtd-'));
       assert.strictEqual(
-        gsdSkills.length,
+        gtdSkills.length,
         0,
-        'rollback must remove all gsd-* skill directories: ' + gsdSkills.map(e => e.name).join(', ')
+        'rollback must remove all gtd-* skill directories: ' + gtdSkills.map(e => e.name).join(', ')
       );
     }
 
-    // agents/ — GSD writes gsd-*.md and gsd-*.toml here. All must be absent.
+    // agents/ — GTD writes gtd-*.md and gtd-*.toml here. All must be absent.
     const agentsDir = path.join(codexHome, 'agents');
     if (fs.existsSync(agentsDir)) {
-      const gsdAgents = fs.readdirSync(agentsDir)
-        .filter(f => f.startsWith('gsd-') && (f.endsWith('.md') || f.endsWith('.toml')));
+      const gtdAgents = fs.readdirSync(agentsDir)
+        .filter(f => f.startsWith('gtd-') && (f.endsWith('.md') || f.endsWith('.toml')));
       assert.strictEqual(
-        gsdAgents.length,
+        gtdAgents.length,
         0,
-        'rollback must remove all gsd-* agent files: ' + gsdAgents.join(', ')
+        'rollback must remove all gtd-* agent files: ' + gtdAgents.join(', ')
       );
     }
 
-    // VERSION — GSD writes get-shit-done/VERSION. Must be absent (wasn't there before).
-    const versionPath = path.join(codexHome, 'get-shit-done', 'VERSION');
+    // VERSION — GTD writes get-tasks-done/VERSION. Must be absent (wasn't there before).
+    const versionPath = path.join(codexHome, 'get-tasks-done', 'VERSION');
     assert.strictEqual(
       fs.existsSync(versionPath),
       false,
@@ -429,23 +429,23 @@ describe('#3245 — idempotent rollback reverts skills/, agents/, and VERSION', 
       threw = true;
     }
     assert.strictEqual(threw, true, 'install must throw when validation fails (very early failure)');
-    // Rollback removes all gsd-* skill dirs it wrote. Even if skills/ was
-    // created during the install, no gsd-* dirs should survive after rollback.
+    // Rollback removes all gtd-* skill dirs it wrote. Even if skills/ was
+    // created during the install, no gtd-* dirs should survive after rollback.
     const skillsDir = path.join(codexHome, 'skills');
-    const remainingGsdSkills = fs.existsSync(skillsDir)
+    const remainingGtdSkills = fs.existsSync(skillsDir)
       ? fs.readdirSync(skillsDir, { withFileTypes: true })
-          .filter((e) => e.isDirectory() && e.name.startsWith('gsd-'))
+          .filter((e) => e.isDirectory() && e.name.startsWith('gtd-'))
           .map((e) => e.name)
       : [];
     assert.deepStrictEqual(
-      remainingGsdSkills,
+      remainingGtdSkills,
       [],
-      'rollback must remove all gsd-* skill dirs even when fired after minimal writes'
+      'rollback must remove all gtd-* skill dirs even when fired after minimal writes'
     );
   });
 
-  test('rollback does not remove pre-existing user skills that GSD did not write', () => {
-    // If the user has a custom skill dir (not gsd-*) it must survive rollback.
+  test('rollback does not remove pre-existing user skills that GTD did not write', () => {
+    // If the user has a custom skill dir (not gtd-*) it must survive rollback.
     const skillsDir = path.join(codexHome, 'skills');
     const userSkill = path.join(skillsDir, 'my-custom-skill');
     fs.mkdirSync(userSkill, { recursive: true });
@@ -463,7 +463,7 @@ describe('#3245 — idempotent rollback reverts skills/, agents/, and VERSION', 
     assert.strictEqual(
       fs.existsSync(path.join(userSkill, 'SKILL.md')),
       true,
-      'pre-existing non-gsd-* skill must survive rollback'
+      'pre-existing non-gtd-* skill must survive rollback'
     );
   });
 

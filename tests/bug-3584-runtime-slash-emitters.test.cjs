@@ -1,12 +1,12 @@
 /**
  * Regression tests for bug #3584 — runtime emitters use the slash formatter.
  *
- * These tests exercise the actual runtime command handlers via `runGsdTools`
+ * These tests exercise the actual runtime command handlers via `runGtdTools`
  * and assert on the structured payloads they emit/persist. They prove that
  * the high-impact emitters identified in the issue (`init.cjs` recommended
  * actions, `phase.cjs` ROADMAP persistence, `verify.cjs` remediation hints,
  * `milestone.cjs` Operator-Next-Steps persistence, `validate-command-router`
- * fracture recommendations) no longer emit the unroutable `/gsd:<cmd>` colon
+ * fracture recommendations) no longer emit the unroutable `/gtd:<cmd>` colon
  * form for skills-based runtimes.
  */
 
@@ -18,21 +18,21 @@ const fs = require('fs');
 const path = require('path');
 
 const {
-  runGsdTools,
+  runGtdTools,
   createTempProject,
   createTempDir,
   cleanup,
 } = require('./helpers.cjs');
 
-// Helper: assert no string field anywhere in `value` (recursive) contains '/gsd:'.
+// Helper: assert no string field anywhere in `value` (recursive) contains '/gtd:'.
 function assertNoColonForm(value, label) {
   const stack = [{ v: value, p: label }];
   while (stack.length > 0) {
     const { v, p } = stack.pop();
     if (typeof v === 'string') {
       assert.ok(
-        !v.includes('/gsd:'),
-        `${p}: must not contain deprecated /gsd: form, got ${JSON.stringify(v)}`,
+        !v.includes('/gtd:'),
+        `${p}: must not contain deprecated /gtd: form, got ${JSON.stringify(v)}`,
       );
     } else if (Array.isArray(v)) {
       v.forEach((item, i) => stack.push({ v: item, p: `${p}[${i}]` }));
@@ -87,13 +87,13 @@ describe('bug-3584: init manager recommendedActions emit hyphen form', () => {
 
   afterEach(() => cleanup(tmpDir));
 
-  test('skills runtime (claude) emits /gsd-<cmd> in recommended_actions[].command', () => {
+  test('skills runtime (claude) emits /gtd-<cmd> in recommended_actions[].command', () => {
     // Plan-but-not-executed: directory exists with a PLAN.md → execute is recommended.
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-foundation');
     fs.mkdirSync(phaseDir, { recursive: true });
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan\n');
 
-    const result = runGsdTools('init manager', tmpDir, { GSD_RUNTIME: 'claude' });
+    const result = runGtdTools('init manager', tmpDir, { GTD_RUNTIME: 'claude' });
     assert.ok(result.success, `init manager failed: ${result.error || result.output}`);
 
     const payload = JSON.parse(result.output);
@@ -102,23 +102,23 @@ describe('bug-3584: init manager recommendedActions emit hyphen form', () => {
 
     for (const cmd of commands) {
       assert.ok(
-        cmd.startsWith('/gsd-'),
-        `recommended_actions command must start with /gsd- for skills-based runtimes, got ${cmd}`,
+        cmd.startsWith('/gtd-'),
+        `recommended_actions command must start with /gtd- for skills-based runtimes, got ${cmd}`,
       );
       assert.ok(
-        !cmd.includes('/gsd:'),
-        `recommended_actions command must not contain /gsd: colon form, got ${cmd}`,
+        !cmd.includes('/gtd:'),
+        `recommended_actions command must not contain /gtd: colon form, got ${cmd}`,
       );
     }
     assertNoColonForm(payload, 'init.manager payload');
   });
 
-  test('codex runtime emits $gsd-<cmd> in recommended_actions[].command', () => {
+  test('codex runtime emits $gtd-<cmd> in recommended_actions[].command', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-foundation');
     fs.mkdirSync(phaseDir, { recursive: true });
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan\n');
 
-    const result = runGsdTools('init manager', tmpDir, { GSD_RUNTIME: 'codex' });
+    const result = runGtdTools('init manager', tmpDir, { GTD_RUNTIME: 'codex' });
     assert.ok(result.success, `init manager (codex) failed: ${result.error || result.output}`);
 
     const payload = JSON.parse(result.output);
@@ -127,8 +127,8 @@ describe('bug-3584: init manager recommendedActions emit hyphen form', () => {
 
     for (const cmd of commands) {
       assert.ok(
-        cmd.startsWith('$gsd-'),
-        `codex recommended_actions command must use $gsd- shell-var form, got ${cmd}`,
+        cmd.startsWith('$gtd-'),
+        `codex recommended_actions command must use $gtd- shell-var form, got ${cmd}`,
       );
     }
   });
@@ -153,10 +153,10 @@ describe('bug-3584: phase add persists hyphen form into ROADMAP.md', () => {
 
   test('phase add persists hyphen-form slash command in roadmap get-phase payload', () => {
     // 1. Add a phase — the system under test persists the phase entry into ROADMAP.md.
-    const addResult = runGsdTools(
+    const addResult = runGtdTools(
       ['phase', 'add', 'Test new feature'],
       tmpDir,
-      { GSD_RUNTIME: 'claude' },
+      { GTD_RUNTIME: 'claude' },
     );
     assert.ok(addResult.success, `phase add failed: ${addResult.error || addResult.output}`);
     const addPayload = JSON.parse(addResult.output);
@@ -165,10 +165,10 @@ describe('bug-3584: phase add persists hyphen form into ROADMAP.md', () => {
     // 2. Read the persisted section back via the structured roadmap-get-phase
     //    contract (NOT via readFileSync; the `section` field on the JSON payload
     //    is the runtime's typed projection of the on-disk ROADMAP content).
-    const getResult = runGsdTools(
+    const getResult = runGtdTools(
       ['roadmap', 'get-phase', String(addPayload.phase_number)],
       tmpDir,
-      { GSD_RUNTIME: 'claude' },
+      { GTD_RUNTIME: 'claude' },
     );
     assert.ok(getResult.success, `roadmap get-phase failed: ${getResult.error || getResult.output}`);
     const getPayload = JSON.parse(getResult.output);
@@ -177,12 +177,12 @@ describe('bug-3584: phase add persists hyphen form into ROADMAP.md', () => {
 
     // 3. The persisted phase section must use the routable hyphen form.
     assert.ok(
-      !getPayload.section.includes('/gsd:plan-phase'),
-      `persisted phase section must not contain /gsd:plan-phase, got: ${getPayload.section}`,
+      !getPayload.section.includes('/gtd:plan-phase'),
+      `persisted phase section must not contain /gtd:plan-phase, got: ${getPayload.section}`,
     );
     assert.ok(
-      getPayload.section.includes('/gsd-plan-phase'),
-      `persisted phase section must contain /gsd-plan-phase, got: ${getPayload.section}`,
+      getPayload.section.includes('/gtd-plan-phase'),
+      `persisted phase section must contain /gtd-plan-phase, got: ${getPayload.section}`,
     );
   });
 });
@@ -194,10 +194,10 @@ describe('bug-3584: validate health emits hyphen form in fix hints', () => {
     // No .planning directory → E001 fires with a `fix:` string that contains
     // the slash-command form.
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['validate', 'health'],
       tmpDir,
-      { GSD_RUNTIME: 'claude' },
+      { GTD_RUNTIME: 'claude' },
     );
     // validate health exits non-zero on broken projects but still emits JSON to stdout.
     const stdout = result.output;
@@ -217,16 +217,16 @@ describe('bug-3584: validate health emits hyphen form in fix hints', () => {
 
     const fixesWithSlash = allIssues
       .map((i) => i.fix)
-      .filter((f) => typeof f === 'string' && /gsd[-:]/.test(f));
+      .filter((f) => typeof f === 'string' && /gtd[-:]/.test(f));
     assert.ok(
       fixesWithSlash.length > 0,
-      'at least one fix hint should reference a /gsd- slash command',
+      'at least one fix hint should reference a /gtd- slash command',
     );
 
     for (const fix of fixesWithSlash) {
       assert.ok(
-        !fix.includes('/gsd:'),
-        `validate health fix hint must not contain /gsd: colon form, got ${JSON.stringify(fix)}`,
+        !fix.includes('/gtd:'),
+        `validate health fix hint must not contain /gtd: colon form, got ${JSON.stringify(fix)}`,
       );
     }
     assertNoColonForm(payload, 'validate health payload');
@@ -234,40 +234,40 @@ describe('bug-3584: validate health emits hyphen form in fix hints', () => {
 });
 
 describe('bug-3584: validate context recommendation uses hyphen form', () => {
-  test('warning/critical recommendations emit /gsd-thread', (t) => {
+  test('warning/critical recommendations emit /gtd-thread', (t) => {
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
     // Critical band: 75% utilization. validate context emits JSON only with --json.
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['validate', 'context', '--tokens-used', '75000', '--context-window', '100000', '--json'],
       tmpDir,
-      { GSD_RUNTIME: 'claude' },
+      { GTD_RUNTIME: 'claude' },
     );
     assert.ok(result.success, `validate context failed: ${result.error || result.output}`);
 
     const payload = JSON.parse(result.output);
     assert.ok(payload.recommendation, 'critical utilization should produce a recommendation');
     assert.ok(
-      !payload.recommendation.includes('/gsd:'),
-      `recommendation must not contain /gsd:, got ${JSON.stringify(payload.recommendation)}`,
+      !payload.recommendation.includes('/gtd:'),
+      `recommendation must not contain /gtd:, got ${JSON.stringify(payload.recommendation)}`,
     );
     assert.ok(
-      payload.recommendation.includes('/gsd-thread'),
-      `recommendation must reference /gsd-thread, got ${JSON.stringify(payload.recommendation)}`,
+      payload.recommendation.includes('/gtd-thread'),
+      `recommendation must reference /gtd-thread, got ${JSON.stringify(payload.recommendation)}`,
     );
   });
 });
 
 describe('bug-3584: validate health uses formatter for codex runtime too', () => {
-  test('validate health under codex emits $gsd-<cmd> in fix strings (positive assertion)', (t) => {
+  test('validate health under codex emits $gtd-<cmd> in fix strings (positive assertion)', (t) => {
     const tmpDir = createTempDir();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['validate', 'health'],
       tmpDir,
-      { GSD_RUNTIME: 'codex' },
+      { GTD_RUNTIME: 'codex' },
     );
     let payload;
     try {
@@ -281,29 +281,29 @@ describe('bug-3584: validate health uses formatter for codex runtime too', () =>
       .concat(payload.warnings || [])
       .concat(payload.info || []);
 
-    // Collect fixes that mention any gsd slash-command form so we can lock
+    // Collect fixes that mention any gtd slash-command form so we can lock
     // both the absence of legacy forms AND the presence of the codex shape.
-    const fixesWithGsdRef = allIssues
+    const fixesWithGtdRef = allIssues
       .map((i) => i.fix)
-      .filter((f) => typeof f === 'string' && /(?:\$|\/)gsd[-:]/.test(f));
+      .filter((f) => typeof f === 'string' && /(?:\$|\/)gtd[-:]/.test(f));
 
     assert.ok(
-      fixesWithGsdRef.length > 0,
-      'validate health on a bare tmpdir must produce at least one fix hint referencing a gsd command',
+      fixesWithGtdRef.length > 0,
+      'validate health on a bare tmpdir must produce at least one fix hint referencing a gtd command',
     );
 
-    for (const fix of fixesWithGsdRef) {
+    for (const fix of fixesWithGtdRef) {
       assert.ok(
-        fix.includes('$gsd-'),
-        `codex validate health fix must use shell-var $gsd- form, got ${JSON.stringify(fix)}`,
+        fix.includes('$gtd-'),
+        `codex validate health fix must use shell-var $gtd- form, got ${JSON.stringify(fix)}`,
       );
       assert.ok(
-        !fix.includes('/gsd:'),
-        `codex validate health fix must not contain /gsd: colon form, got ${JSON.stringify(fix)}`,
+        !fix.includes('/gtd:'),
+        `codex validate health fix must not contain /gtd: colon form, got ${JSON.stringify(fix)}`,
       );
       assert.ok(
-        !fix.includes('/gsd-'),
-        `codex validate health fix must not contain /gsd- (skills) form, got ${JSON.stringify(fix)}`,
+        !fix.includes('/gtd-'),
+        `codex validate health fix must not contain /gtd- (skills) form, got ${JSON.stringify(fix)}`,
       );
     }
   });

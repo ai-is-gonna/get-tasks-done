@@ -5,7 +5,7 @@ import { decorateMutationsWithEvents } from './mutation-event-decorator.js';
 describe('decorateMutationsWithEvents', () => {
   it('wraps registered mutation handler and emits event', async () => {
     const registry = new QueryRegistry();
-    const eventStream = { emitEvent: vi.fn() } as unknown as import('../event-stream.js').GSDEventStream;
+    const eventStream = { emitEvent: vi.fn() } as unknown as import('../event-stream.js').GTDEventStream;
 
     registry.register('template.fill', async () => ({ data: { template: 'phase', path: 'x', created: true } }));
 
@@ -22,7 +22,7 @@ describe('decorateMutationsWithEvents', () => {
       emitEvent: vi.fn(() => {
         throw new Error('stream down');
       }),
-    } as unknown as import('../event-stream.js').GSDEventStream;
+    } as unknown as import('../event-stream.js').GTDEventStream;
 
     registry.register('state.update', async () => ({ data: { ok: true } }));
 
@@ -35,7 +35,7 @@ describe('decorateMutationsWithEvents', () => {
 
   it('skips commands not registered in registry', async () => {
     const registry = new QueryRegistry();
-    const eventStream = { emitEvent: vi.fn() } as unknown as import('../event-stream.js').GSDEventStream;
+    const eventStream = { emitEvent: vi.fn() } as unknown as import('../event-stream.js').GTDEventStream;
 
     decorateMutationsWithEvents(registry, new Set(['unknown.command']), eventStream, 'sid-3');
 

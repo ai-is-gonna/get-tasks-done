@@ -1,7 +1,7 @@
 /**
  * Summary query handlers — extract sections and history from SUMMARY.md files.
  *
- * Ported from get-shit-done/bin/lib/commands.cjs (cmdSummaryExtract, cmdHistoryDigest).
+ * Ported from get-tasks-done/bin/lib/commands.cjs (cmdSummaryExtract, cmdHistoryDigest).
  * Uses `extractFrontmatterLeading` for parity with `frontmatter.cjs` (first `---` block only).
  *
  * @example
@@ -25,7 +25,7 @@ import type { QueryHandler } from './utils.js';
 
 /**
  * Extract a one-liner from the summary body when it is not in frontmatter.
- * Port of `extractOneLinerFromBody` from `get-shit-done/bin/lib/core.cjs`.
+ * Port of `extractOneLinerFromBody` from `get-tasks-done/bin/lib/core.cjs`.
  */
 function extractOneLinerFromBody(content: string): string | null {
   if (!content) return null;

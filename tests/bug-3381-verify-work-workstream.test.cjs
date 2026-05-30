@@ -8,13 +8,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 describe('bug #3381: verify-work forwards workstream context', () => {
-  test('workflow forwards ${GSD_WS} to workstream-sensitive SDK queries', () => {
+  test('workflow forwards ${GTD_WS} to workstream-sensitive SDK queries', () => {
     const workflow = fs.readFileSync(
-      path.join(__dirname, '..', 'get-shit-done', 'workflows', 'verify-work.md'),
+      path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'verify-work.md'),
       'utf8',
     );
 
-    assert.match(workflow, /GSD_WS=""/, 'verify-work must initialize GSD_WS');
+    assert.match(workflow, /GTD_WS=""/, 'verify-work must initialize GTD_WS');
     assert.match(
       workflow,
       /grep -qE -- '--ws\[\[:space:\]\]\+\[\^\[:space:\]\]\+'/,
@@ -32,18 +32,18 @@ describe('bug #3381: verify-work forwards workstream context', () => {
     );
     assert.match(
       workflow,
-      /gsd-sdk query init\.verify-work "\$\{PHASE_ARG\}" \$\{GSD_WS\}/,
-      'init.verify-work must receive GSD_WS so phase_dir resolves in workstreams',
+      /gtd-sdk query init\.verify-work "\$\{PHASE_ARG\}" \$\{GTD_WS\}/,
+      'init.verify-work must receive GTD_WS so phase_dir resolves in workstreams',
     );
     assert.match(
       workflow,
-      /gsd-sdk query phase\.mvp-mode "\$\{phase_number\}" \$\{GSD_WS\} --pick active/,
-      'phase.mvp-mode must receive GSD_WS so roadmap mode is workstream-scoped',
+      /gtd-sdk query phase\.mvp-mode "\$\{phase_number\}" \$\{GTD_WS\} --pick active/,
+      'phase.mvp-mode must receive GTD_WS so roadmap mode is workstream-scoped',
     );
     assert.match(
       workflow,
-      /gsd-sdk query roadmap\.get-phase "\$\{phase_number\}" \$\{GSD_WS\} --pick goal/,
-      'roadmap.get-phase must receive GSD_WS so goals are workstream-scoped',
+      /gtd-sdk query roadmap\.get-phase "\$\{phase_number\}" \$\{GTD_WS\} --pick goal/,
+      'roadmap.get-phase must receive GTD_WS so goals are workstream-scoped',
     );
   });
 });

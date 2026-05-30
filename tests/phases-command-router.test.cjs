@@ -3,7 +3,7 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { routePhasesCommand } = require('../get-shit-done/bin/lib/phases-command-router.cjs');
+const { routePhasesCommand } = require('../get-tasks-done/bin/lib/phases-command-router.cjs');
 
 describe('phases-command-router', () => {
   test('routes phases list with parsed options', () => {

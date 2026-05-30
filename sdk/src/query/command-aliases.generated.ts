@@ -46,7 +46,6 @@ export const VERIFY_COMMAND_ALIASES: readonly FamilyCommandAlias[] = [
 ] as const;
 
 export const INIT_COMMAND_ALIASES: readonly FamilyCommandAlias[] = [
-  { canonical: 'init.execute-phase', aliases: ['init execute-phase'], subcommand: 'execute-phase', mutation: false },
   { canonical: 'init.plan-phase', aliases: ['init plan-phase'], subcommand: 'plan-phase', mutation: false },
   { canonical: 'init.new-project', aliases: ['init new-project'], subcommand: 'new-project', mutation: false },
   { canonical: 'init.new-milestone', aliases: ['init new-milestone'], subcommand: 'new-milestone', mutation: false },

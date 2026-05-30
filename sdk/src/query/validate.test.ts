@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, writeFile, mkdir, rm, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 
 import { verifyKeyLinks, validateConsistency, validateHealth, regexForKeyLinkPattern } from './validate.js';
 
@@ -32,22 +32,22 @@ describe('verifyKeyLinks', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-validate-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-validate-'));
   });
 
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('throws GSDError Validation when no args', async () => {
+  it('throws GTDError Validation when no args', async () => {
     let caught: unknown;
     try {
       await verifyKeyLinks([], tmpDir);
     } catch (err) {
       caught = err;
     }
-    expect(caught).toBeInstanceOf(GSDError);
-    expect((caught as GSDError).classification).toBe('validation');
+    expect(caught).toBeInstanceOf(GTDError);
+    expect((caught as GTDError).classification).toBe('validation');
   });
 
   it('returns all_verified true when pattern found in source', async () => {
@@ -212,7 +212,7 @@ must_haves:
     expect(links[0].detail).toBe('Target referenced in source');
   });
 
-  it('reports invalid regex like gsd-tools.cjs (try/catch on new RegExp)', async () => {
+  it('reports invalid regex like gtd-tools.cjs (try/catch on new RegExp)', async () => {
     await writeFile(join(tmpDir, 'source.ts'), 'const x = 1;');
     await writeFile(join(tmpDir, 'target.ts'), 'const y = 2;');
 
@@ -271,7 +271,7 @@ describe('validateConsistency', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-consistency-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-consistency-'));
   });
 
   afterEach(async () => {
@@ -446,7 +446,7 @@ describe('validateHealth', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-health-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-health-'));
   });
 
   afterEach(async () => {

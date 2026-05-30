@@ -13,7 +13,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach, before } = require('node:test');
 const assert = require('node:assert/strict');
@@ -29,20 +29,20 @@ const HOOKS_DIST = path.join(__dirname, '..', 'hooks', 'dist');
 
 // Expected .sh community hooks
 const EXPECTED_SH_HOOKS = [
-  'gsd-session-state.sh',
-  'gsd-validate-commit.sh',
-  'gsd-phase-boundary.sh',
+  'gtd-session-state.sh',
+  'gtd-validate-commit.sh',
+  'gtd-phase-boundary.sh',
 ];
 
 // All hooks that should be in hooks/dist/ after build
 const EXPECTED_ALL_HOOKS = [
-  'gsd-check-update.js',
-  'gsd-context-monitor.js',
-  'gsd-prompt-guard.js',
-  'gsd-read-guard.js',
-  'gsd-read-injection-scanner.js',
-  'gsd-statusline.js',
-  'gsd-workflow-guard.js',
+  'gtd-check-update.js',
+  'gtd-context-monitor.js',
+  'gtd-prompt-guard.js',
+  'gtd-read-guard.js',
+  'gtd-read-injection-scanner.js',
+  'gtd-statusline.js',
+  'gtd-workflow-guard.js',
   ...EXPECTED_SH_HOOKS,
 ];
 
@@ -59,7 +59,7 @@ before(() => {
 
 // ─── Helper: simulate the hook copy loop from install.js ────────────────────
 // NOTE: This helper mirrors the chmod/copy logic only. It omits the .js
-// template substitution ('.claude' → runtime dir, {{GSD_VERSION}} stamping)
+// template substitution ('.claude' → runtime dir, {{GTD_VERSION}} stamping)
 // since these tests focus on file presence and permissions, not content.
 
 function simulateHookCopy(hooksSrc, hooksDest) {
@@ -91,7 +91,7 @@ describe('#1755: .sh hooks are copied and executable after install', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-hook-copy-');
+    tmpDir = createTempDir('gtd-hook-copy-');
   });
 
   afterEach(() => {
@@ -161,28 +161,28 @@ describe('install.js source correctness', () => {
     );
   });
 
-  test('Codex hook uses correct filename gsd-check-update.js (not gsd-update-check.js)', () => {
-    // The cache file gsd-update-check.json is legitimate (different artifact);
+  test('Codex hook uses correct filename gtd-check-update.js (not gtd-update-check.js)', () => {
+    // The cache file gtd-update-check.json is legitimate (different artifact);
     // check that no hook registration uses the inverted .js filename.
-    // Match the exact pattern: quote + gsd-update-check.js + quote
+    // Match the exact pattern: quote + gtd-update-check.js + quote
     assert.ok(
-      !src.match(/['"]gsd-update-check\.js['"]/),
-      'install.js must not reference the inverted hook name gsd-update-check.js in quotes'
+      !src.match(/['"]gtd-update-check\.js['"]/),
+      'install.js must not reference the inverted hook name gtd-update-check.js in quotes'
     );
   });
 
-  test('Codex hook path does not use get-shit-done/hooks/ subdirectory', () => {
-    // The Codex hook should resolve to targetDir/hooks/, not targetDir/get-shit-done/hooks/
+  test('Codex hook path does not use get-tasks-done/hooks/ subdirectory', () => {
+    // The Codex hook should resolve to targetDir/hooks/, not targetDir/get-tasks-done/hooks/
     assert.ok(
-      !src.includes("'get-shit-done', 'hooks', 'gsd-check-update"),
-      'Codex hook should not use get-shit-done/hooks/ path segment'
+      !src.includes("'get-tasks-done', 'hooks', 'gtd-check-update"),
+      'Codex hook should not use get-tasks-done/hooks/ path segment'
     );
   });
 
-  test('cache invalidation uses ~/.cache/gsd/ path', () => {
+  test('cache invalidation uses ~/.cache/gtd/ path', () => {
     assert.ok(
-      src.includes("os.homedir(), '.cache', 'gsd'"),
-      'Cache path should use os.homedir()/.cache/gsd/'
+      src.includes("os.homedir(), '.cache', 'gtd'"),
+      'Cache path should use os.homedir()/.cache/gtd/'
     );
   });
 
@@ -193,45 +193,45 @@ describe('install.js source correctness', () => {
     );
   });
 
-  test('gsd-workflow-guard.js is in uninstall hook list', () => {
-    const gsdHooksMatch = src.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'gsdHooks array should exist');
-    const gsdHooksContent = gsdHooksMatch[1];
+  test('gtd-workflow-guard.js is in uninstall hook list', () => {
+    const gtdHooksMatch = src.match(/const gtdHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(gtdHooksMatch, 'gtdHooks array should exist');
+    const gtdHooksContent = gtdHooksMatch[1];
     assert.ok(
-      gsdHooksContent.includes('gsd-workflow-guard.js'),
-      'gsdHooks should include gsd-workflow-guard.js'
+      gtdHooksContent.includes('gtd-workflow-guard.js'),
+      'gtdHooks should include gtd-workflow-guard.js'
     );
   });
 
-  test('phantom gsd-check-update.sh is not in uninstall hook list', () => {
-    const gsdHooksMatch = src.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'gsdHooks array should exist');
-    const gsdHooksContent = gsdHooksMatch[1];
+  test('phantom gtd-check-update.sh is not in uninstall hook list', () => {
+    const gtdHooksMatch = src.match(/const gtdHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(gtdHooksMatch, 'gtdHooks array should exist');
+    const gtdHooksContent = gtdHooksMatch[1];
     assert.ok(
-      !gsdHooksContent.includes('gsd-check-update.sh'),
-      'gsdHooks should not include phantom gsd-check-update.sh'
+      !gtdHooksContent.includes('gtd-check-update.sh'),
+      'gtdHooks should not include phantom gtd-check-update.sh'
     );
   });
 
-  test('isGsdHookCommand covers all GSD hook names', () => {
-    // The consolidated uninstall cleanup uses isGsdHookCommand — verify all hook names are present
+  test('isGtdHookCommand covers all GTD hook names', () => {
+    // The consolidated uninstall cleanup uses isGtdHookCommand — verify all hook names are present
     const expectedHookNames = [
-      'gsd-check-update', 'gsd-statusline', 'gsd-session-state',
-      'gsd-context-monitor', 'gsd-phase-boundary', 'gsd-prompt-guard',
-      'gsd-read-guard', 'gsd-validate-commit', 'gsd-workflow-guard',
+      'gtd-check-update', 'gtd-statusline', 'gtd-session-state',
+      'gtd-context-monitor', 'gtd-phase-boundary', 'gtd-prompt-guard',
+      'gtd-read-guard', 'gtd-validate-commit', 'gtd-workflow-guard',
     ];
     for (const name of expectedHookNames) {
       assert.ok(
         src.includes(`'${name}'`) || src.includes(`"${name}"`),
-        `isGsdHookCommand should match ${name}`
+        `isGtdHookCommand should match ${name}`
       );
     }
   });
 
-  test('Codex install migrates legacy gsd-update-check entries', () => {
+  test('Codex install migrates legacy gtd-update-check entries', () => {
     assert.ok(
-      src.includes('gsd-update-check'),
-      'install.js should detect legacy gsd-update-check entries for migration'
+      src.includes('gtd-update-check'),
+      'install.js should detect legacy gtd-update-check entries for migration'
     );
   });
 
@@ -270,7 +270,7 @@ describe('writeManifest includes .sh hooks', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-manifest-');
+    tmpDir = createTempDir('gtd-manifest-');
     // Set up minimal structure expected by writeManifest
     const hooksDir = path.join(tmpDir, 'hooks');
     fs.mkdirSync(hooksDir, { recursive: true });
@@ -285,7 +285,7 @@ describe('writeManifest includes .sh hooks', () => {
   test('manifest contains .sh hook entries', () => {
     writeManifest(tmpDir, 'claude');
 
-    const manifestPath = path.join(tmpDir, 'gsd-file-manifest.json');
+    const manifestPath = path.join(tmpDir, 'gtd-file-manifest.json');
     assert.ok(fs.existsSync(manifestPath), 'manifest file should exist');
 
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -301,7 +301,7 @@ describe('writeManifest includes .sh hooks', () => {
   test('manifest contains .js hook entries', () => {
     writeManifest(tmpDir, 'claude');
 
-    const manifestPath = path.join(tmpDir, 'gsd-file-manifest.json');
+    const manifestPath = path.join(tmpDir, 'gtd-file-manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
     const jsHooks = EXPECTED_ALL_HOOKS.filter(h => h.endsWith('.js'));
@@ -319,50 +319,50 @@ describe('writeManifest includes .sh hooks', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('uninstall settings cleanup preserves user hooks', () => {
-  // Mirror the isGsdHookCommand logic from install.js
-  const isGsdHookCommand = (cmd) =>
-    cmd && (cmd.includes('gsd-check-update') || cmd.includes('gsd-statusline') ||
-      cmd.includes('gsd-session-state') || cmd.includes('gsd-context-monitor') ||
-      cmd.includes('gsd-phase-boundary') || cmd.includes('gsd-prompt-guard') ||
-      cmd.includes('gsd-read-guard') || cmd.includes('gsd-validate-commit') ||
-      cmd.includes('gsd-workflow-guard'));
+  // Mirror the isGtdHookCommand logic from install.js
+  const isGtdHookCommand = (cmd) =>
+    cmd && (cmd.includes('gtd-check-update') || cmd.includes('gtd-statusline') ||
+      cmd.includes('gtd-session-state') || cmd.includes('gtd-context-monitor') ||
+      cmd.includes('gtd-phase-boundary') || cmd.includes('gtd-prompt-guard') ||
+      cmd.includes('gtd-read-guard') || cmd.includes('gtd-validate-commit') ||
+      cmd.includes('gtd-workflow-guard'));
 
   // Simulate the per-hook filtering logic from uninstall
-  function filterGsdHooks(entries) {
+  function filterGtdHooks(entries) {
     return entries
       .map(entry => {
         if (!entry.hooks || !Array.isArray(entry.hooks)) return entry;
-        entry.hooks = entry.hooks.filter(h => !isGsdHookCommand(h.command));
+        entry.hooks = entry.hooks.filter(h => !isGtdHookCommand(h.command));
         return entry.hooks.length > 0 ? entry : null;
       })
       .filter(Boolean);
   }
 
-  test('mixed entry with GSD + user hooks preserves user hooks', () => {
+  test('mixed entry with GTD + user hooks preserves user hooks', () => {
     const entries = [{
       matcher: 'Bash',
       hooks: [
-        { type: 'command', command: 'node /path/to/gsd-prompt-guard.js' },
+        { type: 'command', command: 'node /path/to/gtd-prompt-guard.js' },
         { type: 'command', command: 'bash /my/custom-lint.sh' },
       ],
     }];
 
-    const result = filterGsdHooks(entries);
+    const result = filterGtdHooks(entries);
     assert.strictEqual(result.length, 1, 'entry should survive with remaining user hook');
     assert.strictEqual(result[0].hooks.length, 1, 'only user hook should remain');
     assert.ok(result[0].hooks[0].command.includes('custom-lint'), 'user hook preserved');
   });
 
-  test('entry with only GSD hooks is fully removed', () => {
+  test('entry with only GTD hooks is fully removed', () => {
     const entries = [{
       hooks: [
-        { type: 'command', command: 'node /path/to/gsd-check-update.js' },
-        { type: 'command', command: 'node /path/to/gsd-statusline.js' },
+        { type: 'command', command: 'node /path/to/gtd-check-update.js' },
+        { type: 'command', command: 'node /path/to/gtd-statusline.js' },
       ],
     }];
 
-    const result = filterGsdHooks(entries);
-    assert.strictEqual(result.length, 0, 'entry should be removed when all hooks are GSD');
+    const result = filterGtdHooks(entries);
+    assert.strictEqual(result.length, 0, 'entry should be removed when all hooks are GTD');
   });
 
   test('entry with only user hooks is untouched', () => {
@@ -373,7 +373,7 @@ describe('uninstall settings cleanup preserves user hooks', () => {
       ],
     }];
 
-    const result = filterGsdHooks(entries);
+    const result = filterGtdHooks(entries);
     assert.strictEqual(result.length, 1, 'entry should survive');
     assert.strictEqual(result[0].hooks.length, 1, 'user hook should remain');
   });
@@ -381,31 +381,31 @@ describe('uninstall settings cleanup preserves user hooks', () => {
   test('non-array hook entries are preserved during uninstall (#1825)', () => {
     const entries = [
       { type: 'custom', command: 'echo hello' },
-      { matcher: 'Bash', hooks: [{ type: 'command', command: 'node /path/to/gsd-prompt-guard.js' }] },
+      { matcher: 'Bash', hooks: [{ type: 'command', command: 'node /path/to/gtd-prompt-guard.js' }] },
       { url: 'https://example.com/webhook' },
     ];
 
-    const result = filterGsdHooks(JSON.parse(JSON.stringify(entries)));
+    const result = filterGtdHooks(JSON.parse(JSON.stringify(entries)));
     assert.strictEqual(result.length, 2, 'both non-array entries should survive');
     assert.deepStrictEqual(result[0], { type: 'custom', command: 'echo hello' }, 'first non-array entry preserved');
     assert.deepStrictEqual(result[1], { url: 'https://example.com/webhook' }, 'second non-array entry preserved');
   });
 
-  test('all GSD hook names are recognized by isGsdHookCommand', () => {
-    const gsdCommands = [
-      'node /path/gsd-check-update.js',
-      'node /path/gsd-statusline.js',
-      'bash /path/gsd-session-state.sh',
-      'node /path/gsd-context-monitor.js',
-      'bash /path/gsd-phase-boundary.sh',
-      'node /path/gsd-prompt-guard.js',
-      'node /path/gsd-read-guard.js',
-      'bash /path/gsd-validate-commit.sh',
-      'node /path/gsd-workflow-guard.js',
+  test('all GTD hook names are recognized by isGtdHookCommand', () => {
+    const gtdCommands = [
+      'node /path/gtd-check-update.js',
+      'node /path/gtd-statusline.js',
+      'bash /path/gtd-session-state.sh',
+      'node /path/gtd-context-monitor.js',
+      'bash /path/gtd-phase-boundary.sh',
+      'node /path/gtd-prompt-guard.js',
+      'node /path/gtd-read-guard.js',
+      'bash /path/gtd-validate-commit.sh',
+      'node /path/gtd-workflow-guard.js',
     ];
 
-    for (const cmd of gsdCommands) {
-      assert.ok(isGsdHookCommand(cmd), `should recognize: ${cmd}`);
+    for (const cmd of gtdCommands) {
+      assert.ok(isGtdHookCommand(cmd), `should recognize: ${cmd}`);
     }
   });
 });
@@ -414,12 +414,12 @@ describe('uninstall settings cleanup preserves user hooks', () => {
 // 5. Codex legacy migration
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Codex legacy gsd-update-check migration', () => {
-  test('install.js strips legacy gsd-update-check hook blocks from config', () => {
+describe('Codex legacy gtd-update-check migration', () => {
+  test('install.js strips legacy gtd-update-check hook blocks from config', () => {
     const src = fs.readFileSync(INSTALL_SRC, 'utf-8');
     assert.ok(
-      src.includes('gsd-update-check') && src.includes('replace('),
-      'install.js should have migration logic to strip legacy gsd-update-check entries'
+      src.includes('gtd-update-check') && src.includes('replace('),
+      'install.js should have migration logic to strip legacy gtd-update-check entries'
     );
   });
 
@@ -428,16 +428,16 @@ describe('Codex legacy gsd-update-check migration', () => {
       '[features]',
       'codex_hooks = true',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
       'event = "SessionStart"',
-      'command = "node /old/path/gsd-update-check.js"',
+      'command = "node /old/path/gtd-update-check.js"',
       '',
     ].join('\n');
 
     let content = legacyBlock;
-    content = content.replace(/\n# GSD Hooks\n\[\[hooks\]\]\nevent = "SessionStart"\ncommand = "node [^\n]*gsd-update-check\.js"\n/g, '\n');
-    assert.ok(!content.includes('gsd-update-check'), 'legacy hook block should be removed');
+    content = content.replace(/\n# GTD Hooks\n\[\[hooks\]\]\nevent = "SessionStart"\ncommand = "node [^\n]*gtd-update-check\.js"\n/g, '\n');
+    assert.ok(!content.includes('gtd-update-check'), 'legacy hook block should be removed');
     assert.ok(content.includes('[features]'), 'non-hook content should be preserved');
   });
 
@@ -446,16 +446,16 @@ describe('Codex legacy gsd-update-check migration', () => {
       '[features]',
       'codex_hooks = true',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
       'event = "SessionStart"',
-      'command = "node /old/path/gsd-update-check.js"',
+      'command = "node /old/path/gtd-update-check.js"',
       '',
     ].join('\r\n');
 
     let content = legacyBlock;
-    content = content.replace(/\r\n# GSD Hooks\r\n\[\[hooks\]\]\r\nevent = "SessionStart"\r\ncommand = "node [^\r\n]*gsd-update-check\.js"\r\n/g, '\r\n');
-    assert.ok(!content.includes('gsd-update-check'), 'legacy CRLF hook block should be removed');
+    content = content.replace(/\r\n# GTD Hooks\r\n\[\[hooks\]\]\r\nevent = "SessionStart"\r\ncommand = "node [^\r\n]*gtd-update-check\.js"\r\n/g, '\r\n');
+    assert.ok(!content.includes('gtd-update-check'), 'legacy CRLF hook block should be removed');
     assert.ok(content.includes('[features]'), 'non-hook content should be preserved');
   });
 });

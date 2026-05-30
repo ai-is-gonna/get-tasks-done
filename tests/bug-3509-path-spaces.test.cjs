@@ -1,10 +1,10 @@
 /**
  * Regression tests for #3509 — CLI breaks when repo path contains spaces
  *
- * Root cause: test code embedded space-containing paths into runGsdTools()
+ * Root cause: test code embedded space-containing paths into runGtdTools()
  * string args; the helper's whitespace tokenizer truncated paths at the first
  * space.  All calls that carry dynamic paths must use the array form of
- * runGsdTools() so execFileSync receives the full path as a single argv slot.
+ * runGtdTools() so execFileSync receives the full path as a single argv slot.
  *
  * These tests create a tmpdir whose prefix intentionally contains a space so
  * they remain red on a broken codebase regardless of the host machine's
@@ -16,7 +16,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { runGsdTools } = require('./helpers.cjs');
+const { runGtdTools } = require('./helpers.cjs');
 
 // Create a tmpdir whose name always contains a space — this is the invariant
 // that was violated on /Volumes/Mini Me/... machines.
@@ -46,7 +46,7 @@ describe('bug-3509: --cwd= survives spaces in path', () => {
 
   test('--cwd= array form passes full path with spaces to dispatcher', () => {
     // Array form: path is a single argv slot, never split on whitespace
-    const result = runGsdTools(['--cwd=' + tmpDir, 'state', 'load'], process.cwd());
+    const result = runGtdTools(['--cwd=' + tmpDir, 'state', 'load'], process.cwd());
     assert.ok(result.success, `--cwd= with spaced path should succeed, got: ${result.error}`);
   });
 });
@@ -66,18 +66,18 @@ describe('bug-3509: frontmatter get/set/merge/validate survive spaces in file pa
   afterEach(() => cleanup(tmpDir));
 
   test('frontmatter get returns parsed fields when file path contains spaces', () => {
-    const result = runGsdTools(['frontmatter', 'get', tmpFile]);
+    const result = runGtdTools(['frontmatter', 'get', tmpFile]);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.phase, '01', 'phase field should be "01"');
   });
 
   test('frontmatter set works when file path contains spaces', () => {
-    const setResult = runGsdTools(['frontmatter', 'set', tmpFile, '--field', 'phase', '--value', '02']);
+    const setResult = runGtdTools(['frontmatter', 'set', tmpFile, '--field', 'phase', '--value', '02']);
     assert.ok(setResult.success, `set failed: ${setResult.error}`);
     // Verify behaviorally — round-trip via frontmatter get rather than reading the file
     // and grepping (which trips lint-no-source-grep even on tmp files).
-    const getResult = runGsdTools(['frontmatter', 'get', tmpFile]);
+    const getResult = runGtdTools(['frontmatter', 'get', tmpFile]);
     assert.ok(getResult.success, `get failed: ${getResult.error}`);
     const parsed = JSON.parse(getResult.output);
     assert.strictEqual(parsed.phase, '02', 'field should be updated to "02"');
@@ -85,7 +85,7 @@ describe('bug-3509: frontmatter get/set/merge/validate survive spaces in file pa
 
   test('frontmatter validate works when file path contains spaces', () => {
     // Plan frontmatter schema — file path contains a space; must reach validation, not fail on path
-    const result = runGsdTools(['frontmatter', 'validate', tmpFile, '--schema', 'plan']);
+    const result = runGtdTools(['frontmatter', 'validate', tmpFile, '--schema', 'plan']);
     // Should succeed (exit 0) and return structured JSON with valid/missing, not a path-split error
     assert.ok(result.success, `Command should exit 0, got: ${result.error}`);
     const out = JSON.parse(result.output);
@@ -109,7 +109,7 @@ describe('bug-3509: verify-path-exists survives absolute paths with spaces', () 
     const absFile = path.join(tmpDir, 'abs-test.txt');
     fs.writeFileSync(absFile, 'content');
 
-    const result = runGsdTools(['verify-path-exists', absFile], tmpDir);
+    const result = runGtdTools(['verify-path-exists', absFile], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.exists, true, 'file should be found');
@@ -132,7 +132,7 @@ describe('bug-3509: scan-sessions --path survives spaces in path', () => {
     const sessionsDir = path.join(tmpDir, 'projects');
     fs.mkdirSync(sessionsDir, { recursive: true });
 
-    const result = runGsdTools(['scan-sessions', '--path', sessionsDir, '--raw'], tmpDir);
+    const result = runGtdTools(['scan-sessions', '--path', sessionsDir, '--raw'], tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.ok(Array.isArray(out), 'should return an array');

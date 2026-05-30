@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createGSDToolsRuntime } from './query-gsd-tools-runtime.js';
+import { createGTDToolsRuntime } from './query-gtd-tools-runtime.js';
 
 describe('SDK Runtime Bridge seam coverage', () => {
   it('exposes bridge as the single runtime seam', () => {
-    const runtime = createGSDToolsRuntime({
+    const runtime = createGTDToolsRuntime({
       projectDir: '/tmp/project',
-      gsdToolsPath: '/tmp/gsd-tools.cjs',
+      gtdToolsPath: '/tmp/gtd-tools.cjs',
       timeoutMs: 1_000,
       shouldUseNativeQuery: () => true,
       execJsonFallback: vi.fn(async () => ({})),

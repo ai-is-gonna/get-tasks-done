@@ -35,7 +35,7 @@ describe('intelStatus', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-intel-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-intel-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({ model_profile: 'balanced' }));
   });
@@ -66,7 +66,7 @@ describe('intelSnapshot', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-intel-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-intel-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),

@@ -206,7 +206,7 @@ export function normalizeLegacyKeys(parsed: Record<string, unknown>): Normalizat
 
 /**
  * Fill in CONFIG_DEFAULTS where the parsed object lacks values.
- * Deep-merges per-section (git, workflow, hooks, agent_skills, planning, ship).
+ * Deep-merges per-section (git, workflow, hooks, agent_skills, planning).
  * Boolean false and explicit null are preserved — not overridden by truthy defaults.
  */
 export function mergeDefaults(parsed: Record<string, unknown>): MergedConfig {

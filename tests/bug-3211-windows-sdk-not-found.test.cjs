@@ -1,13 +1,13 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Regression tests for bug #3211.
  *
  * Windows 11 + PowerShell 7 + Node v22.22.1, fresh
- * `npx get-shit-done-cc@latest --global --claude`:
- *   gsd-sdk: The term 'gsd-sdk' is not recognized
+ * `npx get-tasks-done@latest --global --claude`:
+ *   gtd-sdk: The term 'gtd-sdk' is not recognized
  *
  * Root causes (Windows sibling of #3231):
  *
@@ -17,7 +17,7 @@ process.env.GSD_TEST_MODE = '1';
  *    stripped. We verify this explicitly because the Linux tests only exercised
  *    POSIX-style paths.
  *
- * B. isGsdSdkOnPath (zero-arg fallback) reads `process.env.PATH || ''`. On
+ * B. isGtdSdkOnPath (zero-arg fallback) reads `process.env.PATH || ''`. On
  *    Windows, Node.js normalises PATH case so `process.env.PATH` always
  *    returns the right value in production. But in a cross-platform test
  *    running on macOS/Linux that simulates Windows by writing to
@@ -53,8 +53,8 @@ const installModule = require(path.join(ROOT, 'bin', 'install.js'));
 
 const {
   filterNpxFromPath,
-  isLegacyGsdSdkShim,
-  isGsdSdkOnPath,
+  isLegacyGtdSdkShim,
+  isGtdSdkOnPath,
   installSdkIfNeeded,
   getUserShellWindowsPersistentPath,
 } = installModule;
@@ -110,49 +110,49 @@ describe('bug #3211-A: filterNpxFromPath handles Windows backslash _npx paths', 
 });
 
 // ---------------------------------------------------------------------------
-// B. isGsdSdkOnPath — does not return true when only a Windows _npx dir has
-//    gsd-sdk.cmd (using filterNpxFromPath on the passed pathString)
+// B. isGtdSdkOnPath — does not return true when only a Windows _npx dir has
+//    gtd-sdk.cmd (using filterNpxFromPath on the passed pathString)
 // ---------------------------------------------------------------------------
 
-describe('bug #3211-B: isGsdSdkOnPath rejects Windows _npx-only transient PATH', () => {
+describe('bug #3211-B: isGtdSdkOnPath rejects Windows _npx-only transient PATH', () => {
   let tmpRoot;
 
   before(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3211-b-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3211-b-'));
   });
 
   after(() => {
     try { fs.rmSync(tmpRoot, { recursive: true, force: true }); } catch {}
   });
 
-  test('returns false when a gsd-sdk.cmd exists only in an _npx-style transient dir', () => {
+  test('returns false when a gtd-sdk.cmd exists only in an _npx-style transient dir', () => {
     // On POSIX we name the dir with _npx/ to match the filter pattern.
-    // We can't set process.platform, but we CAN call isGsdSdkOnPath with an
+    // We can't set process.platform, but we CAN call isGtdSdkOnPath with an
     // explicit pathString that contains an _npx segment — the fix must
     // ensure callers pre-filter via filterNpxFromPath before calling
-    // isGsdSdkOnPath. We test filterNpxFromPath(pathString) produces an
-    // empty result, which means isGsdSdkOnPath of the filtered path returns false.
+    // isGtdSdkOnPath. We test filterNpxFromPath(pathString) produces an
+    // empty result, which means isGtdSdkOnPath of the filtered path returns false.
     const npxBinDir = path.join(tmpRoot, '_npx', 'abc123', 'node_modules', '.bin');
     fs.mkdirSync(npxBinDir, { recursive: true });
 
-    // Write a gsd-sdk shim (named .cmd for the Windows scenario — on POSIX
-    // isGsdSdkOnPath won't find .cmd; we validate the filter, not the exec check).
-    const shimPath = path.join(npxBinDir, 'gsd-sdk.cmd');
+    // Write a gtd-sdk shim (named .cmd for the Windows scenario — on POSIX
+    // isGtdSdkOnPath won't find .cmd; we validate the filter, not the exec check).
+    const shimPath = path.join(npxBinDir, 'gtd-sdk.cmd');
     fs.writeFileSync(
       shimPath,
-      ['@ECHO OFF', '@node "C:\\path\\to\\gsd-sdk.js" %*', ''].join('\r\n'),
+      ['@ECHO OFF', '@node "C:\\path\\to\\gtd-sdk.js" %*', ''].join('\r\n'),
     );
 
     // The raw pathString contains an _npx segment — it MUST be filtered.
     const rawPath = npxBinDir;
     const persistentPath = filterNpxFromPath(rawPath);
 
-    // After filtering, the _npx dir must be gone so isGsdSdkOnPath returns false.
-    const onPath = isGsdSdkOnPath(persistentPath);
+    // After filtering, the _npx dir must be gone so isGtdSdkOnPath returns false.
+    const onPath = isGtdSdkOnPath(persistentPath);
     assert.equal(
       onPath,
       false,
-      'isGsdSdkOnPath(filterNpxFromPath(path)) must return false when only _npx dir has gsd-sdk. persistentPath=' + persistentPath,
+      'isGtdSdkOnPath(filterNpxFromPath(path)) must return false when only _npx dir has gtd-sdk. persistentPath=' + persistentPath,
     );
   });
 });
@@ -241,7 +241,7 @@ describe('bug #3211-C: getUserShellWindowsPersistentPath export', () => {
 
 // ---------------------------------------------------------------------------
 // D. installSdkIfNeeded Windows false-positive: transient _npx + npm-prefix
-//    NOT on PATH → must NOT print "GSD SDK ready"
+//    NOT on PATH → must NOT print "GTD SDK ready"
 // ---------------------------------------------------------------------------
 
 describe('bug #3211-D: installSdkIfNeeded — Windows _npx false-positive', () => {
@@ -283,19 +283,19 @@ describe('bug #3211-D: installSdkIfNeeded — Windows _npx false-positive', () =
   }
 
   beforeEach(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3211-d-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3211-d-'));
     sdkDir = makeSdkDir(tmpRoot);
 
     // Simulate: install-time PATH contains only a transient _npx dir
-    // with a gsd-sdk shim. The persistent npm prefix dir is separate and
+    // with a gtd-sdk shim. The persistent npm prefix dir is separate and
     // NOT in process.env.PATH during the npx run.
     const npxBinDir = path.join(tmpRoot, '_npx', 'abc123', 'node_modules', '.bin');
     fs.mkdirSync(npxBinDir, { recursive: true });
-    // Write a gsd-sdk shim in the transient dir (executable on POSIX)
-    const shimName = 'gsd-sdk';
+    // Write a gtd-sdk shim in the transient dir (executable on POSIX)
+    const shimName = 'gtd-sdk';
     fs.writeFileSync(
       path.join(npxBinDir, shimName),
-      ['#!/bin/sh', 'exec node /path/to/gsd-sdk.js "$@"', ''].join('\n'),
+      ['#!/bin/sh', 'exec node /path/to/gtd-sdk.js "$@"', ''].join('\n'),
       { mode: 0o755 },
     );
 
@@ -340,15 +340,15 @@ describe('bug #3211-D: installSdkIfNeeded — Windows _npx false-positive', () =
     try { fs.rmSync(tmpRoot, { recursive: true, force: true }); } catch {}
   });
 
-  test('does NOT print "GSD SDK ready" when the only gsd-sdk entry is in a transient _npx dir and npm-prefix is off-PATH', () => {
+  test('does NOT print "GTD SDK ready" when the only gtd-sdk entry is in a transient _npx dir and npm-prefix is off-PATH', () => {
     const { stdout, stderr } = captureConsole(() => {
       installSdkIfNeeded({ sdkDir });
     });
     const combined = `${stdout}\n${stderr}`;
 
     assert.ok(
-      !/GSD SDK ready/.test(combined),
-      'installer must NOT print "GSD SDK ready" when gsd-sdk is only in a transient _npx dir. Got:\n' + combined,
+      !/GTD SDK ready/.test(combined),
+      'installer must NOT print "GTD SDK ready" when gtd-sdk is only in a transient _npx dir. Got:\n' + combined,
     );
     // Must emit SOME output (warning or diagnostic), not silently succeed.
     assert.ok(
@@ -359,51 +359,51 @@ describe('bug #3211-D: installSdkIfNeeded — Windows _npx false-positive', () =
 });
 
 // ---------------------------------------------------------------------------
-// E. isLegacyGsdSdkShim — Windows .cmd shim detection
+// E. isLegacyGtdSdkShim — Windows .cmd shim detection
 // ---------------------------------------------------------------------------
 
-describe('bug #3211-E: isLegacyGsdSdkShim detects legacy marker in .cmd files', () => {
+describe('bug #3211-E: isLegacyGtdSdkShim detects legacy marker in .cmd files', () => {
   let tmpRoot;
 
   before(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3211-e-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3211-e-'));
   });
 
   after(() => {
     try { fs.rmSync(tmpRoot, { recursive: true, force: true }); } catch {}
   });
 
-  test('detects @deprecated + gsd-tools.cjs in a .cmd shim', () => {
-    assert.equal(typeof isLegacyGsdSdkShim, 'function');
+  test('detects @deprecated + gtd-tools.cjs in a .cmd shim', () => {
+    assert.equal(typeof isLegacyGtdSdkShim, 'function');
 
-    const legacyCmd = path.join(tmpRoot, 'gsd-sdk.cmd');
+    const legacyCmd = path.join(tmpRoot, 'gtd-sdk.cmd');
     fs.writeFileSync(
       legacyCmd,
       [
         '@ECHO OFF',
-        ':: @deprecated — use gsd-tools.cjs directly',
-        '@node "C:\\path\\to\\gsd-tools.cjs" %*',
+        ':: @deprecated — use gtd-tools.cjs directly',
+        '@node "C:\\path\\to\\gtd-tools.cjs" %*',
         '',
       ].join('\r\n'),
     );
-    assert.equal(isLegacyGsdSdkShim(legacyCmd), true, 'must detect @deprecated gsd-tools.cjs in .cmd shim');
+    assert.equal(isLegacyGtdSdkShim(legacyCmd), true, 'must detect @deprecated gtd-tools.cjs in .cmd shim');
   });
 
-  test('returns false for a modern .cmd shim pointing at gsd-sdk.js', () => {
-    const modernCmd = path.join(tmpRoot, 'gsd-sdk-modern.cmd');
+  test('returns false for a modern .cmd shim pointing at gtd-sdk.js', () => {
+    const modernCmd = path.join(tmpRoot, 'gtd-sdk-modern.cmd');
     fs.writeFileSync(
       modernCmd,
       [
         '@ECHO OFF',
         '@SETLOCAL',
-        '@node "C:\\path\\to\\get-shit-done-cc\\bin\\gsd-sdk.js" %*',
+        '@node "C:\\path\\to\\get-tasks-done\\bin\\gtd-sdk.js" %*',
         '',
       ].join('\r\n'),
     );
-    assert.equal(isLegacyGsdSdkShim(modernCmd), false, 'must not flag modern .cmd shim as legacy');
+    assert.equal(isLegacyGtdSdkShim(modernCmd), false, 'must not flag modern .cmd shim as legacy');
   });
 
   test('returns false for a missing file', () => {
-    assert.equal(isLegacyGsdSdkShim(path.join(tmpRoot, 'no-such-file.cmd')), false);
+    assert.equal(isLegacyGtdSdkShim(path.join(tmpRoot, 'no-such-file.cmd')), false);
   });
 });

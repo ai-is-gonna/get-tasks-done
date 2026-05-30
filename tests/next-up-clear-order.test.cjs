@@ -19,10 +19,10 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('path');
 
-const GSD_ROOT = path.join(__dirname, '..', 'get-shit-done');
-const UI_BRAND = path.join(GSD_ROOT, 'references', 'ui-brand.md');
-const CONTINUATION_FORMAT = path.join(GSD_ROOT, 'references', 'continuation-format.md');
-const WORKFLOWS_DIR = path.join(GSD_ROOT, 'workflows');
+const GTD_ROOT = path.join(__dirname, '..', 'get-tasks-done');
+const UI_BRAND = path.join(GTD_ROOT, 'references', 'ui-brand.md');
+const CONTINUATION_FORMAT = path.join(GTD_ROOT, 'references', 'continuation-format.md');
+const WORKFLOWS_DIR = path.join(GTD_ROOT, 'workflows');
 
 /**
  * Recursively collect all .md files in a directory.
@@ -106,7 +106,7 @@ describe('workflow files — no <sub>/clear patterns in Next Up blocks', () => {
       const matches = content.match(subClearPattern);
       if (matches) {
         failures.push({
-          file: path.relative(GSD_ROOT, filePath),
+          file: path.relative(GTD_ROOT, filePath),
           matches: matches.length,
           examples: matches.slice(0, 3),
         });
@@ -128,7 +128,7 @@ describe('workflow files — no <sub>/clear patterns in Next Up blocks', () => {
 });
 
 describe('reference files — no <sub>/clear patterns', () => {
-  const referencesDir = path.join(GSD_ROOT, 'references');
+  const referencesDir = path.join(GTD_ROOT, 'references');
   const refFiles = collectMarkdownFiles(referencesDir);
 
   test('found reference .md files to scan', () => {
@@ -147,7 +147,7 @@ describe('reference files — no <sub>/clear patterns', () => {
       const matches = content.match(subClearPattern);
       if (matches) {
         failures.push({
-          file: path.relative(GSD_ROOT, filePath),
+          file: path.relative(GTD_ROOT, filePath),
           matches: matches.length,
           examples: matches.slice(0, 3),
         });

@@ -1,9 +1,9 @@
 /**
- * Enhancement #2500: gsd-codebase-mapper (arch focus) rich architecture output
+ * Enhancement #2500: gtd-codebase-mapper (arch focus) rich architecture output
  *
- * The codebase/ARCHITECTURE.md produced by gsd-codebase-mapper was a sparse
+ * The codebase/ARCHITECTURE.md produced by gtd-codebase-mapper was a sparse
  * structural inventory — file listings and module relationships. After a major
- * refactor, research/ARCHITECTURE.md (created at /gsd-new-project) goes stale
+ * refactor, research/ARCHITECTURE.md (created at /gtd-new-project) goes stale
  * with no refresh command. This enhancement enriches the codebase mapper's
  * arch-focus template to match the richness of the research version:
  *   - ASCII system overview diagram
@@ -20,7 +20,7 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// The gsd-codebase-mapper ARCHITECTURE.md template is the instruction set
+// The gtd-codebase-mapper ARCHITECTURE.md template is the instruction set
 // executed by the LLM at runtime. Testing its text content tests whether the
 // deployed agent will produce rich architecture docs as required by #2500.
 
@@ -29,14 +29,14 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const AGENT_PATH = path.join(__dirname, '..', 'agents', 'gsd-codebase-mapper.md');
+const AGENT_PATH = path.join(__dirname, '..', 'agents', 'gtd-codebase-mapper.md');
 
-describe('enh-2500: gsd-codebase-mapper arch focus — rich architecture output', () => {
+describe('enh-2500: gtd-codebase-mapper arch focus — rich architecture output', () => {
   let agentContent;
   let archTemplate;
 
   before(() => {
-    assert.ok(fs.existsSync(AGENT_PATH), 'agents/gsd-codebase-mapper.md must exist');
+    assert.ok(fs.existsSync(AGENT_PATH), 'agents/gtd-codebase-mapper.md must exist');
     agentContent = fs.readFileSync(AGENT_PATH, 'utf-8');
 
     // Isolate the ARCHITECTURE.md template section from the agent file.

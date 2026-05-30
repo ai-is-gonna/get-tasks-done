@@ -80,8 +80,8 @@ describe('executeForCjs - sync primitive', () => {
   });
 
   it('native_failure: handler execution failure is classified as native_failure', () => {
-    // generate-slug with no args throws a GSDError (validation) — that maps to validation_error.
-    // We need a command that throws a plain Error (GSDToolsError classification.kind='failure').
+    // generate-slug with no args throws a GTDError (validation) — that maps to validation_error.
+    // We need a command that throws a plain Error (GTDToolsError classification.kind='failure').
     //
     // Phase 5.1 fix note: the Phase 5.0 fixture used projectDir='/tmp' with an absolute
     // path arg that started with /tmp — after the worker fix threads projectDir correctly,

@@ -27,8 +27,8 @@ const { test, describe, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
-const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
 
 function makePlanProject(files = {}) {
   const dir = createTempProject();
@@ -113,7 +113,7 @@ describe('bug #2770 — non-string truths must be coerced, not dropped', () => {
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_BARE_INT_TRUTH(2),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -140,7 +140,7 @@ describe('bug #2770 — non-string truths must be coerced, not dropped', () => {
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_NUMERIC_TRUTH(2, 'shared-rule'),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const out = JSON.parse(result.output);

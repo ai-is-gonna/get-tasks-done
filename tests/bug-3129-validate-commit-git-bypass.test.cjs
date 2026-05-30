@@ -3,7 +3,7 @@
 
 // Regression tests for bug #3129.
 //
-// gsd-validate-commit.sh used `[[ "$CMD" =~ ^git[[:space:]]+commit ]]` to
+// gtd-validate-commit.sh used `[[ "$CMD" =~ ^git[[:space:]]+commit ]]` to
 // detect git commit invocations. This regex silently bypasses Conventional
 // Commits enforcement for three real git commit forms:
 //   1. git -C /some/path commit -m "..."   (working-directory prefix)
@@ -89,24 +89,24 @@ describe('git-cmd.js isGitSubcommand: should NOT match commit', () => {
   }
 });
 
-// ── gsd-validate-commit.sh source check ──────────────────────────────────────
+// ── gtd-validate-commit.sh source check ──────────────────────────────────────
 
-describe('gsd-validate-commit.sh delegates to git-cmd.js', () => {
+describe('gtd-validate-commit.sh delegates to git-cmd.js', () => {
   const hookSrc = fs.readFileSync(
-    path.join(ROOT, 'hooks', 'gsd-validate-commit.sh'), 'utf8',
+    path.join(ROOT, 'hooks', 'gtd-validate-commit.sh'), 'utf8',
   );
 
   test('hook no longer uses the stale ^git\\s+commit bash regex', () => {
     assert.ok(
       !hookSrc.includes('^git[[:space:]]+commit'),
-      'gsd-validate-commit.sh still uses the bypassed regex — fix not applied',
+      'gtd-validate-commit.sh still uses the bypassed regex — fix not applied',
     );
   });
 
   test('hook delegates to git-cmd.js isGitSubcommand', () => {
     assert.ok(
       hookSrc.includes('git-cmd.js') && hookSrc.includes('isGitSubcommand'),
-      'gsd-validate-commit.sh does not reference git-cmd.js or isGitSubcommand',
+      'gtd-validate-commit.sh does not reference git-cmd.js or isGitSubcommand',
     );
   });
 

@@ -1,7 +1,7 @@
 /**
  * Regression tests for bug #2684:
- *   `gsd-sdk query milestone.complete <version>` always fails with
- *   GSDError: version required for phases archive.
+ *   `gtd-sdk query milestone.complete <version>` always fails with
+ *   GTDError: version required for phases archive.
  *
  * Root cause: milestoneComplete extracted version from args[0] but passed
  * [] instead of args (or [version]) to phasesArchive, so phasesArchive
@@ -14,7 +14,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const SDK_CLI = path.join(__dirname, '..', 'sdk', 'dist', 'cli.js');
 const { execFileSync } = require('child_process');

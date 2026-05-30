@@ -2,12 +2,12 @@
  * Unit tests for utility query handlers.
  *
  * Covers: generateSlug and currentTimestamp functions with output parity
- * to gsd-tools.cjs cmdGenerateSlug and cmdCurrentTimestamp.
+ * to gtd-tools.cjs cmdGenerateSlug and cmdCurrentTimestamp.
  */
 
 import { describe, it, expect } from 'vitest';
 import { generateSlug, currentTimestamp } from './utils.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 
 const PROJECT_DIR = '/tmp/test-project';
 
@@ -33,23 +33,23 @@ describe('generateSlug', () => {
     expect((result.data as { slug: string }).slug).toHaveLength(60);
   });
 
-  it('throws GSDError with Validation classification for empty text', async () => {
-    await expect(generateSlug([''], PROJECT_DIR)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification for empty text', async () => {
+    await expect(generateSlug([''], PROJECT_DIR)).rejects.toThrow(GTDError);
     try {
       await generateSlug([''], PROJECT_DIR);
     } catch (err) {
-      expect(err).toBeInstanceOf(GSDError);
-      expect((err as GSDError).classification).toBe(ErrorClassification.Validation);
+      expect(err).toBeInstanceOf(GTDError);
+      expect((err as GTDError).classification).toBe(ErrorClassification.Validation);
     }
   });
 
-  it('throws GSDError with Validation classification for missing text', async () => {
-    await expect(generateSlug([], PROJECT_DIR)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification for missing text', async () => {
+    await expect(generateSlug([], PROJECT_DIR)).rejects.toThrow(GTDError);
     try {
       await generateSlug([], PROJECT_DIR);
     } catch (err) {
-      expect(err).toBeInstanceOf(GSDError);
-      expect((err as GSDError).classification).toBe(ErrorClassification.Validation);
+      expect(err).toBeInstanceOf(GTDError);
+      expect((err as GTDError).classification).toBe(ErrorClassification.Validation);
     }
   });
 });

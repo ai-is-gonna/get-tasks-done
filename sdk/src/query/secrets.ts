@@ -1,5 +1,5 @@
 /**
- * Secrets handling — TypeScript mirror of `get-shit-done/bin/lib/secrets.cjs`.
+ * Secrets handling — TypeScript mirror of `get-tasks-done/bin/lib/secrets.cjs`.
  *
  * Keys considered sensitive (`SECRET_CONFIG_KEYS`) are masked in any
  * machine-readable response from `config-set` / `config-get` so plaintext

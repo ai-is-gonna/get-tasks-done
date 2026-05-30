@@ -2,7 +2,7 @@
 // Regression tests for issue #3286 — three bugs in state.cjs:
 //
 // Bug A: cmdStateRecordMetric / cmdStateAddDecision return { recorded: false }
-//   with exit code 0 when their target section is absent. gsd-executor treats
+//   with exit code 0 when their target section is absent. gtd-task-executor treats
 //   exit 0 as success, silently losing metrics/decisions across an entire phase.
 //   Fix: auto-create the missing section (Bug B subsumes A — silent no-op
 //   disappears). When auto-created, JSON must include created: true.
@@ -19,7 +19,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fixtures
@@ -28,7 +28,7 @@ const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 /** Build a minimal STATE.md with all canonical sections */
 function buildFullStateMd() {
   return [
-    '# GSD State',
+    '# GTD State',
     '',
     '## Configuration',
     'Current Phase: 1',
@@ -57,7 +57,7 @@ function buildFullStateMd() {
 /** Build a STATE.md WITHOUT Performance Metrics or Decisions sections */
 function buildBareboneStateMd() {
   return [
-    '# GSD State',
+    '# GTD State',
     '',
     '## Configuration',
     'Current Phase: 1',
@@ -89,7 +89,7 @@ describe('#3286 Bug B: record-metric auto-creates ## Performance Metrics when mi
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '1', '--duration', '45min'],
       tmpDir,
     );
@@ -104,7 +104,7 @@ describe('#3286 Bug B: record-metric auto-creates ## Performance Metrics when mi
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '1', '--duration', '45min'],
       tmpDir,
     );
@@ -118,14 +118,14 @@ describe('#3286 Bug B: record-metric auto-creates ## Performance Metrics when mi
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '2', '--duration', '30min', '--tasks', '5'],
       tmpDir,
     );
     assert.ok(result.success, `record-metric must succeed, got: ${result.error}`);
 
     // Verify the metric appeared in the file by calling state get to read the section
-    const getResult = runGsdTools(['state', 'get', 'Performance Metrics'], tmpDir);
+    const getResult = runGtdTools(['state', 'get', 'Performance Metrics'], tmpDir);
     assert.ok(getResult.success, `state get must succeed, got: ${getResult.error}`);
 
     // Parse JSON to check structural content (no .includes on raw file)
@@ -142,7 +142,7 @@ describe('#3286 Bug B: record-metric auto-creates ## Performance Metrics when mi
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildFullStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '2', '--plan', '1', '--duration', '1h'],
       tmpDir,
     );
@@ -169,7 +169,7 @@ describe('#3286 Bug B: add-decision auto-creates ## Decisions when missing', () 
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '1', '--summary', 'Use TypeScript for type safety'],
       tmpDir,
     );
@@ -183,7 +183,7 @@ describe('#3286 Bug B: add-decision auto-creates ## Decisions when missing', () 
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '1', '--summary', 'Use Redis for caching'],
       tmpDir,
     );
@@ -198,14 +198,14 @@ describe('#3286 Bug B: add-decision auto-creates ## Decisions when missing', () 
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
     const summary = 'Adopt PostgreSQL over MySQL for JSONB support';
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '2', '--summary', summary],
       tmpDir,
     );
     assert.ok(result.success, `add-decision must succeed, got: ${result.error}`);
 
     // Verify via state get (structured), not raw file grep
-    const getResult = runGsdTools(['state', 'get', 'Decisions'], tmpDir);
+    const getResult = runGtdTools(['state', 'get', 'Decisions'], tmpDir);
     assert.ok(getResult.success, `state get Decisions must succeed, got: ${getResult.error}`);
 
     const sectionContent = JSON.parse(getResult.output);
@@ -220,7 +220,7 @@ describe('#3286 Bug B: add-decision auto-creates ## Decisions when missing', () 
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildFullStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '1', '--summary', 'Use monorepo layout'],
       tmpDir,
     );
@@ -251,7 +251,7 @@ describe('#3286 Bug A: record-metric / add-decision never silently no-op', () =>
     // Minimal state — no Performance Metrics section
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '1', '--duration', '20min'],
       tmpDir,
     );
@@ -270,7 +270,7 @@ describe('#3286 Bug A: record-metric / add-decision never silently no-op', () =>
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '1', '--summary', 'Prefer composition over inheritance'],
       tmpDir,
     );
@@ -311,7 +311,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
   });
 
   test('record-metric --ws foo writes to workstream STATE.md, not root', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '1', '--duration', '10min', '--ws', 'foo'],
       tmpDir,
     );
@@ -321,7 +321,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
     assert.strictEqual(parsed.recorded, true, `recorded must be true`);
 
     // Workstream STATE.md should have the row; root STATE.md should NOT
-    const rootGet = runGsdTools(['state', 'get', 'Performance Metrics'], tmpDir);
+    const rootGet = runGtdTools(['state', 'get', 'Performance Metrics'], tmpDir);
     assert.ok(rootGet.success, `state get root must succeed, got: ${rootGet.error}`);
     const rootContent = JSON.parse(rootGet.output)['Performance Metrics'] || '';
     assert.ok(
@@ -329,7 +329,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
       `Root STATE.md must NOT have the metric row. Got: ${rootContent}`,
     );
 
-    const wsGet = runGsdTools(['state', 'get', 'Performance Metrics', '--ws', 'foo'], tmpDir);
+    const wsGet = runGtdTools(['state', 'get', 'Performance Metrics', '--ws', 'foo'], tmpDir);
     assert.ok(wsGet.success, `state get --ws foo must succeed, got: ${wsGet.error}`);
     const wsContent = JSON.parse(wsGet.output)['Performance Metrics'] || '';
     assert.ok(
@@ -340,7 +340,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
 
   test('add-decision --ws foo writes to workstream STATE.md, not root', () => {
     const summary = 'Adopt event-sourcing for audit trail';
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'add-decision', '--phase', '1', '--summary', summary, '--ws', 'foo'],
       tmpDir,
     );
@@ -350,7 +350,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
     assert.strictEqual(parsed.added, true, `added must be true`);
 
     // Root STATE.md must NOT have the decision
-    const rootGet = runGsdTools(['state', 'get', 'Decisions'], tmpDir);
+    const rootGet = runGtdTools(['state', 'get', 'Decisions'], tmpDir);
     assert.ok(rootGet.success, `state get root must succeed, got: ${rootGet.error}`);
     const rootContent = JSON.parse(rootGet.output)['Decisions'] || '';
     assert.ok(
@@ -359,7 +359,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
     );
 
     // Workstream STATE.md must have the decision
-    const wsGet = runGsdTools(['state', 'get', 'Decisions', '--ws', 'foo'], tmpDir);
+    const wsGet = runGtdTools(['state', 'get', 'Decisions', '--ws', 'foo'], tmpDir);
     assert.ok(wsGet.success, `state get --ws foo must succeed, got: ${wsGet.error}`);
     const wsContent = JSON.parse(wsGet.output)['Decisions'] || '';
     assert.ok(
@@ -374,7 +374,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
     fs.mkdirSync(wsDir, { recursive: true });
     fs.writeFileSync(path.join(wsDir, 'STATE.md'), buildBareboneStateMd());
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['state', 'record-metric', '--phase', '1', '--plan', '1', '--duration', '5min', '--ws', 'bar'],
       tmpDir,
     );
@@ -385,7 +385,7 @@ describe('#3286 Bug C: record-metric / add-decision honor --ws routing', () => {
     assert.strictEqual(parsed.created, true, `created must be true when section auto-created in workstream`);
 
     // Root STATE.md must remain untouched
-    const rootGet = runGsdTools(['state', 'get', 'Performance Metrics'], tmpDir);
+    const rootGet = runGtdTools(['state', 'get', 'Performance Metrics'], tmpDir);
     assert.ok(rootGet.success);
     const rootContent = JSON.parse(rootGet.output)['Performance Metrics'] || '';
     assert.ok(

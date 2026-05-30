@@ -11,7 +11,7 @@ export interface QueryHotpathMethodsDeps {
 }
 
 /**
- * Module owning typed hot-path method projection for GSDTools facade.
+ * Module owning typed hot-path method projection for GTDTools facade.
  */
 export class QueryHotpathMethods {
   constructor(private readonly deps: QueryHotpathMethodsDeps) {}

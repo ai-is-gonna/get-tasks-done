@@ -4,12 +4,12 @@ import {
   mapFallbackDispatchError,
   toDispatchFailure,
 } from './query-dispatch-error-mapper.js';
-import { GSDToolsError } from '../gsd-tools-error.js';
+import { GTDToolsError } from '../gtd-tools-error.js';
 
 describe('query dispatch error mapper', () => {
   it('maps native timeout errors', () => {
     const err = mapNativeDispatchError(
-      new Error('gsd-tools timed out after 30000ms: state load'),
+      new Error('gtd-tools timed out after 30000ms: state load'),
       'state.load',
       [],
     );
@@ -25,9 +25,9 @@ describe('query dispatch error mapper', () => {
     expect(err.details).toMatchObject({ command: 'state.json', args: [] });
   });
 
-  it('maps typed timeout classification from GSDToolsError', () => {
+  it('maps typed timeout classification from GTDToolsError', () => {
     const err = mapNativeDispatchError(
-      GSDToolsError.timeout('timeout', 'state', ['load'], '', 1234),
+      GTDToolsError.timeout('timeout', 'state', ['load'], '', 1234),
       'state.load',
       [],
     );
@@ -35,9 +35,9 @@ describe('query dispatch error mapper', () => {
     expect(err.details).toMatchObject({ timeout_ms: 1234 });
   });
 
-  it('maps typed failure classification from GSDToolsError', () => {
+  it('maps typed failure classification from GTDToolsError', () => {
     const err = mapNativeDispatchError(
-      GSDToolsError.failure('boom', 'state', ['load'], 1),
+      GTDToolsError.failure('boom', 'state', ['load'], 1),
       'state.load',
       [],
     );

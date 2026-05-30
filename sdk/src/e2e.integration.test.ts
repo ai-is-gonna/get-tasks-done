@@ -3,7 +3,7 @@
  * parse → prompt → query() → SUMMARY.md
  *
  * Requires Claude Code CLI (`claude`) installed and authenticated, plus
- * opt-in env `GSD_ENABLE_E2E=1`. Skips if env unset or CLI unavailable.
+ * opt-in env `GTD_ENABLE_E2E=1`. Skips if env unset or CLI unavailable.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -13,8 +13,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-import { GSD, parsePlanFile, GSDEventType } from './index.js';
-import type { GSDEvent } from './index.js';
+import { GTD, parsePlanFile, GTDEventType } from './index.js';
+import type { GTDEvent } from './index.js';
 
 // ─── CLI availability check ─────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ try {
   cliAvailable = false;
 }
 
-const e2eEnabled = process.env.GSD_ENABLE_E2E === '1';
+const e2eEnabled = process.env.GTD_ENABLE_E2E === '1';
 const canRunE2E = cliAvailable && e2eEnabled;
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -38,7 +38,7 @@ describe.skipIf(!canRunE2E)('E2E: Single plan execution', () => {
   let tmpDir: string;
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-e2e-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-e2e-'));
     // Copy fixture files to temp directory
     await cp(fixturesDir, tmpDir, { recursive: true });
   });
@@ -50,8 +50,8 @@ describe.skipIf(!canRunE2E)('E2E: Single plan execution', () => {
   });
 
   it('executes a single plan and returns a valid PlanResult', async () => {
-    const gsd = new GSD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
-    const result = await gsd.executePlan('sample-plan.md');
+    const gtd = new GTD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
+    const result = await gtd.executePlan('sample-plan.md');
 
     expect(result.success).toBe(true);
     expect(typeof result.sessionId).toBe('string');
@@ -63,20 +63,20 @@ describe.skipIf(!canRunE2E)('E2E: Single plan execution', () => {
     // Verify the plan's task was executed — output.txt should exist
     const outputPath = join(tmpDir, 'output.txt');
     const outputContent = await readFile(outputPath, 'utf-8');
-    expect(outputContent).toContain('hello from gsd-sdk');
+    expect(outputContent).toContain('hello from gtd-sdk');
   }, 120_000); // 2 minute timeout for real CLI execution
 
   it('proves session isolation (R014) — different session IDs for sequential runs', async () => {
     // Create a second temp dir for isolation proof
-    const tmpDir2 = await mkdtemp(join(tmpdir(), 'gsd-sdk-e2e-'));
+    const tmpDir2 = await mkdtemp(join(tmpdir(), 'gtd-sdk-e2e-'));
     await cp(fixturesDir, tmpDir2, { recursive: true });
 
     try {
-      const gsd1 = new GSD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
-      const gsd2 = new GSD({ projectDir: tmpDir2, maxBudgetUsd: 1.0, maxTurns: 20 });
+      const gtd1 = new GTD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
+      const gtd2 = new GTD({ projectDir: tmpDir2, maxBudgetUsd: 1.0, maxTurns: 20 });
 
-      const result1 = await gsd1.executePlan('sample-plan.md');
-      const result2 = await gsd2.executePlan('sample-plan.md');
+      const result1 = await gtd1.executePlan('sample-plan.md');
+      const result2 = await gtd2.executePlan('sample-plan.md');
 
       // Different sessions must have different session IDs
       expect(result1.sessionId).not.toBe(result2.sessionId);
@@ -116,7 +116,7 @@ describe.skipIf(!canRunE2E)('E2E: Event stream during plan execution (R007)', ()
   let tmpDir: string;
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-e2e-stream-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-e2e-stream-'));
     await cp(fixturesDir, tmpDir, { recursive: true });
   });
 
@@ -127,53 +127,53 @@ describe.skipIf(!canRunE2E)('E2E: Event stream during plan execution (R007)', ()
   });
 
   it('event stream emits events during plan execution (R007)', async () => {
-    const events: GSDEvent[] = [];
-    const gsd = new GSD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
+    const events: GTDEvent[] = [];
+    const gtd = new GTD({ projectDir: tmpDir, maxBudgetUsd: 1.0, maxTurns: 20 });
 
     // Subscribe to all events
-    gsd.onEvent((event) => {
+    gtd.onEvent((event) => {
       events.push(event);
     });
 
-    const result = await gsd.executePlan('sample-plan.md');
+    const result = await gtd.executePlan('sample-plan.md');
     expect(result.success).toBe(true);
 
     // (a) At least one session_init event received
-    const initEvents = events.filter(e => e.type === GSDEventType.SessionInit);
+    const initEvents = events.filter(e => e.type === GTDEventType.SessionInit);
     expect(initEvents.length).toBeGreaterThanOrEqual(1);
 
     // (b) At least one tool_call event received
-    const toolCallEvents = events.filter(e => e.type === GSDEventType.ToolCall);
+    const toolCallEvents = events.filter(e => e.type === GTDEventType.ToolCall);
     expect(toolCallEvents.length).toBeGreaterThanOrEqual(1);
 
     // (c) Exactly one session_complete event with cost >= 0
-    const completeEvents = events.filter(e => e.type === GSDEventType.SessionComplete);
+    const completeEvents = events.filter(e => e.type === GTDEventType.SessionComplete);
     expect(completeEvents).toHaveLength(1);
     const completeEvent = completeEvents[0]!;
-    if (completeEvent.type === GSDEventType.SessionComplete) {
+    if (completeEvent.type === GTDEventType.SessionComplete) {
       expect(completeEvent.totalCostUsd).toBeGreaterThanOrEqual(0);
     }
 
     // (d) Events arrived in order: session_init before tool_call before session_complete
-    const initIdx = events.findIndex(e => e.type === GSDEventType.SessionInit);
-    const toolCallIdx = events.findIndex(e => e.type === GSDEventType.ToolCall);
-    const completeIdx = events.findIndex(e => e.type === GSDEventType.SessionComplete);
+    const initIdx = events.findIndex(e => e.type === GTDEventType.SessionInit);
+    const toolCallIdx = events.findIndex(e => e.type === GTDEventType.ToolCall);
+    const completeIdx = events.findIndex(e => e.type === GTDEventType.SessionComplete);
     expect(initIdx).toBeLessThan(toolCallIdx);
     expect(toolCallIdx).toBeLessThan(completeIdx);
 
     // Bonus: at least one cost_update event was emitted
-    const costEvents = events.filter(e => e.type === GSDEventType.CostUpdate);
+    const costEvents = events.filter(e => e.type === GTDEventType.CostUpdate);
     expect(costEvents.length).toBeGreaterThanOrEqual(1);
   }, 120_000);
 });
 
 describe('E2E: Error handling', () => {
   it('returns failure for nonexistent plan path', async () => {
-    const tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-e2e-err-'));
+    const tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-e2e-err-'));
 
     try {
-      const gsd = new GSD({ projectDir: tmpDir });
-      await expect(gsd.executePlan('nonexistent-plan.md')).rejects.toThrow();
+      const gtd = new GTD({ projectDir: tmpDir });
+      await expect(gtd.executePlan('nonexistent-plan.md')).rejects.toThrow();
     } finally {
       await rm(tmpDir, { recursive: true, force: true });
     }

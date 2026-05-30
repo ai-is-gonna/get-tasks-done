@@ -6,7 +6,7 @@ const {
   parseCliWorkstream,
   resolveActiveWorkstream,
   applyResolvedWorkstreamEnv,
-} = require('../get-shit-done/bin/lib/active-workstream-store.cjs');
+} = require('../get-tasks-done/bin/lib/active-workstream-store.cjs');
 
 describe('active-workstream-store', () => {
   test('validateWorkstreamName accepts canonical names', () => {
@@ -44,7 +44,7 @@ describe('active-workstream-store', () => {
 
   test('resolveActiveWorkstream precedence: cli > env > store', () => {
     const cli = resolveActiveWorkstream('/repo', ['state', 'json', '--ws', 'cli-ws'], {
-      GSD_WORKSTREAM: 'env-ws',
+      GTD_WORKSTREAM: 'env-ws',
     }, {
       getStored: () => 'store-ws',
     });
@@ -52,7 +52,7 @@ describe('active-workstream-store', () => {
     assert.equal(cli.source, 'cli');
 
     const env = resolveActiveWorkstream('/repo', ['state', 'json'], {
-      GSD_WORKSTREAM: 'env-ws',
+      GTD_WORKSTREAM: 'env-ws',
     }, {
       getStored: () => 'store-ws',
     });
@@ -60,7 +60,7 @@ describe('active-workstream-store', () => {
     assert.equal(env.source, 'env');
 
     const store = resolveActiveWorkstream('/repo', ['state', 'json'], {
-      GSD_WORKSTREAM: '',
+      GTD_WORKSTREAM: '',
     }, {
       getStored: () => 'store-ws',
     });
@@ -70,7 +70,7 @@ describe('active-workstream-store', () => {
 
   test('resolveActiveWorkstream returns none when no source provides a workstream', () => {
     const resolved = resolveActiveWorkstream('/repo', ['state', 'json'], {
-      GSD_WORKSTREAM: '',
+      GTD_WORKSTREAM: '',
     }, {
       getStored: () => null,
     });
@@ -86,12 +86,12 @@ describe('active-workstream-store', () => {
   });
 
   test('applyResolvedWorkstreamEnv sets env only when ws exists', () => {
-    const env = { GSD_WORKSTREAM: 'old' };
+    const env = { GTD_WORKSTREAM: 'old' };
     applyResolvedWorkstreamEnv({ ws: null }, env);
-    assert.equal(env.GSD_WORKSTREAM, 'old');
+    assert.equal(env.GTD_WORKSTREAM, 'old');
 
     applyResolvedWorkstreamEnv({ ws: 'new-ws' }, env);
-    assert.equal(env.GSD_WORKSTREAM, 'new-ws');
+    assert.equal(env.GTD_WORKSTREAM, 'new-ws');
   });
 });
 

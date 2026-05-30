@@ -1,17 +1,17 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Regression test for bug #3562 — Codex global install must create a
- * discoverable $gsd-* skill surface.
+ * discoverable $gtd-* skill surface.
  *
  * Codex CLI 0.130.0 (the version in the issue report) does NOT auto-discover
- * commands from get-shit-done/workflows/*.md or agents/*.md. It only registers
+ * commands from get-tasks-done/workflows/*.md or agents/*.md. It only registers
  * commands from skills/<name>/SKILL.md. Prior installer logic ("Codex now
  * discovers official skills from .agents/skills") was based on an assumption
  * that does not match the shipping Codex CLI behavior, leaving users with
- * workflows on disk and no $gsd-* entrypoints after `npx get-shit-done-cc
+ * workflows on disk and no $gtd-* entrypoints after `npx get-tasks-done
  * --codex --global`.
  *
  * Fix: re-wire copyCommandsAsCodexSkills() back into the install dispatch path
@@ -42,7 +42,7 @@ function withCodexHome(codexHome, fn) {
   }
 }
 
-describe('#3562 — Codex install produces discoverable $gsd-* skill surface', { concurrency: false }, () => {
+describe('#3562 — Codex install produces discoverable $gtd-* skill surface', { concurrency: false }, () => {
   let tmpRoot;
   let codexHome;
 
@@ -50,7 +50,7 @@ describe('#3562 — Codex install produces discoverable $gsd-* skill surface', {
     if (!fs.existsSync(HOOKS_DIST) || fs.readdirSync(HOOKS_DIST).length === 0) {
       execFileSync(process.execPath, [BUILD_HOOKS_SCRIPT], { stdio: 'pipe' });
     }
-    tmpRoot = createTempDir('gsd-3562-');
+    tmpRoot = createTempDir('gtd-3562-');
     codexHome = path.join(tmpRoot, '.codex');
     fs.mkdirSync(codexHome, { recursive: true });
   });
@@ -59,46 +59,46 @@ describe('#3562 — Codex install produces discoverable $gsd-* skill surface', {
     cleanup(tmpRoot);
   });
 
-  test('global install creates skills/gsd-help/SKILL.md', () => {
+  test('global install creates skills/gtd-help/SKILL.md', () => {
     withCodexHome(codexHome, () => install(true, 'codex'));
 
-    const skillPath = path.join(codexHome, 'skills', 'gsd-help', 'SKILL.md');
+    const skillPath = path.join(codexHome, 'skills', 'gtd-help', 'SKILL.md');
     assert.ok(
       fs.existsSync(skillPath),
-      `Codex install must create ${skillPath} so $gsd-help is discoverable. ` +
-        'Without this, Codex CLI 0.130.0 does not expose any $gsd-* command.',
+      `Codex install must create ${skillPath} so $gtd-help is discoverable. ` +
+        'Without this, Codex CLI 0.130.0 does not expose any $gtd-* command.',
     );
   });
 
   test('SKILL.md content has frontmatter expected by Codex skill discovery', () => {
     withCodexHome(codexHome, () => install(true, 'codex'));
 
-    const skillPath = path.join(codexHome, 'skills', 'gsd-help', 'SKILL.md');
+    const skillPath = path.join(codexHome, 'skills', 'gtd-help', 'SKILL.md');
     assert.ok(fs.existsSync(skillPath), 'precondition: SKILL.md exists');
 
     const content = fs.readFileSync(skillPath, 'utf8');
     const frontmatter = parseFrontmatter(content);
-    assert.equal(frontmatter.name, 'gsd-help', 'SKILL.md frontmatter must declare name: gsd-help so $gsd-help resolves');
+    assert.equal(frontmatter.name, 'gtd-help', 'SKILL.md frontmatter must declare name: gtd-help so $gtd-help resolves');
   });
 
-  test('multiple core $gsd-* skills are produced (not just gsd-help)', () => {
+  test('multiple core $gtd-* skills are produced (not just gtd-help)', () => {
     withCodexHome(codexHome, () => install(true, 'codex'));
 
     const skillsDir = path.join(codexHome, 'skills');
     assert.ok(fs.existsSync(skillsDir), 'skills/ directory must exist after install');
 
-    const gsdSkills = fs
+    const gtdSkills = fs
       .readdirSync(skillsDir, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && e.name.startsWith('gsd-'))
+      .filter((e) => e.isDirectory() && e.name.startsWith('gtd-'))
       .map((e) => e.name);
 
     // Lower bound — exact count depends on the current command surface. The
-    // commands/gsd/ directory holds dozens of *.md files; expecting more than
+    // commands/gtd/ directory holds dozens of *.md files; expecting more than
     // 10 generated skills is a conservative floor that catches "we generated
     // nothing" or "we only generated one accidentally" regressions.
     assert.ok(
-      gsdSkills.length >= 10,
-      `Expected >= 10 generated gsd-* skill directories, found ${gsdSkills.length}: ${gsdSkills.join(', ')}`,
+      gtdSkills.length >= 10,
+      `Expected >= 10 generated gtd-* skill directories, found ${gtdSkills.length}: ${gtdSkills.join(', ')}`,
     );
   });
 
@@ -114,7 +114,7 @@ describe('#3562 — Codex install produces discoverable $gsd-* skill surface', {
     const userSkill = path.join(codexHome, 'skills', 'custom-user-skill', 'SKILL.md');
     assert.ok(
       fs.existsSync(userSkill),
-      'Codex install must preserve existing non-gsd user skill directories',
+      'Codex install must preserve existing non-gtd user skill directories',
     );
   });
 });

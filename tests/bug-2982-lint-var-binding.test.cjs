@@ -3,7 +3,7 @@
 // Tracked in #2974 for migration to typed-IR assertions per CONTRIBUTING.md
 // "Prohibited: Raw Text Matching on Test Outputs". Do not copy this pattern.
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');

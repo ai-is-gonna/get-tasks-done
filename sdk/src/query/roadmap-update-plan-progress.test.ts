@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-roadmap-update-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-roadmap-update-'));
 });
 
 afterEach(async () => {
@@ -41,7 +41,7 @@ async function setupProject(opts: {
     join(planningDir, 'STATE.md'),
     [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'milestone: v3.0',
       'status: executing',
       '---',

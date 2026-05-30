@@ -3,7 +3,7 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { routeRoadmapCommand } = require('../get-shit-done/bin/lib/roadmap-command-router.cjs');
+const { routeRoadmapCommand } = require('../get-tasks-done/bin/lib/roadmap-command-router.cjs');
 
 describe('roadmap-command-router', () => {
   test('routes roadmap analyze', () => {

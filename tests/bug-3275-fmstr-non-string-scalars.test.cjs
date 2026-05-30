@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests — Bug #3275 (CR finding)
+ * GTD Tools Tests — Bug #3275 (CR finding)
  *
  * Regression guard: `state-snapshot` must prefer YAML frontmatter scalar
  * values even when those scalars are numeric (e.g. current_phase: 19) or
@@ -15,7 +15,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () => {
   let tmpDir;
@@ -33,7 +33,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
     // fmStr must not drop the frontmatter value when it is a number.
     const stateMd = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'current_phase: 19',
       '---',
       '',
@@ -46,7 +46,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state-snapshot', tmpDir);
+    const result = runGtdTools('state-snapshot', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -57,7 +57,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
   test('numeric total_phases in frontmatter wins over body extraction', () => {
     const stateMd = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'total_phases: 7',
       '---',
       '',
@@ -70,7 +70,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state-snapshot', tmpDir);
+    const result = runGtdTools('state-snapshot', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -81,7 +81,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
   test('numeric total_plans_in_phase in frontmatter wins over body extraction', () => {
     const stateMd = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'total_plans_in_phase: 5',
       '---',
       '',
@@ -94,7 +94,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state-snapshot', tmpDir);
+    const result = runGtdTools('state-snapshot', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -104,7 +104,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
   test('string current_phase in frontmatter still works (no regression)', () => {
     const stateMd = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       "current_phase: '19'",
       '---',
       '',
@@ -117,7 +117,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state-snapshot', tmpDir);
+    const result = runGtdTools('state-snapshot', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -136,7 +136,7 @@ describe('state-snapshot: fmStr accepts non-string YAML scalars (#3275 CR)', () 
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state-snapshot', tmpDir);
+    const result = runGtdTools('state-snapshot', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

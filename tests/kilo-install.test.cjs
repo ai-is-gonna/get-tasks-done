@@ -4,13 +4,13 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - Kilo Install Plumbing
+ * GTD Tools Tests - Kilo Install Plumbing
  *
  * Tests for Kilo runtime directory resolution, config paths,
  * permission config, and installer source integration.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -114,7 +114,7 @@ describe('Kilo config file helpers', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-kilo-');
+    tmpDir = createTempProject('gtd-kilo-');
   });
 
   afterEach(() => {
@@ -143,7 +143,7 @@ describe('configureKiloPermissions', () => {
   let savedEnv;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-kilo-perms-');
+    tmpDir = createTempProject('gtd-kilo-perms-');
     configDir = path.join(tmpDir, '.config', 'kilo');
     savedEnv = {
       KILO_CONFIG_DIR: process.env.KILO_CONFIG_DIR,
@@ -169,15 +169,15 @@ describe('configureKiloPermissions', () => {
     cleanup(tmpDir);
   });
 
-  test('writes GSD permissions to kilo.json when config is missing', () => {
+  test('writes GTD permissions to kilo.json when config is missing', () => {
     configureKiloPermissions(true);
 
     const configPath = path.join(configDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gtdPath = `${configDir.replace(/\\/g, '/')}/get-tasks-done/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[gtdPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[gtdPath], 'allow');
   });
 
   test('updates existing kilo.jsonc configs via JSONC parsing', () => {
@@ -188,11 +188,11 @@ describe('configureKiloPermissions', () => {
     configureKiloPermissions(true);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gtdPath = `${configDir.replace(/\\/g, '/')}/get-tasks-done/*`;
 
     assert.strictEqual(config.permission.bash, 'ask');
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[gtdPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[gtdPath], 'allow');
   });
 
   test('writes permissions to an explicit config dir argument', () => {
@@ -202,16 +202,16 @@ describe('configureKiloPermissions', () => {
 
     const configPath = path.join(explicitDir, 'kilo.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${explicitDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gtdPath = `${explicitDir.replace(/\\/g, '/')}/get-tasks-done/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[gtdPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[gtdPath], 'allow');
   });
 });
 
 describe('Source code integration (Kilo)', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'bin', 'install.js'), 'utf8');
-  const updateWorkflowSrc = fs.readFileSync(path.join(__dirname, '..', 'get-shit-done', 'workflows', 'update.md'), 'utf8');
+  const updateWorkflowSrc = fs.readFileSync(path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'update.md'), 'utf8');
   // #2790: reapply-patches.md command was absorbed into update.md --reapply.
   // The Kilo-specific env-var checks (KILO_CONFIG_DIR, KILO_CONFIG, XDG_CONFIG_HOME)
   // now live in the update.md workflow (which covers both --sync and --reapply paths).
@@ -231,7 +231,7 @@ describe('Source code integration (Kilo)', () => {
 
   test('promptRuntime runtimeMap has Kilo as option 11', () => {
     // Structural assertion against exported runtimeMap rather than source-grep.
-    process.env.GSD_TEST_MODE = '1';
+    process.env.GTD_TEST_MODE = '1';
     delete require.cache[require.resolve(path.join(__dirname, '..', 'bin', 'install.js'))];
     const { runtimeMap } = require(path.join(__dirname, '..', 'bin', 'install.js'));
     assert.strictEqual(runtimeMap['11'], 'kilo', 'runtimeMap has 11 -> kilo');
@@ -239,7 +239,7 @@ describe('Source code integration (Kilo)', () => {
 
   test('prompt text shows Kilo above OpenCode without marketing copy', () => {
     // Call the exported prompt builder; assert against rendered text, not raw source.
-    process.env.GSD_TEST_MODE = '1';
+    process.env.GTD_TEST_MODE = '1';
     delete require.cache[require.resolve(path.join(__dirname, '..', 'bin', 'install.js'))];
     const { buildRuntimePromptText } = require(path.join(__dirname, '..', 'bin', 'install.js'));
     const promptText = buildRuntimePromptText();

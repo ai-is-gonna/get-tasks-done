@@ -3,7 +3,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD Tools Tests — Codebase Drift Detection (#2003)
+ * GTD Tools Tests — Codebase Drift Detection (#2003)
  *
  * Unit tests for bin/lib/drift.cjs plus CLI surface via verify codebase-drift.
  * Exercises the four drift categories (new dir, barrel, migration, route),
@@ -22,13 +22,13 @@ const {
   createTempProject,
   createTempGitProject,
   cleanup,
-  runGsdTools,
+  runGtdTools,
 } = require('./helpers.cjs');
 
 const DRIFT_PATH = path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'drift.cjs',
@@ -36,7 +36,7 @@ const DRIFT_PATH = path.join(
 const CONFIG_SCHEMA_PATH = path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'config-schema.cjs',
@@ -356,7 +356,7 @@ describe('sanitizePaths', () => {
 describe('last_mapped_commit frontmatter', () => {
   let tmp;
   beforeEach(() => {
-    tmp = createTempProject('gsd-drift-');
+    tmp = createTempProject('gtd-drift-');
     fs.mkdirSync(path.join(tmp, '.planning', 'codebase'), { recursive: true });
   });
   afterEach(() => cleanup(tmp));
@@ -486,32 +486,32 @@ describe('config-schema — drift keys', () => {
 describe('config-set drift validation via CLI', () => {
   let tmp;
   beforeEach(() => {
-    tmp = createTempGitProject('gsd-drift-cfg-');
+    tmp = createTempGitProject('gtd-drift-cfg-');
   });
   afterEach(() => cleanup(tmp));
 
   test('accepts warn', () => {
-    const r = runGsdTools(['config-set', 'workflow.drift_action', 'warn'], tmp);
+    const r = runGtdTools(['config-set', 'workflow.drift_action', 'warn'], tmp);
     assert.strictEqual(r.success, true, r.error);
   });
 
   test('accepts auto-remap', () => {
-    const r = runGsdTools(['config-set', 'workflow.drift_action', 'auto-remap'], tmp);
+    const r = runGtdTools(['config-set', 'workflow.drift_action', 'auto-remap'], tmp);
     assert.strictEqual(r.success, true, r.error);
   });
 
   test('rejects bogus drift_action value', () => {
-    const r = runGsdTools(['config-set', 'workflow.drift_action', 'sometimes'], tmp);
+    const r = runGtdTools(['config-set', 'workflow.drift_action', 'sometimes'], tmp);
     assert.strictEqual(r.success, false);
   });
 
   test('drift_threshold accepts integer', () => {
-    const r = runGsdTools(['config-set', 'workflow.drift_threshold', '5'], tmp);
+    const r = runGtdTools(['config-set', 'workflow.drift_threshold', '5'], tmp);
     assert.strictEqual(r.success, true, r.error);
   });
 
   test('drift_threshold rejects non-numeric', () => {
-    const r = runGsdTools(['config-set', 'workflow.drift_threshold', 'many'], tmp);
+    const r = runGtdTools(['config-set', 'workflow.drift_threshold', 'many'], tmp);
     assert.strictEqual(r.success, false);
   });
 });
@@ -538,18 +538,10 @@ describe('docs parity', () => {
 
 // ─── Mapper --paths flag documented ──────────────────────────────────────────
 
-describe('gsd-codebase-mapper --paths flag', () => {
+describe('gtd-codebase-mapper --paths flag', () => {
   test('agent doc mentions --paths', () => {
     const doc = fs.readFileSync(
-      path.join(__dirname, '..', 'agents', 'gsd-codebase-mapper.md'),
-      'utf8',
-    );
-    assert.ok(/--paths/.test(doc));
-  });
-
-  test('AGENTS.md mentions --paths for mapper', () => {
-    const doc = fs.readFileSync(
-      path.join(__dirname, '..', 'docs', 'AGENTS.md'),
+      path.join(__dirname, '..', 'agents', 'gtd-codebase-mapper.md'),
       'utf8',
     );
     assert.ok(/--paths/.test(doc));
@@ -560,7 +552,7 @@ describe('gsd-codebase-mapper --paths flag', () => {
       path.join(
         __dirname,
         '..',
-        'get-shit-done',
+        'get-tasks-done',
         'workflows',
         'map-codebase.md',
       ),
@@ -572,15 +564,15 @@ describe('gsd-codebase-mapper --paths flag', () => {
 
 // ─── Execute-phase workflow integration ──────────────────────────────────────
 
-describe('execute-phase integrates codebase_drift_gate', () => {
+describe('task orchestration integrates codebase_drift_gate', () => {
   test('workflow references a codebase drift step', () => {
     const doc = fs.readFileSync(
       path.join(
         __dirname,
         '..',
-        'get-shit-done',
+        'get-tasks-done',
         'workflows',
-        'execute-phase.md',
+        'work-task-issue.md',
       ),
       'utf8',
     );
@@ -592,9 +584,9 @@ describe('execute-phase integrates codebase_drift_gate', () => {
       path.join(
         __dirname,
         '..',
-        'get-shit-done',
+        'get-tasks-done',
         'workflows',
-        'execute-phase.md',
+        'work-task-issue.md',
       ),
       'utf8',
     );
@@ -607,13 +599,13 @@ describe('execute-phase integrates codebase_drift_gate', () => {
 describe('verify codebase-drift CLI', () => {
   let tmp;
   beforeEach(() => {
-    tmp = createTempGitProject('gsd-drift-cli-');
+    tmp = createTempGitProject('gtd-drift-cli-');
     fs.mkdirSync(path.join(tmp, '.planning', 'codebase'), { recursive: true });
   });
   afterEach(() => cleanup(tmp));
 
   test('returns skipped JSON when STRUCTURE.md missing', () => {
-    const r = runGsdTools(['verify', 'codebase-drift'], tmp);
+    const r = runGtdTools(['verify', 'codebase-drift'], tmp);
     assert.strictEqual(r.success, true, r.error);
     const data = JSON.parse(r.output);
     assert.strictEqual(data.skipped, true);
@@ -625,7 +617,7 @@ describe('verify codebase-drift CLI', () => {
     fs.writeFileSync(structure, '# Codebase Structure\n\n- `src/`\n');
     const head = git(tmp, 'rev-parse', 'HEAD');
     writeMappedCommit(structure, head, '2026-04-22');
-    const r = runGsdTools(['verify', 'codebase-drift'], tmp);
+    const r = runGtdTools(['verify', 'codebase-drift'], tmp);
     assert.strictEqual(r.success, true, r.error);
     const data = JSON.parse(r.output);
     assert.strictEqual(data.action_required, false);
@@ -645,7 +637,7 @@ describe('verify codebase-drift CLI', () => {
     }
     git(tmp, 'add', '-A');
     git(tmp, 'commit', '-m', 'add packages');
-    const r = runGsdTools(['verify', 'codebase-drift'], tmp);
+    const r = runGtdTools(['verify', 'codebase-drift'], tmp);
     assert.strictEqual(r.success, true, r.error);
     const data = JSON.parse(r.output);
     assert.strictEqual(data.action_required, true);
@@ -654,9 +646,9 @@ describe('verify codebase-drift CLI', () => {
   });
 
   test('never exits non-zero when git repo is missing (non-blocking)', () => {
-    const nonGit = createTempProject('gsd-drift-nongit-');
+    const nonGit = createTempProject('gtd-drift-nongit-');
     try {
-      const r = runGsdTools(['verify', 'codebase-drift'], nonGit);
+      const r = runGtdTools(['verify', 'codebase-drift'], nonGit);
       assert.strictEqual(r.success, true, 'must exit 0 even without git');
       const data = JSON.parse(r.output);
       assert.strictEqual(data.skipped, true);

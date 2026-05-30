@@ -17,7 +17,7 @@ export interface QueryRuntimeContext {
  *
  * Workstream resolution priority:
  *   1. `--ws <name>` flag (input.ws)
- *   2. `GSD_WORKSTREAM` environment variable
+ *   2. `GTD_WORKSTREAM` environment variable
  *   3. `.planning/active-workstream` file
  *   4. Root `.planning/` (no workstream)
  */
@@ -31,7 +31,7 @@ export function resolveQueryRuntimeContext(input: QueryRuntimeContextInput): Que
     };
   }
 
-  const envWs = process.env.GSD_WORKSTREAM;
+  const envWs = process.env.GTD_WORKSTREAM;
   if (envWs && validateWorkstreamName(envWs)) {
     return { projectDir, ws: envWs };
   }

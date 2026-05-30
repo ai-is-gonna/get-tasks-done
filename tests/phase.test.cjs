@@ -3,14 +3,14 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD Tools Tests - Phase
+ * GTD Tools Tests - Phase
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('phases list command', () => {
   let tmpDir;
@@ -24,7 +24,7 @@ describe('phases list command', () => {
   });
 
   test('empty phases directory returns empty array', () => {
-    const result = runGsdTools('phases list', tmpDir);
+    const result = runGtdTools('phases list', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -38,7 +38,7 @@ describe('phases list command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
 
-    const result = runGsdTools('phases list', tmpDir);
+    const result = runGtdTools('phases list', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -56,7 +56,7 @@ describe('phases list command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02.2-patch'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-ui'), { recursive: true });
 
-    const result = runGsdTools('phases list', tmpDir);
+    const result = runGtdTools('phases list', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -75,7 +75,7 @@ describe('phases list command', () => {
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Summary');
     fs.writeFileSync(path.join(phaseDir, 'RESEARCH.md'), '# Research');
 
-    const result = runGsdTools('phases list --type plans', tmpDir);
+    const result = runGtdTools('phases list --type plans', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -93,7 +93,7 @@ describe('phases list command', () => {
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Summary 1');
     fs.writeFileSync(path.join(phaseDir, '01-02-SUMMARY.md'), '# Summary 2');
 
-    const result = runGsdTools('phases list --type summaries', tmpDir);
+    const result = runGtdTools('phases list --type summaries', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -112,7 +112,7 @@ describe('phases list command', () => {
     fs.writeFileSync(path.join(phase01, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(phase02, '02-01-PLAN.md'), '# Plan');
 
-    const result = runGsdTools('phases list --type plans --phase 01', tmpDir);
+    const result = runGtdTools('phases list --type plans --phase 01', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -141,7 +141,7 @@ describe('phase next-decimal command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06-feature'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '07-next'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 06', tmpDir);
+    const result = runGtdTools('phase next-decimal 06', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -154,7 +154,7 @@ describe('phase next-decimal command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.1-hotfix'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.2-patch'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 06', tmpDir);
+    const result = runGtdTools('phase next-decimal 06', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -167,7 +167,7 @@ describe('phase next-decimal command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.1-first'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.3-third'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 06', tmpDir);
+    const result = runGtdTools('phase next-decimal 06', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -178,7 +178,7 @@ describe('phase next-decimal command', () => {
   test('handles single-digit phase input', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06-feature'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 6', tmpDir);
+    const result = runGtdTools('phase next-decimal 6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -189,7 +189,7 @@ describe('phase next-decimal command', () => {
   test('returns error if base phase does not exist', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-start'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 06', tmpDir);
+    const result = runGtdTools('phase next-decimal 06', tmpDir);
     assert.ok(result.success, `Command should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -217,7 +217,7 @@ describe('phase-plan-index command', () => {
   test('empty phase directory returns empty plans array', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-api'), { recursive: true });
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -233,7 +233,7 @@ describe('phase-plan-index command', () => {
   // `{padded_phase}-{NN}-PLAN.md` contract, the executor used to silently see
   // plan_count: 0 with no signal. Now the response must include a `warning`
   // field naming every offender, so the user gets an actionable error instead
-  // of "execute-phase blocked, no clue why".
+  // of "task orchestration blocked, no clue why".
   test('non-canonical plan filenames surface a warning naming each offender (#2893)', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '03-api');
     fs.mkdirSync(phaseDir, { recursive: true });
@@ -242,7 +242,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -265,7 +265,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
     fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -285,7 +285,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
 
-    const result = runGsdTools('find-phase 03', tmpDir);
+    const result = runGtdTools('find-phase 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -307,7 +307,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
     fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
 
-    const result = runGsdTools('find-phase 03', tmpDir);
+    const result = runGtdTools('find-phase 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -328,7 +328,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-01-foundation.md'), '---\n---\n');
     fs.writeFileSync(path.join(phaseDir, '01-PLAN-02-api.md'), '---\n---\n');
 
-    const result = runGsdTools('phases list --type plans --phase 03', tmpDir);
+    const result = runGtdTools('phases list --type plans --phase 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -350,7 +350,7 @@ describe('phase-plan-index command', () => {
     fs.writeFileSync(path.join(phaseDir, '03-PLAN-OUTLINE.md'), '# outline\n');
     fs.writeFileSync(path.join(phaseDir, '03-01-PLAN.pre-bounce.md'), '---\n---\n');
 
-    const result = runGsdTools('phases list --type plans --phase 03', tmpDir);
+    const result = runGtdTools('phases list --type plans --phase 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -379,7 +379,7 @@ files-modified: [prisma/schema.prisma, src/lib/db.ts]
 `
     );
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -441,7 +441,7 @@ files-modified: [prisma/schema.prisma, src/lib/db.ts]
       ].join('\n')
     );
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -463,7 +463,7 @@ files-modified: [prisma/schema.prisma, src/lib/db.ts]
     // Plan without summary
     fs.writeFileSync(path.join(phaseDir, '03-02-PLAN.md'), `---\nwave: 2\n---\n## Task 1`);
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -479,7 +479,7 @@ files-modified: [prisma/schema.prisma, src/lib/db.ts]
     fs.writeFileSync(path.join(phaseDir, '03-01-auth-hardening-PLAN.md'), `---\nwave: 1\n---\n## Task 1`);
     fs.writeFileSync(path.join(phaseDir, '03-01-SUMMARY.md'), `# Summary`);
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -506,7 +506,7 @@ files-modified: [prisma/schema.prisma, src/lib/db.ts]
       `---\ndepends_on:\n  - '03-01'\n---\n## Task 1\n`,
     );
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -539,7 +539,7 @@ objective: Manual review needed
 `
     );
 
-    const result = runGsdTools('phase-plan-index 03', tmpDir);
+    const result = runGtdTools('phase-plan-index 03', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -548,7 +548,7 @@ objective: Manual review needed
   });
 
   test('phase not found returns error', () => {
-    const result = runGsdTools('phase-plan-index 99', tmpDir);
+    const result = runGtdTools('phase-plan-index 99', tmpDir);
     assert.ok(result.success, `Command should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -603,7 +603,7 @@ Output: App component
 `
     );
 
-    const result = runGsdTools('phase-plan-index 04', tmpDir);
+    const result = runGtdTools('phase-plan-index 04', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -645,7 +645,7 @@ Output: App.tsx with routing
 `
     );
 
-    const result = runGsdTools('phase-plan-index 04', tmpDir);
+    const result = runGtdTools('phase-plan-index 04', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -698,7 +698,7 @@ Create UI components
 `
     );
 
-    const result = runGsdTools('phase-plan-index 04', tmpDir);
+    const result = runGtdTools('phase-plan-index 04', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -734,7 +734,7 @@ Output: Chat component, API endpoints.
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/execute-plan.md
+@~/.claude/get-tasks-done/workflows/work-task-issue.md
 </execution_context>
 
 <context>
@@ -767,7 +767,7 @@ Output: Chat component, API endpoints.
 `
     );
 
-    const result = runGsdTools('phase-plan-index 04', tmpDir);
+    const result = runGtdTools('phase-plan-index 04', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -809,7 +809,7 @@ describe('phase add command', () => {
 `
     );
 
-    const result = runGsdTools('phase add User Dashboard', tmpDir);
+    const result = runGtdTools('phase add User Dashboard', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -834,7 +834,7 @@ describe('phase add command', () => {
       `# Roadmap v1.0\n`
     );
 
-    const result = runGsdTools('phase add Initial Setup', tmpDir);
+    const result = runGtdTools('phase add Initial Setup', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -847,7 +847,7 @@ describe('phase add command', () => {
       `# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n`
     );
 
-    const result = runGsdTools('phase add User Dashboard', tmpDir);
+    const result = runGtdTools('phase add User Dashboard', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -860,7 +860,7 @@ describe('phase add command', () => {
       `# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n`
     );
 
-    const result = runGsdTools(['phase', 'add', '--raw', 'User', 'Dashboard'], tmpDir);
+    const result = runGtdTools(['phase', 'add', '--raw', 'User', 'Dashboard'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -874,11 +874,11 @@ describe('phase add command', () => {
       `# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n`
     );
 
-    const unsupported = runGsdTools(['phase', 'add', '--unknown', 'Dashboard'], tmpDir);
+    const unsupported = runGtdTools(['phase', 'add', '--unknown', 'Dashboard'], tmpDir);
     assert.ok(!unsupported.success, 'unsupported flags should fail');
     assert.match(unsupported.error, /phase add does not support --unknown/);
 
-    const dangling = runGsdTools(['phase', 'add', 'Dashboard', '--id'], tmpDir);
+    const dangling = runGtdTools(['phase', 'add', 'Dashboard', '--id'], tmpDir);
     assert.ok(!dangling.success, 'dangling --id should fail');
     assert.match(dangling.error, /--id requires a value/);
   });
@@ -907,7 +907,7 @@ describe('phase add command', () => {
 `
     );
 
-    const result = runGsdTools('phase add Dashboard', tmpDir);
+    const result = runGtdTools('phase add Dashboard', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -953,7 +953,7 @@ describe('phase add — orphan directory collision prevention (#2026)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase add dashboard', tmpDir);
+    const result = runGtdTools('phase add dashboard', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -988,7 +988,7 @@ describe('phase add — orphan directory collision prevention (#2026)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase add new-feature', tmpDir);
+    const result = runGtdTools('phase add new-feature', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1019,7 +1019,7 @@ describe('phase add — orphan directory collision prevention (#2026)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase add new-feature', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('phase add new-feature', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1058,7 +1058,7 @@ describe('phase add with project_code', () => {
       '# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n'
     );
 
-    const result = runGsdTools('phase add User Dashboard', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('phase add User Dashboard', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1079,7 +1079,7 @@ describe('phase add with project_code', () => {
       '# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n'
     );
 
-    const result = runGsdTools('phase add User Dashboard', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('phase add User Dashboard', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     assert.ok(
@@ -1093,7 +1093,7 @@ describe('phase add with project_code', () => {
     fs.mkdirSync(phaseDir, { recursive: true });
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
 
-    const result = runGsdTools('find-phase 01', tmpDir);
+    const result = runGtdTools('find-phase 01', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1106,7 +1106,7 @@ describe('phase add with project_code', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', 'CK-01-foundation'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', 'CK-03-ui'), { recursive: true });
 
-    const result = runGsdTools('phases list', tmpDir);
+    const result = runGtdTools('phases list', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1147,7 +1147,7 @@ describe('phase add-batch command (#2165)', () => {
 
   test('adds multiple phases with sequential numbers in a single call', () => {
     // Use array form to avoid shell quoting issues with JSON args
-    const result = runGsdTools(['phase', 'add-batch', '--descriptions', '["Alpha","Beta","Gamma"]'], tmpDir);
+    const result = runGtdTools(['phase', 'add-batch', '--descriptions', '["Alpha","Beta","Gamma"]'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1170,10 +1170,10 @@ describe('phase add-batch command (#2165)', () => {
     // Regression for #2165: parallel `phase add` invocations produced duplicates
     // because each read disk state before any write landed. add-batch serializes
     // the entire batch under a single lock so the next call sees the updated state.
-    const r1 = runGsdTools(['phase', 'add-batch', '--descriptions', '["Wave-One-A","Wave-One-B"]'], tmpDir);
+    const r1 = runGtdTools(['phase', 'add-batch', '--descriptions', '["Wave-One-A","Wave-One-B"]'], tmpDir);
     assert.ok(r1.success, `First batch failed: ${r1.error}`);
 
-    const r2 = runGsdTools(['phase', 'add-batch', '--descriptions', '["Wave-Two-A","Wave-Two-B"]'], tmpDir);
+    const r2 = runGtdTools(['phase', 'add-batch', '--descriptions', '["Wave-Two-A","Wave-Two-B"]'], tmpDir);
     assert.ok(r2.success, `Second batch failed: ${r2.error}`);
 
     const out1 = JSON.parse(r1.output);
@@ -1188,7 +1188,7 @@ describe('phase add-batch command (#2165)', () => {
   });
 
   test('each phase directory contains a .gitkeep file', () => {
-    const result = runGsdTools(['phase', 'add-batch', '--descriptions', '["Setup","Build"]'], tmpDir);
+    const result = runGtdTools(['phase', 'add-batch', '--descriptions', '["Setup","Build"]'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     assert.ok(
@@ -1202,22 +1202,22 @@ describe('phase add-batch command (#2165)', () => {
   });
 
   test('returns error for empty descriptions array', () => {
-    const result = runGsdTools(['phase', 'add-batch', '--descriptions', '[]'], tmpDir);
+    const result = runGtdTools(['phase', 'add-batch', '--descriptions', '[]'], tmpDir);
     assert.ok(!result.success, 'should fail on empty array');
   });
 
   test('returns error when --descriptions JSON is not an array', () => {
-    const result = runGsdTools(['phase', 'add-batch', '--descriptions', '{"one":"Alpha"}'], tmpDir);
+    const result = runGtdTools(['phase', 'add-batch', '--descriptions', '{"one":"Alpha"}'], tmpDir);
     assert.ok(!result.success, 'should fail on non-array JSON');
     assert.match(result.error, /--descriptions must be a JSON array/);
   });
 
   test('returns error when --descriptions is missing its JSON value', () => {
-    const missing = runGsdTools(['phase', 'add-batch', '--descriptions'], tmpDir);
+    const missing = runGtdTools(['phase', 'add-batch', '--descriptions'], tmpDir);
     assert.ok(!missing.success, 'should fail on dangling --descriptions');
     assert.match(missing.error, /--descriptions must be a JSON array/);
 
-    const flagValue = runGsdTools(['phase', 'add-batch', '--descriptions', '--raw'], tmpDir);
+    const flagValue = runGtdTools(['phase', 'add-batch', '--descriptions', '--raw'], tmpDir);
     assert.ok(!flagValue.success, 'should fail when --descriptions value is another flag');
     assert.match(flagValue.error, /--descriptions must be a JSON array/);
   });
@@ -1253,7 +1253,7 @@ describe('phase insert command', () => {
     );
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
 
-    const result = runGsdTools('phase insert 1 Fix Critical Bug', tmpDir);
+    const result = runGtdTools('phase insert 1 Fix Critical Bug', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1286,7 +1286,7 @@ describe('phase insert command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01.1-hotfix'), { recursive: true });
 
-    const result = runGsdTools('phase insert 1 Another Fix', tmpDir);
+    const result = runGtdTools('phase insert 1 Another Fix', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1299,7 +1299,7 @@ describe('phase insert command', () => {
       `# Roadmap\n### Phase 1: Test\n**Goal:** Test\n`
     );
 
-    const result = runGsdTools('phase insert 99 Fix Something', tmpDir);
+    const result = runGtdTools('phase insert 99 Fix Something', tmpDir);
     assert.ok(!result.success, 'should fail for missing phase');
     assert.ok(result.error.includes('not found'), 'error mentions not found');
   });
@@ -1319,7 +1319,7 @@ describe('phase insert command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '09.05-existing'), { recursive: true });
 
     // Pass unpadded "9.05" but roadmap has "09.05"
-    const result = runGsdTools('phase insert 9.05 Padding Test', tmpDir);
+    const result = runGtdTools('phase insert 9.05 Padding Test', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1336,7 +1336,7 @@ describe('phase insert command', () => {
     );
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-foundation'), { recursive: true });
 
-    const result = runGsdTools('phase insert 1 Fix Critical Bug', tmpDir);
+    const result = runGtdTools('phase insert 1 Fix Critical Bug', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -1349,7 +1349,7 @@ describe('phase insert command', () => {
       `# Roadmap\n\n- [ ] **Phase 5: Placeholder**\n`
     );
 
-    const result = runGsdTools('phase insert 5 Hotfix', tmpDir);
+    const result = runGtdTools('phase insert 5 Hotfix', tmpDir);
     assert.ok(!result.success, 'should fail when phase is summary-only placeholder');
     assert.ok(result.error.includes('missing a detail section'));
   });
@@ -1360,7 +1360,7 @@ describe('phase insert command', () => {
       `# Roadmap\n\n### Phase 1: Foundation\n**Goal:** Setup\n`
     );
 
-    const result = runGsdTools('phase insert 1 Hotfix --dry-run', tmpDir);
+    const result = runGtdTools('phase insert 1 Hotfix --dry-run', tmpDir);
     assert.ok(!result.success, 'phase insert should reject unsupported --dry-run');
     assert.ok(result.error.includes('does not support --dry-run'));
   });
@@ -1381,7 +1381,7 @@ describe('phase insert command', () => {
     );
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05-feature-work'), { recursive: true });
 
-    const result = runGsdTools('phase insert 5 Hotfix', tmpDir);
+    const result = runGtdTools('phase insert 5 Hotfix', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1438,7 +1438,7 @@ describe('phase remove command', () => {
     fs.writeFileSync(path.join(p3, '03-02-PLAN.md'), '# Plan 2');
 
     // Remove phase 2
-    const result = runGsdTools('phase remove 2', tmpDir);
+    const result = runGtdTools('phase remove 2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1482,12 +1482,12 @@ describe('phase remove command', () => {
     );
 
     // Should fail without --force
-    const result = runGsdTools('phase remove 1', tmpDir);
+    const result = runGtdTools('phase remove 1', tmpDir);
     assert.ok(!result.success, 'should fail without --force');
     assert.ok(result.error.includes('executed plan'), 'error mentions executed plans');
 
     // Should succeed with --force
-    const forceResult = runGsdTools('phase remove 1 --force', tmpDir);
+    const forceResult = runGtdTools('phase remove 1 --force', tmpDir);
     assert.ok(forceResult.success, `Force remove failed: ${forceResult.error}`);
   });
 
@@ -1503,7 +1503,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-b'), { recursive: true });
 
-    const result = runGsdTools('phase remove --force 2', tmpDir);
+    const result = runGtdTools('phase remove --force 2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1526,7 +1526,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.2-fix-b'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06.3-fix-c'), { recursive: true });
 
-    const result = runGsdTools('phase remove 6.2', tmpDir);
+    const result = runGtdTools('phase remove 6.2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     // 06.3 should become 06.2
@@ -1552,7 +1552,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-b'), { recursive: true });
 
-    runGsdTools('phase remove 2', tmpDir);
+    runGtdTools('phase remove 2', tmpDir);
 
     const state = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.ok(state.includes('**Total Phases:** 1'), 'total phases should be decremented');
@@ -1587,7 +1587,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '999.1-backlog-item'), { recursive: true });
 
-    const result = runGsdTools('phase remove 4', tmpDir);
+    const result = runGtdTools('phase remove 4', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     // Backlog directory must remain at 999.1, not be decremented to 998.1
@@ -1633,7 +1633,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05-final'), { recursive: true });
 
-    const result = runGsdTools('phase remove 4', tmpDir);
+    const result = runGtdTools('phase remove 4', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -1681,7 +1681,7 @@ describe('phase remove command', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '04-extras'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05-final'), { recursive: true });
 
-    const result = runGsdTools('phase remove 4', tmpDir);
+    const result = runGtdTools('phase remove 4', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -1714,7 +1714,7 @@ describe('phase remove command', () => {
     }
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), lines.join('\n'));
 
-    const result = runGsdTools('phase remove 27 --force', tmpDir);
+    const result = runGtdTools('phase remove 27 --force', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -1787,7 +1787,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1823,7 +1823,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -1888,7 +1888,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const req = fs.readFileSync(path.join(tmpDir, '.planning', 'REQUIREMENTS.md'), 'utf-8');
@@ -1961,7 +1961,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const req = fs.readFileSync(path.join(tmpDir, '.planning', 'REQUIREMENTS.md'), 'utf-8');
@@ -2017,7 +2017,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     // REQUIREMENTS.md should be unchanged
@@ -2048,7 +2048,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command should succeed even without REQUIREMENTS.md: ${result.error}`);
   });
 
@@ -2090,7 +2090,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.requirements_updated, true, 'requirements_updated should be true');
@@ -2136,7 +2136,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const req = fs.readFileSync(path.join(tmpDir, '.planning', 'REQUIREMENTS.md'), 'utf-8');
@@ -2188,7 +2188,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-auth'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     // Phase 1 has no Requirements field, so Phase 2's AUTH-01 should NOT be updated
@@ -2259,7 +2259,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p321, '03.2.1-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p321, '03.2.1-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 03.2.1', tmpDir);
+    const result = runGtdTools('phase complete 03.2.1', tmpDir);
     assert.ok(result.success, `Command should not crash on regex metacharacters: ${result.error}`);
 
     const req = fs.readFileSync(path.join(tmpDir, '.planning', 'REQUIREMENTS.md'), 'utf-8');
@@ -2294,7 +2294,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -2321,7 +2321,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const state = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -2365,7 +2365,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -2405,7 +2405,7 @@ describe('phase complete command', () => {
     fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -2445,7 +2445,7 @@ Plans:
     fs.writeFileSync(path.join(p1, '01-02-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-02-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -2483,7 +2483,7 @@ Plans:
     fs.writeFileSync(path.join(p1, '01-02-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(p1, '01-02-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -2498,7 +2498,7 @@ Plans:
 // comparePhaseNum and normalizePhaseName (imported directly)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const { comparePhaseNum, normalizePhaseName } = require('../get-shit-done/bin/lib/core.cjs');
+const { comparePhaseNum, normalizePhaseName } = require('../get-tasks-done/bin/lib/core.cjs');
 
 describe('comparePhaseNum', () => {
   test('sorts integer phases numerically', () => {
@@ -2614,7 +2614,7 @@ describe('letter-suffix phase sorting', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '12B-hotfix'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '13-deploy'), { recursive: true });
 
-    const result = runGsdTools('phases list', tmpDir);
+    const result = runGtdTools('phases list', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -2683,7 +2683,7 @@ describe('phase complete milestone-scoped next-phase', () => {
     // Phase 6 — next phase in milestone
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '06-dashboard'), { recursive: true });
 
-    const result = runGsdTools('phase complete 5', tmpDir);
+    const result = runGtdTools('phase complete 5', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -2718,7 +2718,7 @@ describe('phase complete milestone-scoped next-phase', () => {
       fs.writeFileSync(path.join(phaseDir, `${padded}-01-SUMMARY.md`), '# Summary');
     }
 
-    const result = runGsdTools('phase complete 5', tmpDir);
+    const result = runGtdTools('phase complete 5', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -2749,7 +2749,7 @@ describe('phase resolution uses exact token matching', () => {
     fs.mkdirSync(path.join(phasesDir, '1009A-feature-consistency'));
     fs.writeFileSync(path.join(phasesDir, '1009A-feature-consistency', 'PLAN.md'), '# Plan');
 
-    const result = runGsdTools('find-phase 1009', tmpDir);
+    const result = runGtdTools('find-phase 1009', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.found, false, 'should NOT find phase 1009 when only 1009A exists');
@@ -2761,7 +2761,7 @@ describe('phase resolution uses exact token matching', () => {
     fs.mkdirSync(path.join(phasesDir, '1009A-feature-consistency'));
     fs.writeFileSync(path.join(phasesDir, '1009-pipeline-accuracy-fix', 'PLAN.md'), '# Plan');
 
-    const result = runGsdTools('find-phase 1009', tmpDir);
+    const result = runGtdTools('find-phase 1009', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.found, true, 'should find phase 1009');
@@ -2776,7 +2776,7 @@ describe('phase resolution uses exact token matching', () => {
     fs.mkdirSync(path.join(phasesDir, '999.60-episode-processing'));
     fs.writeFileSync(path.join(phasesDir, '999.60-episode-processing', 'PLAN.md'), '# Plan');
 
-    const result = runGsdTools('find-phase 999.6', tmpDir);
+    const result = runGtdTools('find-phase 999.6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.found, false, 'should NOT find phase 999.6 when only 999.60 exists');
@@ -2788,7 +2788,7 @@ describe('phase resolution uses exact token matching', () => {
     fs.mkdirSync(path.join(phasesDir, '999.60-episode-processing'));
     fs.writeFileSync(path.join(phasesDir, '999.6-ground-truth-dataset', 'PLAN.md'), '# Plan');
 
-    const result = runGsdTools('find-phase 999.6', tmpDir);
+    const result = runGtdTools('find-phase 999.6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
     assert.strictEqual(output.found, true, 'should find phase 999.6');
@@ -2805,13 +2805,13 @@ describe('phase resolution uses exact token matching', () => {
     fs.writeFileSync(path.join(phasesDir, '01-foundation', 'PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(phasesDir, '02-implementation', 'PLAN.md'), '# Plan');
 
-    const r1 = runGsdTools('find-phase 1', tmpDir);
+    const r1 = runGtdTools('find-phase 1', tmpDir);
     assert.ok(r1.success, `Command failed for phase 1: ${r1.error}`);
     const o1 = JSON.parse(r1.output);
     assert.strictEqual(o1.found, true, 'should find phase 1');
     assert.ok(o1.directory.includes('01-foundation'), `should match 01-foundation, got: ${o1.directory}`);
 
-    const r2 = runGsdTools('find-phase 2', tmpDir);
+    const r2 = runGtdTools('find-phase 2', tmpDir);
     assert.ok(r2.success, `Command failed for phase 2: ${r2.error}`);
     const o2 = JSON.parse(r2.output);
     assert.strictEqual(o2.found, true, 'should find phase 2');
@@ -2854,7 +2854,7 @@ describe('phase complete updates Performance Metrics', () => {
       `# Roadmap\n\n## Phase 2: Core\n\n- [ ] Phase 2: Core Systems\n`
     );
 
-    const result = runGsdTools('phase complete 2', tmpDir);
+    const result = runGtdTools('phase complete 2', tmpDir);
     assert.ok(result.success, `phase complete failed: ${result.error}`);
 
     const stateAfter = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -2879,7 +2879,7 @@ describe('phase complete updates Performance Metrics', () => {
       `# Roadmap\n\n## Phase 1: Setup\n\n- [ ] Phase 1: Setup\n`
     );
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `phase complete failed: ${result.error}`);
 
     const stateAfter = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -2960,7 +2960,7 @@ describe('phase complete excludes 999.x backlog from next-phase (#2129)', () => 
     // Backlog stub on disk — this is what triggers the bug
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '999.1-backlog-idea'), { recursive: true });
 
-    const result = runGsdTools('phase complete 2', tmpDir);
+    const result = runGtdTools('phase complete 2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

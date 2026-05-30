@@ -1,17 +1,17 @@
 /**
- * Bug #3037: Gemini global+local install creates duplicate /gsd:* commands
+ * Bug #3037: Gemini global+local install creates duplicate /gtd:* commands
  * across user (HOME/.gemini/) and workspace (PROJECT/.gemini/) scopes.
  *
  * Reproduction (from issue body):
  *   1. install --gemini --global with HOME=tmpHome
  *   2. cd tmpProject; install --gemini --local
- *   → both ~/.gemini/commands/gsd/ and PROJECT/.gemini/commands/gsd/ contain
+ *   → both ~/.gemini/commands/gtd/ and PROJECT/.gemini/commands/gtd/ contain
  *     65 overlapping command filenames.
  *   → Gemini conflict detection renames every overlapping command to
- *     /workspace.gsd:* and /user.gsd:*, breaking the documented /gsd:*
+ *     /workspace.gtd:* and /user.gtd:*, breaking the documented /gtd:*
  *     namespace.
  *
- * Fix: when the local Gemini install detects the user-scope GSD command
+ * Fix: when the local Gemini install detects the user-scope GTD command
  * directory already exists with managed-shape content, skip the local copy
  * and emit a clear warning explaining the conflict avoidance.
  *
@@ -22,7 +22,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -41,8 +41,8 @@ describe('bug #3037: Gemini global+local install must not create duplicate comma
   let originalCwd;
 
   beforeEach(() => {
-    tmpHome = createTempDir('gsd-3037-home-');
-    tmpProject = createTempDir('gsd-3037-work-');
+    tmpHome = createTempDir('gtd-3037-home-');
+    tmpProject = createTempDir('gtd-3037-work-');
     originalHome = process.env.HOME;
     originalUserprofile = process.env.USERPROFILE;
     originalCwd = process.cwd();
@@ -79,20 +79,20 @@ describe('bug #3037: Gemini global+local install must not create duplicate comma
     return out.sort();
   }
 
-  test('global install populates HOME/.gemini/commands/gsd', () => {
+  test('global install populates HOME/.gemini/commands/gtd', () => {
     install(true, 'gemini');
-    const globalCmds = path.join(tmpHome, '.gemini', 'commands', 'gsd');
+    const globalCmds = path.join(tmpHome, '.gemini', 'commands', 'gtd');
     const files = listCommandFiles(globalCmds);
     assert.ok(
       files.length > 0,
-      'global install must populate HOME/.gemini/commands/gsd'
+      'global install must populate HOME/.gemini/commands/gtd'
     );
   });
 
-  test('local install after global does NOT populate PROJECT/.gemini/commands/gsd (avoids /gsd:* namespace conflict)', () => {
+  test('local install after global does NOT populate PROJECT/.gemini/commands/gtd (avoids /gtd:* namespace conflict)', () => {
     // Step 1: global install
     install(true, 'gemini');
-    const globalCmds = path.join(tmpHome, '.gemini', 'commands', 'gsd');
+    const globalCmds = path.join(tmpHome, '.gemini', 'commands', 'gtd');
     const globalFiles = listCommandFiles(globalCmds);
     assert.ok(globalFiles.length > 0, 'precondition: global install must succeed');
 
@@ -100,69 +100,69 @@ describe('bug #3037: Gemini global+local install must not create duplicate comma
     process.chdir(tmpProject);
     install(false, 'gemini');
 
-    // Assertion: the local commands/gsd/ directory must NOT exist (or must
+    // Assertion: the local commands/gtd/ directory must NOT exist (or must
     // be empty) so Gemini's conflict detection has nothing to rename. The
     // fix may either skip the directory entirely (preferred — no leftover
     // file system noise) or create an empty directory (acceptable but odd).
-    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gsd');
+    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gtd');
     const localFiles = listCommandFiles(localCmds);
     assert.equal(
       localFiles.length,
       0,
-      `local install must skip commands/gsd/ when global already exists; ` +
+      `local install must skip commands/gtd/ when global already exists; ` +
         `found ${localFiles.length} duplicate command file(s) at ${localCmds}`
     );
   });
 
-  test('local install with NO existing global GSD does still populate PROJECT/.gemini/commands/gsd', () => {
+  test('local install with NO existing global GTD does still populate PROJECT/.gemini/commands/gtd', () => {
     // No global install first — local should proceed normally so users who
-    // only ever run --local still get GSD commands in their project.
+    // only ever run --local still get GTD commands in their project.
     process.chdir(tmpProject);
     install(false, 'gemini');
 
-    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gsd');
+    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gtd');
     const localFiles = listCommandFiles(localCmds);
     assert.ok(
       localFiles.length > 0,
-      `local-only install must populate PROJECT/.gemini/commands/gsd; ` +
+      `local-only install must populate PROJECT/.gemini/commands/gtd; ` +
         `found ${localFiles.length} files at ${localCmds}`
     );
   });
 
-  test('local install when HOME has hand-dropped overrides UNDER commands/gsd/ (but no full GSD) still populates locally', () => {
+  test('local install when HOME has hand-dropped overrides UNDER commands/gtd/ (but no full GTD) still populates locally', () => {
     // CR #3041 regression: the previous detection was
-    // `fs.readdirSync(homeGeminiGsd).length > 0` which would skip the
+    // `fs.readdirSync(homeGeminiGtd).length > 0` which would skip the
     // local install for a user who manually dropped a single override
-    // command at ~/.gemini/commands/gsd/<thing>.toml without ever
+    // command at ~/.gemini/commands/gtd/<thing>.toml without ever
     // running --gemini --global. The fix narrows detection to require
-    // at least 3 canonical GSD command files (help.toml, progress.toml,
+    // at least 3 canonical GTD command files (help.toml, progress.toml,
     // new-project.toml) — a marker that's structurally impossible to
     // produce by accident.
-    const homeGsdDir = path.join(tmpHome, '.gemini', 'commands', 'gsd');
-    fs.mkdirSync(homeGsdDir, { recursive: true });
+    const homeGtdDir = path.join(tmpHome, '.gemini', 'commands', 'gtd');
+    fs.mkdirSync(homeGtdDir, { recursive: true });
     fs.writeFileSync(
-      path.join(homeGsdDir, 'my-override.toml'),
+      path.join(homeGtdDir, 'my-override.toml'),
       'description = "user override"\nprompt = "..."\n'
     );
 
     process.chdir(tmpProject);
     install(false, 'gemini');
 
-    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gsd');
+    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gtd');
     const localFiles = listCommandFiles(localCmds);
     assert.ok(
       localFiles.length > 0,
-      `local install must proceed when HOME/.gemini/commands/gsd contains ` +
-        `only user overrides (not the full GSD canary set); ` +
+      `local install must proceed when HOME/.gemini/commands/gtd contains ` +
+        `only user overrides (not the full GTD canary set); ` +
         `found ${localFiles.length} files at ${localCmds}`
     );
   });
 
-  test('local install when HOME/.gemini exists but commands/gsd is absent (non-GSD Gemini user) still populates locally', () => {
-    // Simulate a user who has Gemini configured but never installed GSD
+  test('local install when HOME/.gemini exists but commands/gtd is absent (non-GTD Gemini user) still populates locally', () => {
+    // Simulate a user who has Gemini configured but never installed GTD
     // globally. ~/.gemini/ exists with unrelated content; ~/.gemini/commands/
-    // may or may not exist with non-gsd subdirectories. Local install must
-    // still proceed because no GSD-managed user-scope directory is present.
+    // may or may not exist with non-gtd subdirectories. Local install must
+    // still proceed because no GTD-managed user-scope directory is present.
     fs.mkdirSync(path.join(tmpHome, '.gemini', 'commands', 'someone-else'), {
       recursive: true,
     });
@@ -174,11 +174,11 @@ describe('bug #3037: Gemini global+local install must not create duplicate comma
     process.chdir(tmpProject);
     install(false, 'gemini');
 
-    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gsd');
+    const localCmds = path.join(tmpProject, '.gemini', 'commands', 'gtd');
     const localFiles = listCommandFiles(localCmds);
     assert.ok(
       localFiles.length > 0,
-      `local install must proceed when no GSD-managed user-scope directory ` +
+      `local install must proceed when no GTD-managed user-scope directory ` +
         `exists, even if other Gemini commands are present at the user scope`
     );
   });

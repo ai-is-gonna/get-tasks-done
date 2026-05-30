@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Milestone Summary Tests
+ * GTD Milestone Summary Tests
  *
  * Validates the milestone-summary command and workflow files exist
  * and follow expected patterns. Tests artifact discovery logic.
@@ -16,17 +16,17 @@ const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const commandPath = path.join(repoRoot, 'commands', 'gsd', 'milestone-summary.md');
-const workflowPath = path.join(repoRoot, 'get-shit-done', 'workflows', 'milestone-summary.md');
+const commandPath = path.join(repoRoot, 'commands', 'gtd', 'milestone-summary.md');
+const workflowPath = path.join(repoRoot, 'get-tasks-done', 'workflows', 'milestone-summary.md');
 
 describe('milestone-summary command', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(commandPath), 'commands/gsd/milestone-summary.md should exist');
+    assert.ok(fs.existsSync(commandPath), 'commands/gtd/milestone-summary.md should exist');
   });
 
   test('command has correct frontmatter name', () => {
     const content = fs.readFileSync(commandPath, 'utf-8');
-    assert.ok(content.includes('name: gsd:milestone-summary'), 'should have correct command name');
+    assert.ok(content.includes('name: gtd:milestone-summary'), 'should have correct command name');
   });
 
   test('command references workflow in execution_context', () => {
@@ -113,7 +113,7 @@ describe('milestone-summary workflow', () => {
     const content = fs.readFileSync(workflowPath, 'utf-8');
     assert.ok(
       content.includes('state record-session') || content.includes('state.record-session'),
-      'should update STATE.md via state record-session (CJS or gsd-sdk query)'
+      'should update STATE.md via state record-session (CJS or gtd-sdk query)'
     );
   });
 
@@ -201,7 +201,7 @@ describe('milestone-summary fixture-based artifact discovery', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-ms-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-ms-test-'));
   });
 
   afterEach(() => {

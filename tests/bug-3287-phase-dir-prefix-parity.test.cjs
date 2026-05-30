@@ -9,9 +9,9 @@
  * Three tests:
  *   A — sanity: `phase.add` emits the prefixed dir (already works).
  *   B — init phase-op exposes `expected_phase_dir` with the prefix when
- *       the directory does not yet exist (first-touch path for /gsd-discuss-phase).
+ *       the directory does not yet exist (first-touch path for /gtd-discuss-phase).
  *   C — init plan-phase exposes `expected_phase_dir` with the prefix when
- *       the directory does not yet exist (first-touch path for /gsd-plan-phase).
+ *       the directory does not yet exist (first-touch path for /gtd-plan-phase).
  *
  * Tests B and C are RED until the fix lands.
  */
@@ -20,7 +20,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── shared fixture ──────────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ describe('bug-3287 — phase.add emits project_code prefix (sanity)', () => {
   test('phase.add creates XR-02-<slug> when project_code is XR', () => {
     makeXRProject(tmpDir);
 
-    const result = runGsdTools('phase add auth service', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('phase add auth service', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `phase.add failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -87,7 +87,7 @@ describe('bug-3287 — init phase-op exposes expected_phase_dir with project_cod
     makeXRProject(tmpDir);
 
     // Phase 1 is in the roadmap but has no directory yet — the first-touch path
-    const result = runGsdTools('init phase-op 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init phase-op 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init phase-op failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -120,7 +120,7 @@ describe('bug-3287 — init phase-op exposes expected_phase_dir with project_cod
       '# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n',
     );
 
-    const result = runGsdTools('init phase-op 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init phase-op 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init phase-op failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -149,7 +149,7 @@ describe('bug-3287 — init plan-phase exposes expected_phase_dir with project_c
     makeXRProject(tmpDir);
 
     // Phase 1 is in the roadmap but has no directory yet — the first-touch path
-    const result = runGsdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init plan-phase failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -181,7 +181,7 @@ describe('bug-3287 — init plan-phase exposes expected_phase_dir with project_c
       '# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n',
     );
 
-    const result = runGsdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init plan-phase failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

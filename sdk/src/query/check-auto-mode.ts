@@ -4,7 +4,7 @@
  * Replaces paired `config-get workflow.auto_advance` + `config-get workflow._auto_chain_active`
  * for checkpoint and auto-advance gates. See `.planning/research/decision-routing-audit.md` §3.5.
  *
- * Semantics match `execute-phase.md`: automation applies when **either** the ephemeral chain flag
+ * Semantics match `work-task-issue.md`: automation applies when **either** the ephemeral chain flag
  * or the persistent user preference is true (`active === true`).
  */
 

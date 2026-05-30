@@ -34,7 +34,7 @@ let tmpDir: string;
 let planPath: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-pts-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-pts-'));
   const rel = join('.planning', 'phases', '09-x', '09-01-PLAN.md');
   planPath = join(tmpDir, rel);
   await mkdir(join(tmpDir, '.planning', 'phases', '09-x'), { recursive: true });

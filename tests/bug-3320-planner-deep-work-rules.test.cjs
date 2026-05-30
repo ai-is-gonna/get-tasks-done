@@ -10,8 +10,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const PLANNER_AGENT = path.join(ROOT, 'agents', 'gsd-planner.md');
-const PLAN_PHASE_WORKFLOW = path.join(ROOT, 'get-shit-done', 'workflows', 'plan-phase.md');
+const PLANNER_AGENT = path.join(ROOT, 'agents', 'gtd-planner.md');
+const PLAN_PHASE_WORKFLOW = path.join(ROOT, 'get-tasks-done', 'workflows', 'plan-phase.md');
+const GAP_CLOSURE_REF = path.join(ROOT, 'get-tasks-done', 'references', 'planner-gap-closure.md');
+const PLANNER_TEMPLATE = path.join(ROOT, 'get-tasks-done', 'templates', 'planner-subagent-prompt.md');
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
@@ -31,12 +33,12 @@ describe('bug #3320 planner action contract', () => {
     assert.match(
       planner,
       /NEVER place fenced code blocks \(```\) inside `<action>`/,
-      'gsd-planner.md must explicitly forbid fenced implementation code in <action>'
+      'gtd-planner.md must explicitly forbid fenced implementation code in <action>'
     );
     assert.match(
       planner,
       /Code excerpts belong in `<read_first>` source files or referenced context/,
-      'gsd-planner.md must route code excerpts to context/read-first material'
+      'gtd-planner.md must route code excerpts to context/read-first material'
     );
   });
 
@@ -76,7 +78,7 @@ describe('bug #3320 planner action contract', () => {
   });
 
   test('quality gate matches the reconciled planner contract', () => {
-    const workflow = read('get-shit-done/workflows/plan-phase.md');
+    const workflow = read('get-tasks-done/workflows/plan-phase.md');
 
     assert.match(
       workflow,
@@ -87,6 +89,44 @@ describe('bug #3320 planner action contract', () => {
       workflow,
       /Every `<action>` contains concrete identifiers without fenced code blocks or full implementations/,
       'quality gate must enforce concrete prose without implementation dumps'
+    );
+  });
+
+  test('planner requires structured executable task boundaries', () => {
+    const planner = fs.readFileSync(PLANNER_AGENT, 'utf8');
+
+    assert.doesNotMatch(
+      planner,
+      /If the task truly has no constraints, write: `No boundaries/,
+      'planner must not recommend placeholder boundaries'
+    );
+    assert.match(
+      planner,
+      /Allowed: write only path\/to\/file\.ext\./,
+      'PLAN example must show an Allowed boundary clause'
+    );
+    assert.match(
+      planner,
+      /Forbidden: path\/to\/other\.ext, path\/to\/dir\/\*/,
+      'PLAN example must show parseable Forbidden paths'
+    );
+    assert.match(
+      planner,
+      /atomicity\.ok=false/,
+      'planner validation step must require fixing atomicity blockers'
+    );
+  });
+
+  test('gap and planner templates carry the boundary contract', () => {
+    const gap = fs.readFileSync(GAP_CLOSURE_REF, 'utf8');
+    const template = fs.readFileSync(PLANNER_TEMPLATE, 'utf8');
+
+    assert.match(gap, /<boundaries>/, 'gap closure tasks must include boundaries');
+    assert.match(gap, /<acceptance_criteria>/, 'gap closure tasks must include acceptance criteria');
+    assert.match(
+      template,
+      /structured boundaries/,
+      'planner subagent template must mention structured boundaries'
     );
   });
 });

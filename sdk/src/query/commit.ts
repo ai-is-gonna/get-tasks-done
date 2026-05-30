@@ -1,7 +1,7 @@
 /**
  * Git commit and check-commit query handlers.
  *
- * Ported from get-shit-done/bin/lib/commands.cjs (cmdCommit, cmdCheckCommit)
+ * Ported from get-tasks-done/bin/lib/commands.cjs (cmdCommit, cmdCheckCommit)
  * and core.cjs (execGit). Provides commit creation with message sanitization
  * and pre-commit validation.
  *
@@ -19,7 +19,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 import { planningPaths, resolvePathUnderProject } from './helpers.js';
 import type { QueryHandler } from './utils.js';
 
@@ -346,7 +346,7 @@ export const commitToSubrepo: QueryHandler = async (args, projectDir, workstream
       try {
         await resolvePathUnderProject(projectDir, file);
       } catch (err) {
-        if (err instanceof GSDError) {
+        if (err instanceof GTDError) {
           return { data: { committed: false, reason: `${err.message}: ${file}` } };
         }
         throw err;

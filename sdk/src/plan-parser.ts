@@ -1,10 +1,10 @@
 /**
- * plan-parser.ts — Parse GSD-1 PLAN.md files into structured data.
+ * plan-parser.ts — Parse GTD-1 PLAN.md files into structured data.
  *
  * Extracts YAML frontmatter, XML task bodies, and markdown sections
  * (<objective>, <execution_context>, <context>) from plan files.
  *
- * Ported from get-shit-done/bin/lib/frontmatter.cjs with TypeScript types.
+ * Ported from get-tasks-done/bin/lib/frontmatter.cjs with TypeScript types.
  */
 
 import { readFile } from 'node:fs/promises';
@@ -263,6 +263,7 @@ export function parseTasks(content: string): PlanTask[] {
     const name = extractElement(body, 'name');
     const filesStr = extractElement(body, 'files');
     const readFirstStr = extractElement(body, 'read_first');
+    const boundaries = extractElement(body, 'boundaries');
     const action = extractElement(body, 'action');
     const verify = extractElement(body, 'verify');
     const done = extractElement(body, 'done');
@@ -296,6 +297,7 @@ export function parseTasks(content: string): PlanTask[] {
       name,
       files,
       read_first,
+      boundaries,
       action,
       verify,
       acceptance_criteria,
@@ -350,7 +352,7 @@ function extractExecutionContext(content: string): string[] {
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Parse a GSD-1 PLAN.md content string into a structured ParsedPlan.
+ * Parse a GTD-1 PLAN.md content string into a structured ParsedPlan.
  *
  * Extracts:
  * - YAML frontmatter (phase, wave, depends_on, must_haves, etc.)

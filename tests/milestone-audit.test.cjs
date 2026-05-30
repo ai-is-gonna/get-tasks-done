@@ -7,7 +7,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('audit.cjs module (#2158)', () => {
   let tmpDir;
@@ -21,7 +21,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('auditOpenArtifacts returns structured result with counts', () => {
-    const { auditOpenArtifacts } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts } = require('../get-tasks-done/bin/lib/audit.cjs');
     const result = auditOpenArtifacts(tmpDir);
     assert.ok(typeof result === 'object', 'result must be object');
     assert.ok(typeof result.counts === 'object', 'result must have counts');
@@ -30,7 +30,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('auditOpenArtifacts handles missing planning directories gracefully', () => {
-    const { auditOpenArtifacts } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts } = require('../get-tasks-done/bin/lib/audit.cjs');
     // tmpDir has .planning/ but no debug/ or threads/ subdirs
     const result = auditOpenArtifacts(tmpDir);
     assert.strictEqual(result.counts.total, 0, 'empty project should have 0 open items');
@@ -38,7 +38,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('auditOpenArtifacts detects open debug sessions', () => {
-    const { auditOpenArtifacts } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts } = require('../get-tasks-done/bin/lib/audit.cjs');
     // Create a fake debug session
     const debugDir = path.join(tmpDir, '.planning', 'debug');
     fs.mkdirSync(debugDir, { recursive: true });
@@ -57,7 +57,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('auditOpenArtifacts ignores resolved debug sessions', () => {
-    const { auditOpenArtifacts } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts } = require('../get-tasks-done/bin/lib/audit.cjs');
     const resolvedDir = path.join(tmpDir, '.planning', 'debug', 'resolved');
     fs.mkdirSync(resolvedDir, { recursive: true });
     fs.writeFileSync(path.join(resolvedDir, 'old-bug.md'), [
@@ -72,7 +72,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('formatAuditReport returns string with header', () => {
-    const { auditOpenArtifacts, formatAuditReport } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts, formatAuditReport } = require('../get-tasks-done/bin/lib/audit.cjs');
     const result = auditOpenArtifacts(tmpDir);
     const report = formatAuditReport(result);
     assert.ok(typeof report === 'string');
@@ -80,7 +80,7 @@ describe('audit.cjs module (#2158)', () => {
   });
 
   test('formatAuditReport shows all clear when no open items', () => {
-    const { auditOpenArtifacts, formatAuditReport } = require('../get-shit-done/bin/lib/audit.cjs');
+    const { auditOpenArtifacts, formatAuditReport } = require('../get-tasks-done/bin/lib/audit.cjs');
     const result = auditOpenArtifacts(tmpDir);
     const report = formatAuditReport(result);
     assert.ok(report.includes('clear') || report.includes('0 items') || report.includes('no open'),
@@ -90,7 +90,7 @@ describe('audit.cjs module (#2158)', () => {
 
 describe('complete-milestone workflow has pre-close audit gate (#2158)', () => {
   const completeMilestoneContent = fs.readFileSync(
-    path.join(__dirname, '..', 'get-shit-done', 'workflows', 'complete-milestone.md'),
+    path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'complete-milestone.md'),
     'utf8'
   );
 
@@ -117,7 +117,7 @@ describe('complete-milestone workflow has pre-close audit gate (#2158)', () => {
 
 describe('verify-work workflow has phase artifact check (#2157)', () => {
   const verifyWorkContent = fs.readFileSync(
-    path.join(__dirname, '..', 'get-shit-done', 'workflows', 'verify-work.md'),
+    path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'verify-work.md'),
     'utf8'
   );
 
@@ -138,7 +138,7 @@ describe('verify-work workflow has phase artifact check (#2157)', () => {
 
 describe('state.md template has Deferred Items section (#2158)', () => {
   const stateTemplate = fs.readFileSync(
-    path.join(__dirname, '..', 'get-shit-done', 'templates', 'state.md'),
+    path.join(__dirname, '..', 'get-tasks-done', 'templates', 'state.md'),
     'utf8'
   );
 
@@ -149,7 +149,7 @@ describe('state.md template has Deferred Items section (#2158)', () => {
 });
 
 describe('audit-open CLI command — ReferenceError regression (#2236)', () => {
-  // The audit-open case in gsd-tools.cjs called bare output() instead of
+  // The audit-open case in gtd-tools.cjs called bare output() instead of
   // core.output(), crashing with ReferenceError: output is not defined
   // on every invocation. These tests exercise the CLI dispatch directly so
   // a regression at the call site is caught even if the lib tests all pass.
@@ -164,12 +164,12 @@ describe('audit-open CLI command — ReferenceError regression (#2236)', () => {
   });
 
   test('audit-open exits without error on an empty project', () => {
-    const result = runGsdTools(['audit-open'], tmpDir);
+    const result = runGtdTools(['audit-open'], tmpDir);
     assert.ok(result.success, `audit-open crashed: ${result.error}`);
   });
 
   test('audit-open --json exits without error and returns valid JSON', () => {
-    const result = runGsdTools(['audit-open', '--json'], tmpDir);
+    const result = runGtdTools(['audit-open', '--json'], tmpDir);
     assert.ok(result.success, `audit-open --json crashed: ${result.error}`);
     let parsed;
     assert.doesNotThrow(() => { parsed = JSON.parse(result.output); }, 'output must be valid JSON');
@@ -180,7 +180,7 @@ describe('audit-open CLI command — ReferenceError regression (#2236)', () => {
   test('audit-open error is not ReferenceError: output is not defined', () => {
     // Even if the command fails for some other reason, it must not throw the
     // specific ReferenceError that was the bug in #2236.
-    const result = runGsdTools(['audit-open'], tmpDir);
+    const result = runGtdTools(['audit-open'], tmpDir);
     assert.ok(
       !String(result.error).includes('output is not defined'),
       `ReferenceError regression: ${result.error}`

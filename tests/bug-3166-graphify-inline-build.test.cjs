@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Regression fence for #3166 — `/gsd-graphify build` lost artifacts because the
+ * Regression fence for #3166 — `/gtd-graphify build` lost artifacts because the
  * skill spawned a Task sub-agent that backgrounded `graphify update .`. Sub-agent
  * isolation SIGTERM'd the post-extraction phase (graphify v0.7+) before
  * graph.json / graph.html / GRAPH_REPORT.md were written.
@@ -20,7 +20,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const SKILL_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'graphify.md');
+const SKILL_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'graphify.md');
 
 /**
  * Parse the narrow YAML subset used in this skill's frontmatter:
@@ -111,7 +111,7 @@ function loadSkill() {
   };
 }
 
-describe('bug-3166: /gsd-graphify build runs inline (no Task sub-agent)', () => {
+describe('bug-3166: /gtd-graphify build runs inline (no Task sub-agent)', () => {
   test('frontmatter allowed-tools does not include Task', () => {
     const { frontmatter } = loadSkill();
     assert.ok(Array.isArray(frontmatter['allowed-tools']),
@@ -149,8 +149,8 @@ describe('bug-3166: /gsd-graphify build runs inline (no Task sub-agent)', () => 
       'a bash code block must invoke `graphify update .`'
     );
     assert.ok(
-      bashBlocks.some(b => /gsd-tools\.cjs["']?\s+graphify build snapshot/.test(b.content)),
-      'a bash code block must invoke `gsd-tools.cjs graphify build snapshot`'
+      bashBlocks.some(b => /gtd-tools\.cjs["']?\s+graphify build snapshot/.test(b.content)),
+      'a bash code block must invoke `gtd-tools.cjs graphify build snapshot`'
     );
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2798
  *
- * `gsd-sdk query config-set context_window <n>` was rejected with
+ * `gtd-sdk query config-set context_window <n>` was rejected with
  * "Unknown config key: context_window" because context_window was missing
  * from VALID_CONFIG_KEYS in sdk/src/query/config-schema.ts.
  *
@@ -29,7 +29,7 @@ function runConfigSet(key, value, projectDir) {
     stdout = execFileSync(process.execPath, [SDK_CLI, ...argv], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, GSD_SESSION_KEY: '' },
+      env: { ...process.env, GTD_SESSION_KEY: '' },
     });
   } catch (err) {
     exitCode = err.status ?? 1;
@@ -44,7 +44,7 @@ describe('bug-2798: context_window is a valid config key', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-test-2798-');
+    tmpDir = createTempProject('gtd-test-2798-');
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({ mode: 'balanced' })
@@ -74,7 +74,7 @@ describe('bug-2798: context_window is a valid config key', () => {
   });
 
   test('config-schema CJS and SDK allowlists both include context_window', () => {
-    const cjsSchema = require(path.join(REPO_ROOT, 'get-shit-done', 'bin', 'lib', 'config-schema.cjs'));
+    const cjsSchema = require(path.join(REPO_ROOT, 'get-tasks-done', 'bin', 'lib', 'config-schema.cjs'));
     const sdkSchema = require(path.join(REPO_ROOT, 'sdk', 'dist', 'query', 'config-schema.js'));
 
     assert.ok(

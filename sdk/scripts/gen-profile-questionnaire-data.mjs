@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..', '..');
-const cjs = fs.readFileSync(join(root, 'get-shit-done/bin/lib/profile-output.cjs'), 'utf-8');
+const cjs = fs.readFileSync(join(root, 'get-tasks-done/bin/lib/profile-output.cjs'), 'utf-8');
 
 const m1 = cjs.match(/const PROFILING_QUESTIONS = (\[[\s\S]*?\]);/);
 const m2 = cjs.match(/const CLAUDE_INSTRUCTIONS = (\{[\s\S]*?\n\});/);
@@ -18,7 +18,7 @@ if (!m1 || !m2) {
 }
 
 const header = `/**
- * Synced from get-shit-done/bin/lib/profile-output.cjs (PROFILING_QUESTIONS, CLAUDE_INSTRUCTIONS).
+ * Synced from get-tasks-done/bin/lib/profile-output.cjs (PROFILING_QUESTIONS, CLAUDE_INSTRUCTIONS).
  * Used by profileQuestionnaire for parity with cmdProfileQuestionnaire.
  */
 

@@ -4,9 +4,9 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tests — /gsd:sketch --wrap-up silently no-ops (#2949)
+ * GTD Tests — /gtd:sketch --wrap-up silently no-ops (#2949)
  *
- * The --wrap-up flag was documented in commands/gsd/sketch.md but never dispatched.
+ * The --wrap-up flag was documented in commands/gtd/sketch.md but never dispatched.
  * The sketch-wrap-up.md micro-skill entry point was deleted in #2790 and the dispatch
  * wiring was never added to the command or workflow.
  */
@@ -19,11 +19,11 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SKETCH_COMMAND = path.join(ROOT, 'commands/gsd/sketch.md');
-const SKETCH_WORKFLOW = path.join(ROOT, 'get-shit-done/workflows/sketch.md');
+const SKETCH_COMMAND = path.join(ROOT, 'commands/gtd/sketch.md');
+const SKETCH_WORKFLOW = path.join(ROOT, 'get-tasks-done/workflows/sketch.md');
 
 describe('bug-2949: sketch --wrap-up dispatch wiring', () => {
-  test('commands/gsd/sketch.md contains --wrap-up dispatch logic', () => {
+  test('commands/gtd/sketch.md contains --wrap-up dispatch logic', () => {
     const content = fs.readFileSync(SKETCH_COMMAND, 'utf8');
     assert.ok(
       content.includes('--wrap-up'),
@@ -36,7 +36,7 @@ describe('bug-2949: sketch --wrap-up dispatch wiring', () => {
     );
   });
 
-  test('commands/gsd/sketch.md has sketch-wrap-up in execution_context section', () => {
+  test('commands/gtd/sketch.md has sketch-wrap-up in execution_context section', () => {
     const content = fs.readFileSync(SKETCH_COMMAND, 'utf8');
     // Find execution_context block
     const execCtxMatch = content.match(/<execution_context>([\s\S]*?)<\/execution_context>/);
@@ -48,19 +48,19 @@ describe('bug-2949: sketch --wrap-up dispatch wiring', () => {
     );
   });
 
-  test('workflows/sketch.md does NOT contain old /gsd-sketch-wrap-up form', () => {
+  test('workflows/sketch.md does NOT contain old /gtd-sketch-wrap-up form', () => {
     const content = fs.readFileSync(SKETCH_WORKFLOW, 'utf8');
     assert.ok(
-      !content.includes('/gsd-sketch-wrap-up'),
-      'workflows/sketch.md must not reference the old /gsd-sketch-wrap-up command'
+      !content.includes('/gtd-sketch-wrap-up'),
+      'workflows/sketch.md must not reference the old /gtd-sketch-wrap-up command'
     );
   });
 
-  test('workflows/sketch.md DOES contain new /gsd:sketch --wrap-up form', () => {
+  test('workflows/sketch.md DOES contain new /gtd:sketch --wrap-up form', () => {
     const content = fs.readFileSync(SKETCH_WORKFLOW, 'utf8');
     assert.ok(
-      content.includes('/gsd:sketch --wrap-up'),
-      'workflows/sketch.md should reference /gsd:sketch --wrap-up (the new form)'
+      content.includes('/gtd:sketch --wrap-up'),
+      'workflows/sketch.md should reference /gtd:sketch --wrap-up (the new form)'
     );
   });
 });

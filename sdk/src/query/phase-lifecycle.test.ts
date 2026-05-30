@@ -72,7 +72,7 @@ const ROADMAP_WITH_DETAILS = `# Roadmap
 `;
 
 const MINIMAL_STATE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -123,7 +123,7 @@ async function setupTestProject(
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-lifecycle-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-lifecycle-'));
 });
 
 afterEach(async () => {
@@ -339,7 +339,7 @@ describe('phaseAdd', () => {
     expect(data.phase_number).toBe(11);
   });
 
-  it('throws GSDError with Validation for empty description', async () => {
+  it('throws GTDError with Validation for empty description', async () => {
     const { phaseAdd } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir);
 
@@ -692,14 +692,14 @@ describe('phaseInsert', () => {
     expect(insertedIdx).toBeGreaterThan(phase10Idx);
   });
 
-  it('throws GSDError for missing target phase', async () => {
+  it('throws GTDError for missing target phase', async () => {
     const { phaseInsert } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir);
 
     await expect(phaseInsert(['99', 'Missing'], tmpDir)).rejects.toThrow('Phase 99 not found');
   });
 
-  it('throws GSDError with Validation for missing args', async () => {
+  it('throws GTDError with Validation for missing args', async () => {
     const { phaseInsert } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir);
 
@@ -790,7 +790,7 @@ describe('phaseScaffold', () => {
     expect(data.reason).toBe('already_exists');
   });
 
-  it('throws GSDError for unknown type', async () => {
+  it('throws GTDError for unknown type', async () => {
     const { phaseScaffold } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir, {
       phases: ['09-foundation'],
@@ -842,7 +842,7 @@ Plans:
 `;
 
 const STATE_FOR_REMOVE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -988,7 +988,7 @@ describe('phaseRemove', () => {
     expect(data.directory_deleted).toBeTruthy();
   });
 
-  it('throws GSDError when ROADMAP.md is missing', async () => {
+  it('throws GTDError when ROADMAP.md is missing', async () => {
     const { phaseRemove } = await import('./phase-lifecycle.js');
     // Set up without ROADMAP.md
     const planningDir = join(tmpDir, '.planning');
@@ -1000,7 +1000,7 @@ describe('phaseRemove', () => {
     await expect(phaseRemove(['6'], tmpDir)).rejects.toThrow('ROADMAP.md not found');
   });
 
-  it('throws GSDError when phase number is missing', async () => {
+  it('throws GTDError when phase number is missing', async () => {
     const { phaseRemove } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir, {
       roadmap: ROADMAP_FOR_REMOVE,
@@ -1010,7 +1010,7 @@ describe('phaseRemove', () => {
     await expect(phaseRemove([], tmpDir)).rejects.toThrow('phase number required');
   });
 
-  it('throws GSDError when target phase does not exist and does not mutate STATE.md', async () => {
+  it('throws GTDError when target phase does not exist and does not mutate STATE.md', async () => {
     const { phaseRemove } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir, {
       roadmap: ROADMAP_FOR_REMOVE,
@@ -1125,7 +1125,7 @@ Plans:
 `;
 
 const STATE_FOR_COMPLETE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -1354,7 +1354,7 @@ describe('phaseComplete', () => {
     expect(warnings.some(w => w.includes('gaps'))).toBe(true);
   });
 
-  it('throws GSDError for missing phase', async () => {
+  it('throws GTDError for missing phase', async () => {
     const { phaseComplete } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir, {
       roadmap: ROADMAP_FOR_COMPLETE,
@@ -1417,7 +1417,7 @@ describe('phaseComplete', () => {
 
     const state = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'milestone: v3.0',
       'status: executing',
       'progress:',
@@ -1463,7 +1463,7 @@ describe('phaseComplete', () => {
 // ─── phasesClear ────────────────────────────────────────────────────────────
 
 describe('phasesClear', () => {
-  it('throws GSDError without --confirm flag, showing count', async () => {
+  it('throws GTDError without --confirm flag, showing count', async () => {
     const { phasesClear } = await import('./phase-lifecycle.js');
     await setupTestProject(tmpDir, {
       phases: ['09-foundation', '10-read-only-queries', '999.1-backlog'],
@@ -1537,9 +1537,9 @@ describe('phasesArchive', () => {
 // ─── milestoneComplete help-flag defense (#3259) ────────────────────────────
 
 describe('milestoneComplete help-flag defense', () => {
-  it('rejects --help as a version value with GSDError before any disk write', async () => {
+  it('rejects --help as a version value with GTDError before any disk write', async () => {
     const { milestoneComplete } = await import('./phase-lifecycle.js');
-    const { GSDError, ErrorClassification } = await import('../errors.js');
+    const { GTDError, ErrorClassification } = await import('../errors.js');
     await setupTestProject(tmpDir);
 
     // Capture pre-invocation filesystem state
@@ -1556,8 +1556,8 @@ describe('milestoneComplete help-flag defense', () => {
       thrown = e;
     }
 
-    expect(thrown).toBeInstanceOf(GSDError);
-    const err = thrown as InstanceType<typeof GSDError>;
+    expect(thrown).toBeInstanceOf(GTDError);
+    const err = thrown as InstanceType<typeof GTDError>;
     expect(err.classification).toBe(ErrorClassification.Validation);
     expect(err.message).toContain('--help');
 
@@ -1567,9 +1567,9 @@ describe('milestoneComplete help-flag defense', () => {
     expect(existsSync(milestonesPath)).toBe(milestonesExistedBefore);
   });
 
-  it('rejects -h as a version value with GSDError before any disk write', async () => {
+  it('rejects -h as a version value with GTDError before any disk write', async () => {
     const { milestoneComplete } = await import('./phase-lifecycle.js');
-    const { GSDError, ErrorClassification } = await import('../errors.js');
+    const { GTDError, ErrorClassification } = await import('../errors.js');
     await setupTestProject(tmpDir);
 
     const statePath = join(tmpDir, '.planning', 'STATE.md');
@@ -1584,8 +1584,8 @@ describe('milestoneComplete help-flag defense', () => {
       thrown = e;
     }
 
-    expect(thrown).toBeInstanceOf(GSDError);
-    const err = thrown as InstanceType<typeof GSDError>;
+    expect(thrown).toBeInstanceOf(GTDError);
+    const err = thrown as InstanceType<typeof GTDError>;
     expect(err.classification).toBe(ErrorClassification.Validation);
     expect(err.message).toContain('-h');
 
@@ -1636,7 +1636,7 @@ describe('listDirectories — CR-3267 finding 1: non-ENOENT errors propagate', (
   it('propagates EACCES from readdir instead of returning []', async () => {
     const { listDirectories } = await import('./phase-filesystem-adapter.js');
     // Create a real directory then remove read permission
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-fs-acl-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-fs-acl-'));
     const inner = join(dir, 'phases');
     await mkdir(inner);
     try {
@@ -1655,7 +1655,7 @@ describe('listDirectories — CR-3267 finding 1: non-ENOENT errors propagate', (
     const { listDirectories } = await import('./phase-filesystem-adapter.js');
     // We can't easily race the real FS, but we can verify the function tolerates
     // a path that truly does not exist (existsSync returns false → early []).
-    const nonExistent = join(tmpdir(), 'gsd-does-not-exist-' + Date.now());
+    const nonExistent = join(tmpdir(), 'gtd-does-not-exist-' + Date.now());
     const result = await listDirectories(nonExistent);
     expect(result).toEqual([]);
   });
@@ -1666,7 +1666,7 @@ describe('listDirectories — CR-3267 finding 1: non-ENOENT errors propagate', (
 describe('readModifyWriteRoadmapMd — CR-3267 finding 4: non-ENOENT errors propagate', () => {
   it('propagates EACCES on ROADMAP.md readFile instead of treating as empty', async () => {
     const { readModifyWriteRoadmapMd } = await import('./phase-lifecycle.js');
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-roadmap-acl-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-roadmap-acl-'));
     const planningDir = join(dir, '.planning');
     await mkdir(planningDir, { recursive: true });
     const roadmapPath = join(planningDir, 'ROADMAP.md');
@@ -1684,7 +1684,7 @@ describe('readModifyWriteRoadmapMd — CR-3267 finding 4: non-ENOENT errors prop
 
   it('starts with empty content when ROADMAP.md is absent (ENOENT)', async () => {
     const { readModifyWriteRoadmapMd } = await import('./phase-lifecycle.js');
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-roadmap-noent-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-roadmap-noent-'));
     const planningDir = join(dir, '.planning');
     await mkdir(planningDir, { recursive: true });
     // No ROADMAP.md written — must default to '' and create it

@@ -1,11 +1,11 @@
 import type { QueryRegistry } from './query/registry.js';
-import type { TransportMode } from './gsd-transport-policy.js';
+import type { TransportMode } from './gtd-transport-policy.js';
 import type { QueryCommandResolution } from './query/query-command-resolution-strategy.js';
 import { resolveQueryCommand } from './query/query-command-resolution-strategy.js';
 import { QueryExecutionPolicy } from './query-execution-policy.js';
 import { QueryNativeHotpathAdapter } from './query-native-hotpath-adapter.js';
-import { GSDToolsError } from './gsd-tools-error.js';
-import type { TransportDecision } from './gsd-transport.js';
+import { GTDToolsError } from './gtd-tools-error.js';
+import type { TransportDecision } from './gtd-transport.js';
 
 export interface RuntimeBridgeExecuteInput {
   legacyCommand: string;
@@ -51,7 +51,7 @@ export interface RuntimeBridgeOptions {
 
 /**
  * SDK Runtime Bridge Module.
- * Owns dispatch routing through the execution policy seam and hotpath/native fallback behavior.
+ * Owns dispatch routing through the execution policy seam and hotpath/task orchestration flow behavior.
  */
 export class QueryRuntimeBridge {
   constructor(
@@ -81,7 +81,7 @@ export class QueryRuntimeBridge {
   async execute(input: RuntimeBridgeExecuteInput): Promise<unknown> {
     const startedAt = Date.now();
     if (this.options?.strictSdk && !this.registry.has(input.registryCommand)) {
-      const error = GSDToolsError.failure(
+      const error = GTDToolsError.failure(
         `Strict SDK mode: command '${input.registryCommand}' has no native adapter`,
         input.legacyCommand,
         input.legacyArgs,
@@ -130,7 +130,7 @@ export class QueryRuntimeBridge {
       });
       return result;
     } catch (error) {
-      const kind = error instanceof GSDToolsError ? error.classification.kind : 'failure';
+      const kind = error instanceof GTDToolsError ? error.classification.kind : 'failure';
       this.emit({
         type: 'query_dispatch',
         command: input.registryCommand,
@@ -157,7 +157,7 @@ export class QueryRuntimeBridge {
     const useNative = this.shouldUseNativeQuery();
 
     if (!useNative && this.options?.allowFallbackToSubprocess === false) {
-      const error = GSDToolsError.failure(
+      const error = GTDToolsError.failure(
         `Subprocess fallback disabled: command '${registryCommand}' cannot run without native dispatch`,
         legacyCommand,
         legacyArgs,
@@ -197,7 +197,7 @@ export class QueryRuntimeBridge {
       });
       return result;
     } catch (error) {
-      const kind = error instanceof GSDToolsError ? error.classification.kind : 'failure';
+      const kind = error instanceof GTDToolsError ? error.classification.kind : 'failure';
       this.emit({
         type: 'query_hotpath_dispatch',
         command: registryCommand,

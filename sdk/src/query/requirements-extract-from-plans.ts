@@ -4,7 +4,7 @@
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter } from './frontmatter.js';
 import {
   normalizePhaseName,
@@ -43,7 +43,7 @@ function normalizeReqList(v: unknown): string[] {
 export const requirementsExtractFromPlans: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
-    throw new GSDError('phase required', ErrorClassification.Validation);
+    throw new GTDError('phase required', ErrorClassification.Validation);
   }
 
   const normalized = normalizePhaseName(phase);

@@ -9,7 +9,7 @@ import type { ContextFiles, ParsedPlan, PlanFrontmatter } from './types.js';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function createTempDir(): Promise<string> {
-  return mkdtemp(join(tmpdir(), 'gsd-prompt-'));
+  return mkdtemp(join(tmpdir(), 'gtd-prompt-'));
 }
 
 function makeWorkflowContent(purpose: string, steps: string[]): string {
@@ -119,7 +119,7 @@ describe('PromptFactory', () => {
     // sdkPromptsDir points to a non-existent temp subdir so real sdk/prompts/ files
     // don't interfere — tests control exactly which files exist on disk.
     return new PromptFactory({
-      gsdInstallDir: tempDir,
+      gtdInstallDir: tempDir,
       agentsDir,
       sdkPromptsDir: join(tempDir, 'sdk-prompts-does-not-exist'),
     });
@@ -132,8 +132,8 @@ describe('PromptFactory', () => {
         makeWorkflowContent('Research the phase.', ['Gather info', 'Analyze findings']),
       );
       await writeFile(
-        join(agentsDir, 'gsd-phase-researcher.md'),
-        makeAgentDef('gsd-phase-researcher', 'Read, Grep, Bash', 'You are a researcher.'),
+        join(agentsDir, 'gtd-phase-researcher.md'),
+        makeAgentDef('gtd-phase-researcher', 'Read, Grep, Bash', 'You are a researcher.'),
       );
 
       const factory = makeFactory();
@@ -166,8 +166,8 @@ describe('PromptFactory', () => {
         makeWorkflowContent('Plan the implementation.', ['Break down tasks']),
       );
       await writeFile(
-        join(agentsDir, 'gsd-planner.md'),
-        makeAgentDef('gsd-planner', 'Read, Write, Bash', 'You are a planner.'),
+        join(agentsDir, 'gtd-planner.md'),
+        makeAgentDef('gtd-planner', 'Read, Write, Bash', 'You are a planner.'),
       );
 
       const factory = makeFactory();
@@ -189,10 +189,14 @@ describe('PromptFactory', () => {
       expect(prompt).toContain('You are a planner.');
     });
 
-    it('delegates execute phase with plan to buildExecutorPrompt', async () => {
+    it('assembles task workflow prompt when an execute plan is supplied', async () => {
       await writeFile(
-        join(agentsDir, 'gsd-executor.md'),
-        makeAgentDef('gsd-executor', 'Read, Write, Edit, Bash', 'You are an executor.'),
+        join(workflowsDir, 'work-task-issue.md'),
+        makeWorkflowContent('Work exported task issues.', ['Run task selector']),
+      );
+      await writeFile(
+        join(agentsDir, 'gtd-task-executor.md'),
+        makeAgentDef('gtd-task-executor', 'Read, Write, Edit, Bash', 'You are an executor.'),
       );
 
       const factory = makeFactory();
@@ -201,21 +205,20 @@ describe('PromptFactory', () => {
 
       const prompt = await factory.buildPrompt(PhaseType.Execute, plan, contextFiles);
 
-      // buildExecutorPrompt produces structured output with ## Objective
-      expect(prompt).toContain('## Objective');
-      expect(prompt).toContain('Build the auth system');
-      expect(prompt).toContain('## Role');
+      expect(prompt).toContain('## Agent Instructions');
       expect(prompt).toContain('You are an executor.');
+      expect(prompt).toContain('## Purpose');
+      expect(prompt).toContain('Work exported task issues.');
     });
 
     it('handles execute phase without plan (non-delegation path)', async () => {
       await writeFile(
-        join(workflowsDir, 'execute-plan.md'),
+        join(workflowsDir, 'work-task-issue.md'),
         makeWorkflowContent('Execute the plan.', ['Run tasks']),
       );
       await writeFile(
-        join(agentsDir, 'gsd-executor.md'),
-        makeAgentDef('gsd-executor', 'Read, Write, Edit, Bash', 'You are an executor.'),
+        join(agentsDir, 'gtd-task-executor.md'),
+        makeAgentDef('gtd-task-executor', 'Read, Write, Edit, Bash', 'You are an executor.'),
       );
 
       const factory = makeFactory();
@@ -236,8 +239,8 @@ describe('PromptFactory', () => {
         makeWorkflowContent('Verify phase goals.', ['Check artifacts', 'Run tests']),
       );
       await writeFile(
-        join(agentsDir, 'gsd-verifier.md'),
-        makeAgentDef('gsd-verifier', 'Read, Bash, Grep', 'You are a verifier.'),
+        join(agentsDir, 'gtd-verifier.md'),
+        makeAgentDef('gtd-verifier', 'Read, Bash, Grep', 'You are a verifier.'),
       );
 
       const factory = makeFactory();
@@ -274,8 +277,8 @@ describe('PromptFactory', () => {
     it('handles missing workflow file gracefully', async () => {
       // No workflow files on disk
       await writeFile(
-        join(agentsDir, 'gsd-phase-researcher.md'),
-        makeAgentDef('gsd-phase-researcher', 'Read, Bash', 'You are a researcher.'),
+        join(agentsDir, 'gtd-phase-researcher.md'),
+        makeAgentDef('gtd-phase-researcher', 'Read, Bash', 'You are a researcher.'),
       );
 
       const factory = makeFactory();
@@ -289,19 +292,19 @@ describe('PromptFactory', () => {
       expect(prompt).not.toContain('## Purpose');
     });
 
-    it('handles missing agent def gracefully', async () => {
+    it('falls back to bundled agent def when installed agent is missing', async () => {
       await writeFile(
         join(workflowsDir, 'research-phase.md'),
         makeWorkflowContent('Research the phase.', ['Gather info']),
       );
-      // No agent file on disk
+      // No installed agent file on disk; bundled repo agents remain available.
 
       const factory = makeFactory();
       const contextFiles: ContextFiles = { state: '# State' };
 
       const prompt = await factory.buildPrompt(PhaseType.Research, null, contextFiles);
 
-      expect(prompt).not.toContain('## Agent Instructions');
+      expect(prompt).toContain('## Agent Instructions');
       expect(prompt).toContain('## Purpose');
       expect(prompt).toContain('Research the phase.');
     });
@@ -343,7 +346,7 @@ describe('PromptFactory', () => {
   describe('loadAgentDef', () => {
     it('loads agent def from agents dir', async () => {
       await writeFile(
-        join(agentsDir, 'gsd-executor.md'),
+        join(agentsDir, 'gtd-task-executor.md'),
         'agent content',
       );
 
@@ -362,12 +365,12 @@ describe('PromptFactory', () => {
       const projectAgentsDir = join(tempDir, 'project-agents');
       await mkdir(projectAgentsDir, { recursive: true });
       await writeFile(
-        join(projectAgentsDir, 'gsd-executor.md'),
+        join(projectAgentsDir, 'gtd-task-executor.md'),
         'project agent content',
       );
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         projectAgentsDir,
         sdkPromptsDir: join(tempDir, 'sdk-prompts-does-not-exist'),
@@ -380,11 +383,11 @@ describe('PromptFactory', () => {
     it('prefers user agents dir over project agents dir', async () => {
       const projectAgentsDir = join(tempDir, 'project-agents');
       await mkdir(projectAgentsDir, { recursive: true });
-      await writeFile(join(agentsDir, 'gsd-executor.md'), 'user agent');
-      await writeFile(join(projectAgentsDir, 'gsd-executor.md'), 'project agent');
+      await writeFile(join(agentsDir, 'gtd-task-executor.md'), 'user agent');
+      await writeFile(join(projectAgentsDir, 'gtd-task-executor.md'), 'project agent');
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         projectAgentsDir,
         sdkPromptsDir: join(tempDir, 'sdk-prompts-does-not-exist'),
@@ -398,39 +401,39 @@ describe('PromptFactory', () => {
   // ─── Headless prompt loading ─────────────────────────────────────────────
 
   describe('headless prompt loading', () => {
-    it('loadWorkflowFile prefers installed GSD over sdkPromptsDir', async () => {
+    it('loadWorkflowFile prefers installed GTD over sdkPromptsDir', async () => {
       const sdkDir = join(tempDir, 'sdk-prompts');
       await mkdir(join(sdkDir, 'workflows'), { recursive: true });
 
-      // Write both: installed GSD and SDK bundled version
-      await writeFile(join(workflowsDir, 'research-phase.md'), 'GSD-1 original');
+      // Write both: installed GTD and SDK bundled version
+      await writeFile(join(workflowsDir, 'research-phase.md'), 'GTD-1 original');
       await writeFile(join(sdkDir, 'workflows', 'research-phase.md'), 'SDK bundled version');
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         sdkPromptsDir: sdkDir,
       });
 
       const content = await factory.loadWorkflowFile(PhaseType.Research);
-      expect(content).toBe('GSD-1 original');
+      expect(content).toBe('GTD-1 original');
     });
 
-    it('loadWorkflowFile falls back to GSD-1 when sdkPromptsDir file missing', async () => {
+    it('loadWorkflowFile falls back to GTD-1 when sdkPromptsDir file missing', async () => {
       const sdkDir = join(tempDir, 'sdk-prompts');
       await mkdir(join(sdkDir, 'workflows'), { recursive: true });
 
-      // Only GSD-1 original exists, no SDK version
-      await writeFile(join(workflowsDir, 'research-phase.md'), 'GSD-1 original');
+      // Only GTD-1 original exists, no SDK version
+      await writeFile(join(workflowsDir, 'research-phase.md'), 'GTD-1 original');
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         sdkPromptsDir: sdkDir,
       });
 
       const content = await factory.loadWorkflowFile(PhaseType.Research);
-      expect(content).toBe('GSD-1 original');
+      expect(content).toBe('GTD-1 original');
     });
 
     it('loadAgentDef prefers installed agents over sdkPromptsDir', async () => {
@@ -438,11 +441,11 @@ describe('PromptFactory', () => {
       await mkdir(join(sdkDir, 'agents'), { recursive: true });
 
       // Write both: installed agent and SDK bundled agent
-      await writeFile(join(agentsDir, 'gsd-executor.md'), 'user agent');
-      await writeFile(join(sdkDir, 'agents', 'gsd-executor.md'), 'SDK bundled agent');
+      await writeFile(join(agentsDir, 'gtd-task-executor.md'), 'user agent');
+      await writeFile(join(sdkDir, 'agents', 'gtd-task-executor.md'), 'SDK bundled agent');
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         sdkPromptsDir: sdkDir,
       });
@@ -456,10 +459,10 @@ describe('PromptFactory', () => {
       await mkdir(join(sdkDir, 'agents'), { recursive: true });
 
       // Only user agent exists, no SDK version
-      await writeFile(join(agentsDir, 'gsd-executor.md'), 'user agent');
+      await writeFile(join(agentsDir, 'gtd-task-executor.md'), 'user agent');
 
       const factory = new PromptFactory({
-        gsdInstallDir: tempDir,
+        gtdInstallDir: tempDir,
         agentsDir,
         sdkPromptsDir: sdkDir,
       });
@@ -474,12 +477,12 @@ describe('PromptFactory', () => {
         join(workflowsDir, 'research-phase.md'),
         makeWorkflowContent('Research the codebase thoroughly.', [
           'Gather data from the project.\nAskUserQuestion("what?")\nAnalyze findings.',
-          'Run the analysis.\n/gsd:analyze --deep\nDocument results.',
+          'Run the analysis.\n/gtd:analyze --deep\nDocument results.',
         ]),
       );
       await writeFile(
-        join(agentsDir, 'gsd-phase-researcher.md'),
-        makeAgentDef('gsd-phase-researcher', 'Read, Bash', 'You are a researcher.\nSTOP and wait for user input.\nBe thorough.'),
+        join(agentsDir, 'gtd-phase-researcher.md'),
+        makeAgentDef('gtd-phase-researcher', 'Read, Bash', 'You are a researcher.\nSTOP and wait for user input.\nBe thorough.'),
       );
 
       const factory = makeFactory();
@@ -489,7 +492,7 @@ describe('PromptFactory', () => {
 
       // Interactive patterns should be stripped by sanitizePrompt()
       expect(prompt).not.toContain('AskUserQuestion');
-      expect(prompt).not.toContain('/gsd:');
+      expect(prompt).not.toContain('/gtd:');
       expect(prompt).not.toMatch(/\bSTOP\s+and\s+wait/);
 
       // Non-interactive content on separate lines should remain
@@ -499,10 +502,10 @@ describe('PromptFactory', () => {
       expect(prompt).toContain('Analyze findings.');
     });
 
-    it('buildPrompt with execute+plan sanitizes output from buildExecutorPrompt', async () => {
+    it('buildPrompt with execute+plan sanitizes task workflow output', async () => {
       await writeFile(
-        join(agentsDir, 'gsd-executor.md'),
-        makeAgentDef('gsd-executor', 'Read, Write, Edit, Bash', 'You are an executor.\nSTOP and wait for user.\nExecute thoroughly.'),
+        join(agentsDir, 'gtd-task-executor.md'),
+        makeAgentDef('gtd-task-executor', 'Read, Write, Edit, Bash', 'You are an executor.\nSTOP and wait for user.\nExecute thoroughly.'),
       );
 
       const factory = makeFactory();
@@ -511,8 +514,6 @@ describe('PromptFactory', () => {
 
       const prompt = await factory.buildPrompt(PhaseType.Execute, plan, contextFiles);
 
-      // Objective should remain (no interactive pattern on that line)
-      expect(prompt).toContain('Build the auth system');
       // The role's STOP directive should be stripped
       expect(prompt).not.toMatch(/\bSTOP\s+and\s+wait/);
       // Non-interactive role content should remain
@@ -529,7 +530,7 @@ describe('PHASE_WORKFLOW_MAP', () => {
     }
   });
 
-  it('execute phase maps to execute-plan.md (not execute-phase.md)', () => {
-    expect(PHASE_WORKFLOW_MAP[PhaseType.Execute]).toBe('execute-plan.md');
+  it('task execution maps to work-task-issue.md', () => {
+    expect(PHASE_WORKFLOW_MAP[PhaseType.Execute]).toBe('work-task-issue.md');
   });
 });

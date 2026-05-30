@@ -58,14 +58,14 @@ function makePlan(overrides: Partial<ParsedPlan> = {}): ParsedPlan {
 }
 
 const SAMPLE_AGENT_DEF = `---
-name: gsd-executor
-description: Executes GSD plans
+name: gtd-task-executor
+description: Executes GTD plans
 tools: Read, Write, Edit, Bash, Grep, Glob
 permissionMode: acceptEdits
 ---
 
 <role>
-You are a GSD plan executor. You execute PLAN.md files atomically.
+You are a GTD plan executor. You execute PLAN.md files atomically.
 </role>
 
 <execution_flow>
@@ -103,7 +103,7 @@ describe('parseAgentTools', () => {
 describe('parseAgentRole', () => {
   it('extracts role content from agent definition', () => {
     const role = parseAgentRole(SAMPLE_AGENT_DEF);
-    expect(role).toContain('GSD plan executor');
+    expect(role).toContain('GTD plan executor');
     expect(role).toContain('PLAN.md files atomically');
   });
 
@@ -285,7 +285,7 @@ describe('buildExecutorPrompt', () => {
     const plan = makePlan();
     const prompt = buildExecutorPrompt(plan, SAMPLE_AGENT_DEF);
     expect(prompt).toContain('## Role');
-    expect(prompt).toContain('GSD plan executor');
+    expect(prompt).toContain('GTD plan executor');
   });
 
   it('works without agent definition', () => {

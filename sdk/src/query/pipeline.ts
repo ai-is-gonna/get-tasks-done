@@ -70,7 +70,7 @@ function collectFiles(dir: string, base: string): string[] {
 
 /**
  * Copy .planning/ subtree from sourceDir to destDir.
- * Only copies text files relevant to GSD state (skips binaries and logs).
+ * Only copies text files relevant to GTD state (skips binaries and logs).
  */
 async function copyPlanningTree(sourceDir: string, destDir: string): Promise<void> {
   const planningSource = join(sourceDir, '.planning');
@@ -181,7 +181,7 @@ export function wrapWithPipeline(
         // ─── Dry-run: clone → mutate → diff ──────────────────────────
         let tempDir: string | null = null;
         try {
-          tempDir = await mkdtemp(join(tmpdir(), 'gsd-dryrun-'));
+          tempDir = await mkdtemp(join(tmpdir(), 'gtd-dryrun-'));
 
           // Snapshot state before mutation
           const beforeState = await readPlanningState(projectDir);

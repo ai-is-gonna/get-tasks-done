@@ -1,9 +1,9 @@
 /**
- * GSD Agent Installation Validation Tests (#1371)
+ * GTD Agent Installation Validation Tests (#1371)
  *
- * Validates that GSD detects missing or incomplete agent installations and
+ * Validates that GTD detects missing or incomplete agent installations and
  * surfaces warnings through init commands and health checks. When agents are
- * not installed, Task(subagent_type="gsd-*") silently falls back to
+ * not installed, Task(subagent_type="gtd-*") silently falls back to
  * general-purpose, losing specialized instructions.
  */
 
@@ -11,18 +11,18 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const AGENTS_DIR_NAME = 'agents';
-const MODEL_PROFILES = require('../get-shit-done/bin/lib/model-profiles.cjs').MODEL_PROFILES;
+const MODEL_PROFILES = require('../get-tasks-done/bin/lib/model-profiles.cjs').MODEL_PROFILES;
 const EXPECTED_AGENTS = Object.keys(MODEL_PROFILES);
 
 /**
- * Create a fake GSD install directory structure that mirrors what the installer
- * produces. gsd-tools.cjs lives at <configDir>/get-shit-done/bin/gsd-tools.cjs,
+ * Create a fake GTD install directory structure that mirrors what the installer
+ * produces. gtd-tools.cjs lives at <configDir>/get-tasks-done/bin/gtd-tools.cjs,
  * so the agents dir is at <configDir>/agents/.
  *
- * We use --cwd to point at the project, and GSD_INSTALL_DIR env to override
+ * We use --cwd to point at the project, and GTD_INSTALL_DIR env to override
  * the agents directory location for testing.
  */
 function createAgentsDir(configDir, agentNames = []) {
@@ -50,34 +50,34 @@ describe('init commands: agents_installed field (#1371)', () => {
     cleanup(tmpDir);
   });
 
-  test('init execute-phase includes agents_installed=true when agents exist', () => {
+  test('init plan-phase includes agents_installed=true when agents exist', () => {
     // Create phase dir for init
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
 
-    // Create agents dir as sibling of get-shit-done/ (the installed layout)
-    // gsd-tools.cjs resolves agents from GSD_INSTALL_DIR or __dirname/../../agents
-    const gsdInstallDir = path.resolve(__dirname, '..', 'get-shit-done', 'bin');
-    const configDir = path.resolve(gsdInstallDir, '..', '..');
+    // Create agents dir as sibling of get-tasks-done/ (the installed layout)
+    // gtd-tools.cjs resolves agents from GTD_INSTALL_DIR or __dirname/../../agents
+    const gtdInstallDir = path.resolve(__dirname, '..', 'get-tasks-done', 'bin');
+    const configDir = path.resolve(gtdInstallDir, '..', '..');
     const agentsDir = path.join(configDir, 'agents');
 
-    // Agents already exist in the repo root /agents/ dir which is sibling to get-shit-done/
-    const result = runGsdTools('init execute-phase 1 --raw', tmpDir);
+    // Agents already exist in the repo root /agents/ dir which is sibling to get-tasks-done/
+    const result = runGtdTools('init plan-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.strictEqual(typeof output.agents_installed, 'boolean',
-      'init execute-phase must include agents_installed field');
-    // The repo has agents/ dir with all gsd-*.md files, so this should be true
+      'init plan-phase must include agents_installed field');
+    // The repo has agents/ dir with all gtd-*.md files, so this should be true
     assert.strictEqual(output.agents_installed, true,
-      'agents_installed should be true when agents directory has gsd-*.md files');
+      'agents_installed should be true when agents directory has gtd-*.md files');
   });
 
   test('init plan-phase includes agents_installed=true when agents exist', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
 
-    const result = runGsdTools('init plan-phase 1 --raw', tmpDir);
+    const result = runGtdTools('init plan-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -86,20 +86,20 @@ describe('init commands: agents_installed field (#1371)', () => {
     assert.strictEqual(output.agents_installed, true);
   });
 
-  test('init execute-phase includes missing_agents list when agents are missing', () => {
+  test('init plan-phase includes missing_agents list when agents are missing', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
 
-    const result = runGsdTools('init execute-phase 1 --raw', tmpDir);
+    const result = runGtdTools('init plan-phase 1 --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.ok(Array.isArray(output.missing_agents),
-      'init execute-phase must include missing_agents array');
+      'init plan-phase must include missing_agents array');
   });
 
   test('init quick includes agents_installed field', () => {
-    const result = runGsdTools(['init', 'quick', 'test description', '--raw'], tmpDir);
+    const result = runGtdTools(['init', 'quick', 'test description', '--raw'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -144,9 +144,9 @@ describe('validate health: agent installation check W010 (#1371)', () => {
   });
 
   test('health check reports healthy when agents are installed (repo layout)', () => {
-    // In the repo, agents/ exists as a sibling of get-shit-done/, so the
-    // health check should find them via the gsd-tools.cjs path resolution
-    const result = runGsdTools('validate health --raw', tmpDir);
+    // In the repo, agents/ exists as a sibling of get-tasks-done/, so the
+    // health check should find them via the gtd-tools.cjs path resolution
+    const result = runGtdTools('validate health --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -170,8 +170,8 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
   });
 
   test('agents_installed=true when agents exist as .agent.md (Copilot format)', () => {
-    // Simulate a Copilot install: agents are named gsd-*.agent.md, not gsd-*.md
-    // Use GSD_AGENTS_DIR to point at an isolated dir with ONLY .agent.md files,
+    // Simulate a Copilot install: agents are named gtd-*.agent.md, not gtd-*.md
+    // Use GTD_AGENTS_DIR to point at an isolated dir with ONLY .agent.md files,
     // so the test does not accidentally pass via the repo's own agents/ dir.
     const agentsDir = path.join(tmpDir, 'copilot-agents');
     fs.mkdirSync(agentsDir, { recursive: true });
@@ -182,13 +182,13 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGtdTools('validate agents --raw', tmpDir, { GTD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     // Must report the custom dir, not the default repo agents dir
     assert.strictEqual(output.agents_dir, agentsDir,
-      'agents_dir must be the GSD_AGENTS_DIR override, not the repo default');
+      'agents_dir must be the GTD_AGENTS_DIR override, not the repo default');
     assert.strictEqual(output.agents_found, true,
       'agents_found must be true when agents exist as .agent.md (Copilot format)');
     assert.deepStrictEqual(output.missing, [],
@@ -205,7 +205,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${firstAgent}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGtdTools('validate agents --raw', tmpDir, { GTD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -225,7 +225,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       );
     }
 
-    const result = runGsdTools('init new-workspace --raw', tmpDir, { GSD_AGENTS_DIR: agentsDir });
+    const result = runGtdTools('init new-workspace --raw', tmpDir, { GTD_AGENTS_DIR: agentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -235,7 +235,7 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       'missing_agents must be empty when all .agent.md files are present');
   });
 
-  test('GSD_AGENTS_DIR env var overrides default agents directory', () => {
+  test('GTD_AGENTS_DIR env var overrides default agents directory', () => {
     // Create a custom agents dir in a subdirectory
     const customAgentsDir = path.join(tmpDir, 'custom-agents');
     fs.mkdirSync(customAgentsDir, { recursive: true });
@@ -245,13 +245,13 @@ describe('checkAgentsInstalled: Copilot .agent.md format (#1512)', () => {
       `---\nname: ${EXPECTED_AGENTS[0]}\ndescription: Test agent\n---\nAgent content.\n`
     );
 
-    const result = runGsdTools('validate agents --raw', tmpDir, { GSD_AGENTS_DIR: customAgentsDir });
+    const result = runGtdTools('validate agents --raw', tmpDir, { GTD_AGENTS_DIR: customAgentsDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     // The custom dir path should be reported
     assert.strictEqual(output.agents_dir, customAgentsDir,
-      'agents_dir must reflect GSD_AGENTS_DIR override');
+      'agents_dir must reflect GTD_AGENTS_DIR override');
   });
 });
 
@@ -269,7 +269,7 @@ describe('validate agents subcommand (#1371)', () => {
   });
 
   test('validate agents returns status with agent list', () => {
-    const result = runGsdTools('validate agents --raw', tmpDir);
+    const result = runGtdTools('validate agents --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -280,7 +280,7 @@ describe('validate agents subcommand (#1371)', () => {
   });
 
   test('validate agents lists all expected agent types', () => {
-    const result = runGsdTools('validate agents --raw', tmpDir);
+    const result = runGtdTools('validate agents --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

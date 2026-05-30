@@ -6,11 +6,11 @@ import { createRegistry } from './index.js';
  *
  * Closes #3121: the `commands` verb was referenced in workflow files
  * (references/workstream-flag.md) but had no native SDK handler, causing
- * a fallback to gsd-tools.cjs which threw "Unknown command: commands".
+ * a fallback to gtd-tools.cjs which threw "Unknown command: commands".
  *
  * Returns: JSON array of all canonical + alias command strings the SDK
  * registry accepts, sorted alphabetically. Suitable for discoverability
- * and for agent auto-complete when constructing `gsd-sdk query` calls.
+ * and for agent auto-complete when constructing `gtd-sdk query` calls.
  */
 export const commandsList: QueryHandler<string[]> = async (_args, _projectDir) => {
   const registry = createRegistry();

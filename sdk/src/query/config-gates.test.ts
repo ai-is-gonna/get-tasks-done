@@ -15,7 +15,7 @@ function cleanupTempDir(dir: string): void {
 
 describe('checkConfigGates', () => {
   it('returns merged workflow defaults when config is absent', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-cg-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-cg-'));
     try {
       await mkdir(join(dir, '.planning'), { recursive: true });
       const { data } = await checkConfigGates([], dir);
@@ -36,7 +36,7 @@ describe('checkConfigGates', () => {
   });
 
   it('treats string "false" as false and honors plan_checker alias', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-cg-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-cg-'));
     try {
       await mkdir(join(dir, '.planning'), { recursive: true });
       await writeFile(
@@ -59,7 +59,7 @@ describe('checkConfigGates', () => {
   });
 
   it('reflects workflow overrides from config.json', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-cg-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-cg-'));
     try {
       await mkdir(join(dir, '.planning'), { recursive: true });
       await writeFile(

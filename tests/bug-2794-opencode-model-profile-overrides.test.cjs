@@ -2,25 +2,25 @@
  * Regression test for bug #2794
  *
  * OpenCode generated agents ignored `model_profile_overrides.opencode.*`.
- * The agent install path called `readGsdEffectiveModelOverrides` (explicit
- * per-agent overrides) but never called `readGsdRuntimeProfileResolver`
+ * The agent install path called `readGtdEffectiveModelOverrides` (explicit
+ * per-agent overrides) but never called `readGtdRuntimeProfileResolver`
  * (tier-based profile overrides). When a user configured:
  *
  *   { runtime: "opencode", model_profile_overrides: { opencode: { sonnet: "..." } } }
  *
- * generated `.opencode/agents/gsd-*.md` files contained no `model:` frontmatter.
+ * generated `.opencode/agents/gtd-*.md` files contained no `model:` frontmatter.
  *
  * The fix adds a tier-resolver fallback in the OpenCode agent conversion block:
  * explicit `model_overrides[agent]` > `model_profile_overrides.opencode.<tier>` > omit.
  *
  * This test exercises:
- * 1. `readGsdRuntimeProfileResolver` correctly resolves OpenCode tier overrides.
+ * 1. `readGtdRuntimeProfileResolver` correctly resolves OpenCode tier overrides.
  * 2. The agent install code path embeds the resolved model into OpenCode frontmatter.
  * 3. Explicit `model_overrides` still wins over tier-based resolution.
  * 4. Missing overrides produce no `model:` field (no regression on omit behavior).
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -29,14 +29,14 @@ const path = require('node:path');
 const os = require('node:os');
 
 const {
-  readGsdRuntimeProfileResolver,
-  readGsdEffectiveModelOverrides,
+  readGtdRuntimeProfileResolver,
+  readGtdEffectiveModelOverrides,
   convertClaudeToOpencodeFrontmatter,
   install,
 } = require('../bin/install.js');
 
 function makeTmp(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `gsd-2794-${prefix}-`));
+  return fs.mkdtempSync(path.join(os.tmpdir(), `gtd-2794-${prefix}-`));
 }
 
 function writeJson(p, obj) {
@@ -48,7 +48,7 @@ function rmr(p) {
   try { fs.rmSync(p, { recursive: true, force: true }); } catch { /* noop */ }
 }
 
-describe('bug-2794: readGsdRuntimeProfileResolver resolves opencode tier overrides', () => {
+describe('bug-2794: readGtdRuntimeProfileResolver resolves opencode tier overrides', () => {
   let projectDir;
   let homeDir;
   let origHome;
@@ -78,12 +78,12 @@ describe('bug-2794: readGsdRuntimeProfileResolver resolves opencode tier overrid
       },
     });
 
-    const resolver = readGsdRuntimeProfileResolver(projectDir);
+    const resolver = readGtdRuntimeProfileResolver(projectDir);
     assert.ok(resolver !== null, 'expected a resolver for opencode runtime');
 
-    // gsd-roadmapper balanced tier = sonnet — should resolve to override
-    const entry = resolver.resolve('gsd-roadmapper');
-    assert.ok(entry !== null, 'expected entry for gsd-roadmapper');
+    // gtd-roadmapper balanced tier = sonnet — should resolve to override
+    const entry = resolver.resolve('gtd-roadmapper');
+    assert.ok(entry !== null, 'expected entry for gtd-roadmapper');
     assert.strictEqual(entry.model, 'anthropic/claude-sonnet-4-7', 'sonnet override applied');
   });
 
@@ -92,7 +92,7 @@ describe('bug-2794: readGsdRuntimeProfileResolver resolves opencode tier overrid
       model_profile: 'balanced',
       model_profile_overrides: { opencode: { sonnet: 'x' } },
     });
-    const resolver = readGsdRuntimeProfileResolver(projectDir);
+    const resolver = readGtdRuntimeProfileResolver(projectDir);
     assert.strictEqual(resolver, null, 'no resolver without runtime field');
   });
 
@@ -102,9 +102,9 @@ describe('bug-2794: readGsdRuntimeProfileResolver resolves opencode tier overrid
       model_profile: 'balanced',
       model_profile_overrides: { opencode: { sonnet: 'x' } },
     });
-    const resolver = readGsdRuntimeProfileResolver(projectDir);
+    const resolver = readGtdRuntimeProfileResolver(projectDir);
     assert.ok(resolver !== null);
-    const entry = resolver.resolve('gsd-nonexistent-agent');
+    const entry = resolver.resolve('gtd-nonexistent-agent');
     assert.strictEqual(entry, null, 'unknown agent name yields null');
   });
 });
@@ -156,24 +156,24 @@ describe('bug-2794: OpenCode agent install embeds model_profile_overrides model'
     const agentsDir = path.join(projectDir, '.opencode', 'agents');
     assert.ok(fs.existsSync(agentsDir), 'agents directory should be created');
 
-    // gsd-roadmapper is balanced -> sonnet tier
-    const roadmapperPath = path.join(agentsDir, 'gsd-roadmapper.md');
-    assert.ok(fs.existsSync(roadmapperPath), 'gsd-roadmapper.md should exist');
+    // gtd-roadmapper is balanced -> sonnet tier
+    const roadmapperPath = path.join(agentsDir, 'gtd-roadmapper.md');
+    assert.ok(fs.existsSync(roadmapperPath), 'gtd-roadmapper.md should exist');
     const roadmapperContent = fs.readFileSync(roadmapperPath, 'utf-8');
     assert.match(
       roadmapperContent,
       /^model: anthropic\/claude-sonnet-4-7$/m,
-      'gsd-roadmapper should have sonnet model from model_profile_overrides'
+      'gtd-roadmapper should have sonnet model from model_profile_overrides'
     );
 
-    // gsd-planner is balanced -> opus tier
-    const plannerPath = path.join(agentsDir, 'gsd-planner.md');
-    assert.ok(fs.existsSync(plannerPath), 'gsd-planner.md should exist');
+    // gtd-planner is balanced -> opus tier
+    const plannerPath = path.join(agentsDir, 'gtd-planner.md');
+    assert.ok(fs.existsSync(plannerPath), 'gtd-planner.md should exist');
     const plannerContent = fs.readFileSync(plannerPath, 'utf-8');
     assert.match(
       plannerContent,
       /^model: anthropic\/claude-opus-4-7$/m,
-      'gsd-planner should have opus model from model_profile_overrides'
+      'gtd-planner should have opus model from model_profile_overrides'
     );
   });
 
@@ -182,7 +182,7 @@ describe('bug-2794: OpenCode agent install embeds model_profile_overrides model'
       runtime: 'opencode',
       model_profile: 'balanced',
       model_overrides: {
-        'gsd-roadmapper': 'explicit-winner-model',
+        'gtd-roadmapper': 'explicit-winner-model',
       },
       model_profile_overrides: {
         opencode: {
@@ -199,7 +199,7 @@ describe('bug-2794: OpenCode agent install embeds model_profile_overrides model'
       console.log = oldLog;
     }
 
-    const roadmapperPath = path.join(projectDir, '.opencode', 'agents', 'gsd-roadmapper.md');
+    const roadmapperPath = path.join(projectDir, '.opencode', 'agents', 'gtd-roadmapper.md');
     assert.ok(fs.existsSync(roadmapperPath));
     const content = fs.readFileSync(roadmapperPath, 'utf-8');
     assert.match(
@@ -228,13 +228,13 @@ describe('bug-2794: OpenCode agent install embeds model_profile_overrides model'
       console.log = oldLog;
     }
 
-    const roadmapperPath = path.join(projectDir, '.opencode', 'agents', 'gsd-roadmapper.md');
+    const roadmapperPath = path.join(projectDir, '.opencode', 'agents', 'gtd-roadmapper.md');
     if (fs.existsSync(roadmapperPath)) {
       const content = fs.readFileSync(roadmapperPath, 'utf-8');
       // When no overrides, model field should either be absent or use built-in default
       // The key invariant: no model field if there are no user-supplied overrides
       // AND no built-in opencode defaults for this tier
-      // (gsd-roadmapper balanced = sonnet; opencode has built-in sonnet defaults)
+      // (gtd-roadmapper balanced = sonnet; opencode has built-in sonnet defaults)
       // So we only assert no crash and no tier-model-not-provided entries
       assert.ok(typeof content === 'string', 'agent file should be a string');
     }

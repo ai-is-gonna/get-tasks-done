@@ -17,7 +17,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -31,7 +31,7 @@ const { installSdkIfNeeded } = require(INSTALL_SRC);
 describe('#2678: --local install does not exit when SDK is missing', () => {
   test('installSdkIfNeeded with isLocal=true and missing sdk/dist/cli.js returns without exiting', () => {
     // Point sdkDir at a temp directory that has no dist/cli.js — simulates missing SDK
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-sdk-local-2678-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-sdk-local-2678-'));
     try {
       // Capture stderr to verify a warning is printed
       const stderrChunks = [];
@@ -68,7 +68,7 @@ describe('#2678: --local install does not exit when SDK is missing', () => {
   });
 
   test('installSdkIfNeeded with isLocal=true and missing SDK prints a local-install message', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-sdk-local-msg-2678-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-sdk-local-msg-2678-'));
     try {
       const stderrOutput = [];
       const origWrite = process.stderr.write.bind(process.stderr);

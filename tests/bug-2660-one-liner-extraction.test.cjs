@@ -1,5 +1,5 @@
 /**
- * Bug #2660: `gsd-tools milestone complete <version>` writes MILESTONES.md
+ * Bug #2660: `gtd-tools milestone complete <version>` writes MILESTONES.md
  * bullets that read "- One-liner:" (the literal label) instead of the prose
  * after the label.
  *
@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
 const path = require('path');
 
 const { extractOneLinerFromBody } = require(
-  path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'core.cjs')
+  path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'core.cjs')
 );
 
 describe('bug #2660: extractOneLinerFromBody', () => {

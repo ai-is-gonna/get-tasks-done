@@ -1,7 +1,7 @@
 /**
  * Shared query helpers — cross-cutting utility functions used across query modules.
  *
- * Ported from get-shit-done/bin/lib/core.cjs and state.cjs.
+ * Ported from get-tasks-done/bin/lib/core.cjs and state.cjs.
  * Provides phase name normalization, path handling, regex escaping,
  * and STATE.md field extraction.
  *
@@ -21,7 +21,7 @@ import { join, dirname, relative, resolve, isAbsolute, normalize, sep as pathSep
 import { realpath } from 'node:fs/promises';
 import { existsSync, statSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 export { SUPPORTED_RUNTIMES, type Runtime } from '../model-catalog.js';
 import { SUPPORTED_RUNTIMES, type Runtime } from '../model-catalog.js';
 import { workspacePlanningPaths, resolveWorkspaceContext, type PlanningPaths } from './workspace.js';
@@ -85,7 +85,7 @@ export function getRuntimeConfigDir(runtime: Runtime): string {
 
 /**
  * Detect the invoking runtime using issue #2402 precedence:
- *   1. `GSD_RUNTIME` env var
+ *   1. `GTD_RUNTIME` env var
  *   2. `config.runtime` field (from `.planning/config.json` when loaded)
  *   3. Fallback to `'claude'`
  *
@@ -93,7 +93,7 @@ export function getRuntimeConfigDir(runtime: Runtime): string {
  * stale env values don't hard-block workflows.
  */
 export function detectRuntime(config?: { runtime?: unknown }): Runtime {
-  const envValue = process.env.GSD_RUNTIME;
+  const envValue = process.env.GTD_RUNTIME;
   if (envValue && (SUPPORTED_RUNTIMES as readonly string[]).includes(envValue)) {
     return envValue as Runtime;
   }
@@ -105,17 +105,17 @@ export function detectRuntime(config?: { runtime?: unknown }): Runtime {
 }
 
 /**
- * Resolve the GSD agents directory for a given runtime.
+ * Resolve the GTD agents directory for a given runtime.
  *
  * Precedence:
- *   1. `GSD_AGENTS_DIR` — explicit SDK override (wins over runtime selection)
+ *   1. `GTD_AGENTS_DIR` — explicit SDK override (wins over runtime selection)
  *   2. `<getRuntimeConfigDir(runtime)>/agents` — installer-parity default
  *
  * Defaults to Claude when no runtime is passed, matching prior behavior
  * (see `init-runner.ts`, which is Claude-only by design).
  */
 export function resolveAgentsDir(runtime: Runtime = 'claude'): string {
-  if (process.env.GSD_AGENTS_DIR) return process.env.GSD_AGENTS_DIR;
+  if (process.env.GTD_AGENTS_DIR) return process.env.GTD_AGENTS_DIR;
   return join(getRuntimeConfigDir(runtime), 'agents');
 }
 
@@ -438,7 +438,7 @@ export function normalizeMd(content: string): string {
  */
 export function planningPaths(projectDir: string, workstream?: string): PlanningPaths {
   const envCtx = resolveWorkspaceContext();
-  // Validate env workstream before use: invalid GSD_WORKSTREAM falls back to
+  // Validate env workstream before use: invalid GTD_WORKSTREAM falls back to
   // root .planning/ (bug-2791 contract — invalid env must not crash or route
   // to a bad path; silent fallback to root preserves pre-#3269 behaviour).
   const validEnvWorkstream =
@@ -488,7 +488,7 @@ export async function resolvePathUnderProject(projectDir: string, userPath: stri
   }
   const rel = relative(projectReal, realCandidate);
   if (rel.startsWith('..') || (isAbsolute(rel) && rel.length > 0)) {
-    throw new GSDError('path escapes project directory', ErrorClassification.Validation);
+    throw new GTDError('path escapes project directory', ErrorClassification.Validation);
   }
   return realCandidate;
 }

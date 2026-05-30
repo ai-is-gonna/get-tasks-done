@@ -9,7 +9,7 @@
  *      - next_phases (YAML flow array)
  *      - progress (nested block: completed_phases / total_phases / percent)
  *
- *   2. formatGsdState renders three new scenes when those fields are populated
+ *   2. formatGtdState renders three new scenes when those fields are populated
  *      - Scene 1: active_phase set         → "Phase X.Y <stage>"
  *      - Scene 2: idle + next_action set   → "next <action> <phases>"
  *      - Scene 3: percent 100 / all done   → "milestone complete"
@@ -28,8 +28,8 @@ const assert = require('node:assert/strict');
 
 const {
   parseStateMd,
-  formatGsdState,
-} = require('../hooks/gsd-statusline.js');
+  formatGtdState,
+} = require('../hooks/gtd-statusline.js');
 
 // ─── parseStateMd: new lifecycle fields ─────────────────────────────────────
 
@@ -50,11 +50,11 @@ describe('parseStateMd #2833 lifecycle fields', () => {
     const content = [
       '---',
       'milestone: v2.0',
-      'next_action: execute-phase',
+      'next_action: work-task-issue',
       '---',
     ].join('\n');
     const s = parseStateMd(content);
-    assert.equal(s.nextAction, 'execute-phase');
+    assert.equal(s.nextAction, 'work-task-issue');
   });
 
   test('treats "null" literal as null for active_phase and next_action', () => {
@@ -119,11 +119,11 @@ describe('parseStateMd #2833 lifecycle fields', () => {
   });
 });
 
-// ─── formatGsdState: new scenes ─────────────────────────────────────────────
+// ─── formatGtdState: new scenes ─────────────────────────────────────────────
 
-describe('formatGsdState #2833 lifecycle scenes', () => {
+describe('formatGtdState #2833 lifecycle scenes', () => {
   test('Scene 1 — active_phase set renders "Phase X.Y <stage>"', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       status: 'executing',
       activePhase: '4.5',
@@ -133,7 +133,7 @@ describe('formatGsdState #2833 lifecycle scenes', () => {
   });
 
   test('Scene 1 — active_phase without status renders "Phase X.Y"', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       activePhase: '4.5',
     });
@@ -141,18 +141,18 @@ describe('formatGsdState #2833 lifecycle scenes', () => {
   });
 
   test('Scene 2 — idle + next_action renders "next <action> <phases>"', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       activePhase: null,
-      nextAction: 'execute-phase',
+      nextAction: 'work-task-issue',
       nextPhases: ['4.5'],
       percent: '59',
     });
-    assert.equal(out, 'v2.0 [█████░░░░░] 59% · next execute-phase 4.5');
+    assert.equal(out, 'v2.0 [█████░░░░░] 59% · next work-task-issue 4.5');
   });
 
   test('Scene 2 — multiple next_phases joined with /', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       nextAction: 'discuss-phase',
       nextPhases: ['4.7', '6.5'],
@@ -161,7 +161,7 @@ describe('formatGsdState #2833 lifecycle scenes', () => {
   });
 
   test('Scene 3 — percent=100 renders "milestone complete"', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       percent: '100',
     });
@@ -169,7 +169,7 @@ describe('formatGsdState #2833 lifecycle scenes', () => {
   });
 
   test('Scene 3 — completed_phases equals total_phases also triggers complete', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       completedPhases: '17',
       totalPhases: '17',
@@ -180,11 +180,11 @@ describe('formatGsdState #2833 lifecycle scenes', () => {
 
 // ─── Backward compatibility — CRITICAL: existing STATE.md unchanged ─────────
 
-describe('formatGsdState #2833 backward compatibility', () => {
+describe('formatGtdState #2833 backward compatibility', () => {
   test('legacy STATE.md (only status + milestone + phase) renders unchanged', () => {
     // Identical to the format documented in #1989 (the foundation issue).
     // No new lifecycle fields populated → must render exactly as v1.38.x did.
-    const out = formatGsdState({
+    const out = formatGtdState({
       status: 'executing',
       milestone: 'v1.9',
       milestoneName: 'Code Quality',
@@ -196,7 +196,7 @@ describe('formatGsdState #2833 backward compatibility', () => {
   });
 
   test('only status set (no phase, no lifecycle fields) renders just "<milestone> · <status>"', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v1.9',
       status: 'executing',
     });
@@ -204,12 +204,12 @@ describe('formatGsdState #2833 backward compatibility', () => {
   });
 
   test('empty state renders empty string', () => {
-    const out = formatGsdState({});
+    const out = formatGtdState({});
     assert.equal(out, '');
   });
 
   test('progress.percent is opt-in — absent percent leaves milestone segment unchanged', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v1.9',
       milestoneName: 'Code Quality',
       status: 'executing',
@@ -219,78 +219,78 @@ describe('formatGsdState #2833 backward compatibility', () => {
   });
 });
 
-// ─── renderProgressBar (exported indirectly via formatGsdState behavior) ────
+// ─── renderProgressBar (exported indirectly via formatGtdState behavior) ────
 
 describe('progress bar rendering', () => {
   test('0% renders 10 empty segments', () => {
     // percent=0 doesn't trigger Scene 3 (only percent='100' does), so
     // Scene 4 fallback fires with no extra parts — just milestone + bar.
-    const out = formatGsdState({ milestone: 'v2.0', percent: '0' });
+    const out = formatGtdState({ milestone: 'v2.0', percent: '0' });
     assert.ok(out.includes('[░░░░░░░░░░] 0%'));
   });
 
   test('50% renders 5 filled + 5 empty', () => {
-    const out = formatGsdState({ milestone: 'v2.0', percent: '50' });
+    const out = formatGtdState({ milestone: 'v2.0', percent: '50' });
     assert.ok(out.includes('[█████░░░░░] 50%'));
   });
 
   test('100% renders 10 filled (and triggers Scene 3)', () => {
-    const out = formatGsdState({ milestone: 'v2.0', percent: '100' });
+    const out = formatGtdState({ milestone: 'v2.0', percent: '100' });
     assert.equal(out, 'v2.0 [██████████] 100% · milestone complete');
   });
 
   test('percent absent → no bar rendered (opt-in)', () => {
-    const out = formatGsdState({ milestone: 'v2.0', status: 'executing' });
+    const out = formatGtdState({ milestone: 'v2.0', status: 'executing' });
     assert.ok(!out.includes('['));
     assert.ok(!out.includes('░'));
     assert.ok(!out.includes('█'));
   });
 
   test('percent over 100 clamps to 100', () => {
-    const out = formatGsdState({ milestone: 'v2.0', percent: '150' });
+    const out = formatGtdState({ milestone: 'v2.0', percent: '150' });
     assert.ok(out.includes('[██████████] 100%'));
   });
 
   test('percent below 0 clamps to 0', () => {
-    const out = formatGsdState({ milestone: 'v2.0', percent: '-10' });
+    const out = formatGtdState({ milestone: 'v2.0', percent: '-10' });
     assert.ok(out.includes('[░░░░░░░░░░] 0%'));
   });
 });
 
 // ─── Scene priority — first-match-wins guarantee ────────────────────────────
 
-describe('formatGsdState #2833 scene priority', () => {
+describe('formatGtdState #2833 scene priority', () => {
   test('active_phase wins over next_action when both populated', () => {
     // active_phase populated should win — orchestrator is in flight,
     // any "next" recommendation would be misleading.
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       status: 'executing',
       activePhase: '4.5',
-      nextAction: 'execute-phase',
+      nextAction: 'work-task-issue',
       nextPhases: ['4.5'],
     });
     assert.ok(out.includes('Phase 4.5 executing'));
-    assert.ok(!out.includes('next execute-phase'));
+    assert.ok(!out.includes('next work-task-issue'));
   });
 
   test('next_action wins over Scene 4 fallback when active_phase null', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       status: 'in_progress',  // would be Scene 4 fallback alone
       activePhase: null,
-      nextAction: 'execute-phase',
+      nextAction: 'work-task-issue',
       nextPhases: ['4.5'],
       phaseNum: '1',
       phaseTotal: '5',
     });
-    assert.ok(out.includes('next execute-phase 4.5'));
+    assert.ok(out.includes('next work-task-issue 4.5'));
     assert.ok(!out.includes('in_progress'));
     assert.ok(!out.includes('1/5'));
   });
 
   test('percent=100 wins over Scene 4 even with phase set', () => {
-    const out = formatGsdState({
+    const out = formatGtdState({
       milestone: 'v2.0',
       percent: '100',
       phaseNum: '1',

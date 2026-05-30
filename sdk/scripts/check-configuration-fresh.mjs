@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Freshness check for get-shit-done/bin/lib/configuration.generated.cjs.
+ * Freshness check for get-tasks-done/bin/lib/configuration.generated.cjs.
  *
  * Re-runs the generator in-memory, compares to the committed file,
  * exits 0 if equal, 1 if not.
@@ -19,7 +19,7 @@ const repoRoot = resolve(here, '..', '..');
 const { buildConfigurationCjs } = await import('./gen-configuration.mjs');
 
 const expected = buildConfigurationCjs();
-const committedPath = resolve(repoRoot, 'get-shit-done', 'bin', 'lib', 'configuration.generated.cjs');
+const committedPath = resolve(repoRoot, 'get-tasks-done', 'bin', 'lib', 'configuration.generated.cjs');
 
 let committed;
 try {

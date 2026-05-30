@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tests - path replacement in install.js
+ * GTD Tests - path replacement in install.js
  *
  * Verifies that global installs produce $HOME/ paths in .md files,
  * so that shell commands expand correctly inside double quotes.
@@ -80,7 +80,7 @@ describe('pathPrefix computation', () => {
 
   test('target outside home uses absolute path', () => {
     const homedir = '/home/user';
-    const targetDir = '/opt/gsd/.claude';
+    const targetDir = '/opt/gtd/.claude';
     // path.resolve won't change an already-absolute path on the same OS,
     // so simulate the string operation directly
     const resolvedTarget = targetDir.replace(/\\/g, '/');
@@ -88,7 +88,7 @@ describe('pathPrefix computation', () => {
     const prefix = resolvedTarget.startsWith(homeDir)
       ? '$HOME' + resolvedTarget.slice(homeDir.length) + '/'
       : resolvedTarget + '/';
-    assert.strictEqual(prefix, '/opt/gsd/.claude/');
+    assert.strictEqual(prefix, '/opt/gtd/.claude/');
     assert.ok(!prefix.includes('$HOME'), `Should not contain $HOME for non-home paths`);
   });
 
@@ -120,7 +120,7 @@ describe('source .md files have no quoted-tilde shell patterns', () => {
     return results;
   }
 
-  const dirsToCheck = ['commands', 'get-shit-done', 'agents'].map(d => path.join(repoRoot, d));
+  const dirsToCheck = ['commands', 'get-tasks-done', 'agents'].map(d => path.join(repoRoot, d));
   const mdFiles = dirsToCheck.flatMap(collectMdFiles);
 
   test('source .md files exist', () => {
@@ -162,7 +162,7 @@ describe('installed .md files contain no resolved absolute paths', () => {
     return results;
   }
 
-  const dirsToCheck = ['commands', 'get-shit-done', 'agents'].map(d => path.join(repoRoot, d));
+  const dirsToCheck = ['commands', 'get-tasks-done', 'agents'].map(d => path.join(repoRoot, d));
   const mdFiles = dirsToCheck.flatMap(collectMdFiles);
 
   test('after replacement, no .md file contains os.homedir()', () => {

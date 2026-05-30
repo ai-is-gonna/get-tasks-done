@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - autonomous --interactive flag
+ * GTD Tools Tests - autonomous --interactive flag
  *
  * Validates that the autonomous workflow and command definition
  * correctly document and support the --interactive flag.
@@ -18,8 +18,8 @@ const fs = require('fs');
 const path = require('path');
 
 describe('autonomous --interactive flag (#1413)', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'autonomous.md');
-  const commandPath = path.join(__dirname, '..', 'commands', 'gsd', 'autonomous.md');
+  const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'autonomous.md');
+  const commandPath = path.join(__dirname, '..', 'commands', 'gtd', 'autonomous.md');
 
   test('command definition includes --interactive in argument-hint', () => {
     const content = fs.readFileSync(commandPath, 'utf8');
@@ -43,12 +43,12 @@ describe('autonomous --interactive flag (#1413)', () => {
   });
 
   test('workflow uses discuss-phase skill in interactive mode', () => {
-    // Per #2697 the user-facing form is the hyphen invariant gsd-discuss-phase;
+    // Per #2697 the user-facing form is the hyphen invariant gtd-discuss-phase;
     // the colon form was retired and is enforced absent by bug-2543 tests.
     //
     // Don't `.includes()` against the full file — both tokens could appear in
     // unrelated sections (e.g. INTERACTIVE="" initialization + a stray
-    // gsd-discuss-phase mention in prose) and falsely pass. Instead, isolate
+    // gtd-discuss-phase mention in prose) and falsely pass. Instead, isolate
     // the structural region that gates on INTERACTIVE and assert the Skill
     // invocation lives inside it.
     const content = fs.readFileSync(workflowPath, 'utf8');
@@ -73,10 +73,10 @@ describe('autonomous --interactive flag (#1413)', () => {
 
     // The branch must invoke the hyphen-form Skill. Tolerate whitespace
     // around `(`, `skill`, and `=` so harmless reformatting doesn't break this.
-    const skillCall = /Skill\(\s*skill\s*=\s*['"]gsd-discuss-phase['"]/.test(branch);
+    const skillCall = /Skill\(\s*skill\s*=\s*['"]gtd-discuss-phase['"]/.test(branch);
     assert.ok(
       skillCall,
-      `INTERACTIVE branch must invoke Skill(skill="gsd-discuss-phase"). Got branch:\n${branch}`,
+      `INTERACTIVE branch must invoke Skill(skill="gtd-discuss-phase"). Got branch:\n${branch}`,
     );
   });
 
@@ -92,8 +92,8 @@ describe('autonomous --interactive flag (#1413)', () => {
   test('workflow dispatches execute as background agent in interactive mode', () => {
     const content = fs.readFileSync(workflowPath, 'utf8');
     assert.ok(
-      content.includes('run_in_background') && content.includes('execute-phase'),
-      'workflow should dispatch execute-phase as background agent in interactive mode'
+      content.includes('run_in_background') && content.includes('export-phase-issues') && content.includes('work-task-issue'),
+      'workflow should dispatch task orchestration commands in interactive mode'
     );
   });
 

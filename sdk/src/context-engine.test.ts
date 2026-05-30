@@ -4,12 +4,12 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { ContextEngine, PHASE_FILE_MANIFEST } from './context-engine.js';
 import { PhaseType } from './types.js';
-import type { GSDLogger } from './logger.js';
+import type { GTDLogger } from './logger.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function createTempProject(): Promise<string> {
-  return mkdtemp(join(tmpdir(), 'gsd-ctx-'));
+  return mkdtemp(join(tmpdir(), 'gtd-ctx-'));
 }
 
 async function createPlanningDir(projectDir: string, files: Record<string, string>): Promise<void> {
@@ -20,7 +20,7 @@ async function createPlanningDir(projectDir: string, files: Record<string, strin
   }
 }
 
-function makeMockLogger(): GSDLogger {
+function makeMockLogger(): GTDLogger {
   return {
     debug: vi.fn(),
     info: vi.fn(),
@@ -29,7 +29,7 @@ function makeMockLogger(): GSDLogger {
     setPhase: vi.fn(),
     setPlan: vi.fn(),
     setSessionId: vi.fn(),
-  } as unknown as GSDLogger;
+  } as unknown as GTDLogger;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ describe('ContextEngine', () => {
       expect(files.requirements).toBe('# Requirements\nR1: auth');
     });
 
-    it('returns minimal files for execute phase', async () => {
+    it('returns minimal files for task execution', async () => {
       await createPlanningDir(projectDir, {
         'STATE.md': '# State',
         'config.json': '{"model":"claude"}',
@@ -276,7 +276,7 @@ Build content.`;
       }
     });
 
-    it('execute phase has fewest files', () => {
+    it('task execution has fewest files', () => {
       const executeCount = PHASE_FILE_MANIFEST[PhaseType.Execute].length;
       const planCount = PHASE_FILE_MANIFEST[PhaseType.Plan].length;
       expect(executeCount).toBeLessThan(planCount);

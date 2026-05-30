@@ -11,7 +11,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeConfig(tmpDir, config) {
   fs.writeFileSync(path.join(tmpDir, '.planning', 'config.json'), JSON.stringify(config, null, 2));
@@ -83,7 +83,7 @@ describe('phase complete auto-prune (#2087)', () => {
 
     setupPhase(tmpDir, 6, 2);
 
-    const result = runGsdTools('phase complete 6', tmpDir);
+    const result = runGtdTools('phase complete 6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const newState = readStateMd(tmpDir);
@@ -126,7 +126,7 @@ describe('phase complete auto-prune (#2087)', () => {
 
     setupPhase(tmpDir, 6, 2);
 
-    const result = runGsdTools('phase complete 6', tmpDir);
+    const result = runGtdTools('phase complete 6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const newState = readStateMd(tmpDir);
@@ -163,7 +163,7 @@ describe('phase complete auto-prune (#2087)', () => {
 
     setupPhase(tmpDir, 6, 2);
 
-    const result = runGsdTools('phase complete 6', tmpDir);
+    const result = runGtdTools('phase complete 6', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const newState = readStateMd(tmpDir);

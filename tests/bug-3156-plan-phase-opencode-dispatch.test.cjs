@@ -1,20 +1,20 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md files are the deployed skill surface. Their frontmatter
+// commands/gtd/*.md files are the deployed skill surface. Their frontmatter
 // IS the runtime contract. Checking frontmatter fields checks deployed behaviour.
 
 /**
- * #3156 — plan-phase auto-dispatches to gsd-planner subagent on OpenCode,
+ * #3156 — plan-phase auto-dispatches to gtd-planner subagent on OpenCode,
  * losing Task tool access.
  *
- * Root cause: commands/gsd/plan-phase.md had `agent: gsd-planner` in its
+ * Root cause: commands/gtd/plan-phase.md had `agent: gtd-planner` in its
  * frontmatter. Per OpenCode docs, `agent: <name>` in a command causes
  * auto-dispatch to a subagent context where the Agent (Task spawner) tool is
  * unavailable. Orchestrator commands that need to spawn subagents via the
  * Agent tool must NOT carry an `agent:` frontmatter directive.
  *
- * This test parses the YAML frontmatter of every commands/gsd/*.md file and
+ * This test parses the YAML frontmatter of every commands/gtd/*.md file and
  * asserts:
  *   1. No command file has an `agent:` frontmatter directive at all.
  *      (The directive causes OpenCode to auto-dispatch, breaking any command
@@ -29,7 +29,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const COMMANDS_DIR = path.join(ROOT, 'commands', 'gsd');
+const COMMANDS_DIR = path.join(ROOT, 'commands', 'gtd');
 
 /** Parse the YAML frontmatter block between the first two `---` delimiters. */
 function parseFrontmatter(content) {
@@ -77,7 +77,7 @@ const commandFiles = fs
 // OpenCode interprets `agent: <name>` as "auto-dispatch to this subagent",
 // which removes the Agent (subagent-spawner) tool from the command's context.
 // Any orchestrator command is immediately broken. Commands that need to run in
-// the main agent context (i.e., all GSD commands) must omit this directive.
+// the main agent context (i.e., all GTD commands) must omit this directive.
 
 describe('#3156 — no command file may have an `agent:` frontmatter directive', () => {
   for (const { name, content } of commandFiles) {

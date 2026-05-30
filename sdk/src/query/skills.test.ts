@@ -35,7 +35,7 @@ describe('agentSkills', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-skills-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-skills-'));
   });
 
   afterEach(async () => {
@@ -48,13 +48,13 @@ describe('agentSkills', () => {
   });
 
   it('returns empty string when project has no config', async () => {
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe('');
   });
 
   it('returns empty string when agent type not in config.agent_skills', async () => {
-    await writeConfig(tmpDir, { agent_skills: { 'gsd-executor': ['.claude/skills/foo'] } });
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    await writeConfig(tmpDir, { agent_skills: { 'gtd-task-executor': ['.claude/skills/foo'] } });
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe('');
   });
 
@@ -63,11 +63,11 @@ describe('agentSkills', () => {
     await writeSkill(join(tmpDir, '.claude', 'skills'), 'skill-b');
     await writeConfig(tmpDir, {
       agent_skills: {
-        'gsd-planner': ['.claude/skills/skill-a', '.claude/skills/skill-b'],
+        'gtd-planner': ['.claude/skills/skill-a', '.claude/skills/skill-b'],
       },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe(
       '<agent_skills>\n' +
         'Read these user-configured skills:\n' +
@@ -80,10 +80,10 @@ describe('agentSkills', () => {
   it('accepts a single string skill path (normalizes to array)', async () => {
     await writeSkill(join(tmpDir, '.claude', 'skills'), 'only-one');
     await writeConfig(tmpDir, {
-      agent_skills: { 'gsd-planner': '.claude/skills/only-one' },
+      agent_skills: { 'gtd-planner': '.claude/skills/only-one' },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe(
       '<agent_skills>\n' +
         'Read these user-configured skills:\n' +
@@ -97,11 +97,11 @@ describe('agentSkills', () => {
     await mkdir(join(tmpDir, '.claude', 'skills', 'missing-md'), { recursive: true });
     await writeConfig(tmpDir, {
       agent_skills: {
-        'gsd-planner': ['.claude/skills/exists', '.claude/skills/missing-md'],
+        'gtd-planner': ['.claude/skills/exists', '.claude/skills/missing-md'],
       },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe(
       '<agent_skills>\n' +
         'Read these user-configured skills:\n' +
@@ -112,26 +112,26 @@ describe('agentSkills', () => {
 
   it('rejects path traversal escaping the project root', async () => {
     await writeConfig(tmpDir, {
-      agent_skills: { 'gsd-planner': ['../evil-skill'] },
+      agent_skills: { 'gtd-planner': ['../evil-skill'] },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe('');
   });
 
   it('returns empty string when agent_skills value is an empty array', async () => {
-    await writeConfig(tmpDir, { agent_skills: { 'gsd-planner': [] } });
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    await writeConfig(tmpDir, { agent_skills: { 'gtd-planner': [] } });
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe('');
   });
 
   it('signals format:"text" for non-empty blocks (used by CLI dispatcher)', async () => {
     await writeSkill(join(tmpDir, '.claude', 'skills'), 'a-skill');
     await writeConfig(tmpDir, {
-      agent_skills: { 'gsd-planner': '.claude/skills/a-skill' },
+      agent_skills: { 'gtd-planner': '.claude/skills/a-skill' },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.format).toBe('text');
   });
 
@@ -140,13 +140,13 @@ describe('agentSkills', () => {
     await writeSkill(join(codexHome, 'skills'), 'global-skill');
     await writeConfig(tmpDir, {
       runtime: 'codex',
-      agent_skills: { 'gsd-planner': ['global:global-skill'] },
+      agent_skills: { 'gtd-planner': ['global:global-skill'] },
     });
 
     const prevCodexHome = process.env.CODEX_HOME;
     process.env.CODEX_HOME = codexHome;
     try {
-      const r = await agentSkills(['gsd-planner'], tmpDir);
+      const r = await agentSkills(['gtd-planner'], tmpDir);
       expect(r.data).toBe(
         '<agent_skills>\n' +
           'Read these user-configured skills:\n' +
@@ -163,16 +163,16 @@ describe('agentSkills', () => {
   it('returns empty string for global: skills on runtimes without a skills dir', async () => {
     await writeConfig(tmpDir, {
       runtime: 'cline',
-      agent_skills: { 'gsd-planner': ['global:nope'] },
+      agent_skills: { 'gtd-planner': ['global:nope'] },
     });
 
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.data).toBe('');
     expect(r.format).toBeUndefined();
   });
 
   it('does not signal format:"text" for empty result', async () => {
-    const r = await agentSkills(['gsd-planner'], tmpDir);
+    const r = await agentSkills(['gtd-planner'], tmpDir);
     expect(r.format).toBeUndefined();
   });
 });
@@ -187,7 +187,7 @@ describe('agentSkills CLI stdout', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-skills-cli-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-skills-cli-'));
   });
 
   afterEach(async () => {
@@ -201,11 +201,11 @@ describe('agentSkills CLI stdout', () => {
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
-      JSON.stringify({ agent_skills: { 'gsd-planner': '.claude/skills/cli-skill' } }),
+      JSON.stringify({ agent_skills: { 'gtd-planner': '.claude/skills/cli-skill' } }),
     );
 
     const stdout = execSync(
-      `node "${CLI}" query --project-dir "${tmpDir}" agent-skills gsd-planner`,
+      `node "${CLI}" query --project-dir "${tmpDir}" agent-skills gtd-planner`,
       { encoding: 'utf-8' },
     );
 
@@ -218,11 +218,11 @@ describe('agentSkills CLI stdout', () => {
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
-      JSON.stringify({ agent_skills: { 'gsd-executor': ['.claude/skills/foo'] } }),
+      JSON.stringify({ agent_skills: { 'gtd-task-executor': ['.claude/skills/foo'] } }),
     );
 
     const stdout = execSync(
-      `node "${CLI}" query --project-dir "${tmpDir}" agent-skills gsd-planner`,
+      `node "${CLI}" query --project-dir "${tmpDir}" agent-skills gtd-planner`,
       { encoding: 'utf-8' },
     );
 

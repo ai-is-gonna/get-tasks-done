@@ -16,10 +16,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const { cmdGenerateClaudeMd } = require('../get-shit-done/bin/lib/profile-output.cjs');
+const { cmdGenerateClaudeMd } = require('../get-tasks-done/bin/lib/profile-output.cjs');
 
 function makeTempProject(files = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2415-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2415-'));
   fs.mkdirSync(path.join(dir, '.planning', 'codebase'), { recursive: true });
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(dir, rel);
@@ -91,8 +91,8 @@ test('link mode falls back to embed for workflow section (no linkable source)', 
 
   const content = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf-8');
   // workflow section should still be inlined (it has no linkPath)
-  assert.ok(!content.includes('@GSD defaults'), 'workflow should not write @GSD defaults');
-  assert.ok(content.includes('GSD Workflow Enforcement'), 'workflow content should be embedded inline');
+  assert.ok(!content.includes('@GTD defaults'), 'workflow should not write @GTD defaults');
+  assert.ok(content.includes('GTD Workflow Enforcement'), 'workflow content should be embedded inline');
 });
 
 test('link mode falls back to embed when source file is missing (hasFallback)', () => {

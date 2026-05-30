@@ -23,7 +23,7 @@ import {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeTmpProject(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'gsd-cfg-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'gtd-cfg-test-'));
   mkdirSync(join(dir, '.planning'), { recursive: true });
   return dir;
 }
@@ -121,7 +121,7 @@ describe('loadConfig', () => {
   });
 
   it('does not throw when .planning/config.json is missing — returns defaults', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'gsd-cfg-noplan-'));
+    const dir = mkdtempSync(join(tmpdir(), 'gtd-cfg-noplan-'));
     // intentionally no .planning dir
     try {
       const config = await loadConfig(dir);
@@ -306,7 +306,7 @@ describe('migrateOnDisk', () => {
   });
 
   it('is a no-op when .planning/config.json is missing', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'gsd-cfg-nomig-'));
+    const dir = mkdtempSync(join(tmpdir(), 'gtd-cfg-nomig-'));
     try {
       const report = await migrateOnDisk(dir);
       expect(report.migrated).toBe(false);

@@ -6,7 +6,7 @@
 /**
  * Agent size budget.
  *
- * Agent definitions in `agents/gsd-*.md` are loaded verbatim into Claude's
+ * Agent definitions in `agents/gtd-*.md` are loaded verbatim into Claude's
  * context on every subagent dispatch. Unbounded growth is paid on every call
  * across every workflow.
  *
@@ -17,9 +17,9 @@
  *
  * Raising a budget is a deliberate choice — adjust the constant, write a
  * rationale in the PR, and make sure the bloat is not duplicated content
- * that belongs in `get-shit-done/references/`.
+ * that belongs in `get-tasks-done/references/`.
  *
- * See: https://github.com/gsd-build/get-shit-done/issues/2361
+ * See: https://github.com/ai-is-gonna/get-tasks-done/issues/2361
  */
 
 const { test, describe } = require('node:test');
@@ -34,24 +34,24 @@ const LARGE_BUDGET = 1000;
 const DEFAULT_BUDGET = 500;
 
 const XL_AGENTS = new Set([
-  'gsd-debugger',
-  'gsd-planner',
+  'gtd-debugger',
+  'gtd-planner',
 ]);
 
 const LARGE_AGENTS = new Set([
-  'gsd-phase-researcher',
-  'gsd-verifier',
-  'gsd-doc-writer',
-  'gsd-plan-checker',
-  'gsd-executor',
-  'gsd-code-fixer',
-  'gsd-codebase-mapper',
-  'gsd-project-researcher',
-  'gsd-roadmapper',
+  'gtd-phase-researcher',
+  'gtd-verifier',
+  'gtd-doc-writer',
+  'gtd-plan-checker',
+  'gtd-task-executor',
+  'gtd-code-fixer',
+  'gtd-codebase-mapper',
+  'gtd-project-researcher',
+  'gtd-roadmapper',
 ]);
 
 const ALL_AGENTS = fs.readdirSync(AGENTS_DIR)
-  .filter(f => f.startsWith('gsd-') && f.endsWith('.md'))
+  .filter(f => f.startsWith('gtd-') && f.endsWith('.md'))
   .map(f => f.replace('.md', ''));
 
 function budgetFor(agent) {
@@ -76,7 +76,7 @@ describe('SIZE: agent line-count budget', () => {
       assert.ok(
         lines <= limit,
         `${agent}.md has ${lines} lines — exceeds ${tier} budget of ${limit}. ` +
-        `Extract shared boilerplate to get-shit-done/references/ or raise the budget ` +
+        `Extract shared boilerplate to get-tasks-done/references/ or raise the budget ` +
         `in tests/agent-size-budget.test.cjs with a rationale.`
       );
     });

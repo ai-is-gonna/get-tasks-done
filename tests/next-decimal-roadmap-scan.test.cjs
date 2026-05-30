@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests — phase next-decimal ROADMAP.md scanning
+ * GTD Tools Tests — phase next-decimal ROADMAP.md scanning
  *
  * Covers issue #1865: next-decimal only scanned directory names in
  * .planning/phases/ to determine the next available decimal number.
@@ -15,7 +15,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
   let tmpDir;
@@ -34,7 +34,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '999.1-idea-one'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '999.2-idea-two'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -62,7 +62,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -86,7 +86,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -111,7 +111,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -123,7 +123,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
     // No ROADMAP.md, just directories
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '05.1-patch'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 5', tmpDir);
+    const result = runGtdTools('phase next-decimal 5', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -145,7 +145,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 10', tmpDir);
+    const result = runGtdTools('phase next-decimal 10', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -157,7 +157,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
     // Remove the phases directory entirely
     fs.rmSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -183,7 +183,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 999', tmpDir);
+    const result = runGtdTools('phase next-decimal 999', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -206,7 +206,7 @@ describe('phase next-decimal ROADMAP.md scanning (#1865)', () => {
       ].join('\n')
     );
 
-    const result = runGsdTools('phase next-decimal 7', tmpDir);
+    const result = runGtdTools('phase next-decimal 7', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

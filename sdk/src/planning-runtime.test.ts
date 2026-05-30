@@ -6,7 +6,7 @@ import { PlanningRuntime } from './planning-runtime.js';
 
 describe('PlanningRuntime', () => {
   it('records intent events through the durable journal', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-runtime-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-runtime-'));
     const runtime = new PlanningRuntime({
       projectDir: dir,
       projectId: 'project-1',

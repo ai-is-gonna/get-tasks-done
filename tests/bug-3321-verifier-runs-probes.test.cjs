@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const VERIFIER_AGENT = path.join(REPO_ROOT, 'agents', 'gsd-verifier.md');
+const VERIFIER_AGENT = path.join(REPO_ROOT, 'agents', 'gtd-verifier.md');
 
 function verifierProbeContract(content) {
   const sectionStart = content.indexOf('## Step 7c: Probe Execution');
@@ -29,7 +29,7 @@ function verifierProbeContract(content) {
   };
 }
 
-describe('bug #3321: gsd-verifier runs probes instead of trusting SUMMARY claims', () => {
+describe('bug #3321: gtd-verifier runs probes instead of trusting SUMMARY claims', () => {
   test('verifier prompt requires direct probe discovery and execution', () => {
     const content = fs.readFileSync(VERIFIER_AGENT, 'utf8');
     const contract = verifierProbeContract(content);

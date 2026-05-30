@@ -1,14 +1,14 @@
 /**
- * GSD Tools Test Helpers
+ * GTD Tools Test Helpers
  */
 
 const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const TOOLS_PATH = path.join(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const TOOLS_PATH = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 const TEST_ENV_BASE = {
-  GSD_SESSION_KEY: '',
+  GTD_SESSION_KEY: '',
   CODEX_THREAD_ID: '',
   CLAUDE_SESSION_ID: '',
   CLAUDE_CODE_SSE_PORT: '',
@@ -25,16 +25,16 @@ const TEST_ENV_BASE = {
 };
 
 /**
- * Run gsd-tools command.
+ * Run gtd-tools command.
  *
  * @param {string|string[]} args - Command string (shell-interpreted) or array
  *   of arguments (shell-bypassed via execFileSync, safe for JSON and dollar signs).
  * @param {string} cwd - Working directory.
  * @param {object} [env] - Optional env overrides merged on top of process.env.
- *   Pass { HOME: cwd } to sandbox ~/.gsd/ lookups in tests that assert concrete
+ *   Pass { HOME: cwd } to sandbox ~/.gtd/ lookups in tests that assert concrete
  *   config values that could be overridden by a developer's defaults.json.
  */
-function runGsdTools(args, cwd = process.cwd(), env = {}) {
+function runGtdTools(args, cwd = process.cwd(), env = {}) {
   try {
     let result;
     const childEnv = { ...process.env, ...TEST_ENV_BASE, ...env };
@@ -71,19 +71,19 @@ function runGsdTools(args, cwd = process.cwd(), env = {}) {
 }
 
 // Create a bare temp directory (no .planning/ structure)
-function createTempDir(prefix = 'gsd-test-') {
+function createTempDir(prefix = 'gtd-test-') {
   return fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
 }
 
 // Create temp directory structure
-function createTempProject(prefix = 'gsd-test-') {
+function createTempProject(prefix = 'gtd-test-') {
   const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
   return tmpDir;
 }
 
 // Create temp directory with initialized git repo and at least one commit
-function createTempGitProject(prefix = 'gsd-test-') {
+function createTempGitProject(prefix = 'gtd-test-') {
   const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
 
@@ -164,10 +164,10 @@ function parseFrontmatter(content) {
 }
 
 // #3026 CR: shared `--help` output check used by bug-1818 + bug-3019 tests.
-// Render-on-help shape is `Usage: gsd-tools …\nCommands: …` — both lines
+// Render-on-help shape is `Usage: gtd-tools …\nCommands: …` — both lines
 // must be present; structural test, not prose substring matching.
 function isUsageOutput(text) {
-  return /Usage:\s*gsd-tools/.test(text) && /Commands:/.test(text);
+  return /Usage:\s*gtd-tools/.test(text) && /Commands:/.test(text);
 }
 
-module.exports = { runGsdTools, createTempDir, createTempProject, createTempGitProject, cleanup, parseFrontmatter, isUsageOutput, TOOLS_PATH };
+module.exports = { runGtdTools, createTempDir, createTempProject, createTempGitProject, cleanup, parseFrontmatter, isUsageOutput, TOOLS_PATH };

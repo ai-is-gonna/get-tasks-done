@@ -3,7 +3,7 @@
 /**
  * Regression test for #2911.
  *
- * Two bugs in the `audit-open` dispatch case in bin/gsd-tools.cjs:
+ * Two bugs in the `audit-open` dispatch case in bin/gtd-tools.cjs:
  *
  *   1. Bare `output(...)` calls (only `core.output` is in scope) → ReferenceError.
  *   2. Even after switching to `core.output(formatted, raw)`, the human-readable
@@ -27,13 +27,13 @@
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('audit-open — output shape (#2911)', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-bug-2911-');
+    tmpDir = createTempProject('gtd-bug-2911-');
   });
 
   afterEach(() => {
@@ -41,7 +41,7 @@ describe('audit-open — output shape (#2911)', () => {
   });
 
   test('text mode emits the formatted report as raw text (not JSON-encoded)', () => {
-    const result = runGsdTools('audit-open', tmpDir);
+    const result = runGtdTools('audit-open', tmpDir);
     assert.ok(
       result.success,
       `audit-open must not crash. stderr: ${result.error}`
@@ -74,7 +74,7 @@ describe('audit-open — output shape (#2911)', () => {
   });
 
   test('--json mode emits parseable JSON matching auditOpenArtifacts shape', () => {
-    const result = runGsdTools(['audit-open', '--json'], tmpDir);
+    const result = runGtdTools(['audit-open', '--json'], tmpDir);
     assert.ok(
       result.success,
       `audit-open --json must not crash. stderr: ${result.error}`
@@ -89,7 +89,7 @@ describe('audit-open — output shape (#2911)', () => {
     assert.equal(typeof parsed, 'object', 'parsed payload must be an object');
     assert.ok(parsed !== null, 'parsed payload must not be null');
 
-    // Shape contract from auditOpenArtifacts() in get-shit-done/bin/lib/audit.cjs.
+    // Shape contract from auditOpenArtifacts() in get-tasks-done/bin/lib/audit.cjs.
     assert.equal(typeof parsed.scanned_at, 'string', 'must include scanned_at ISO timestamp');
     assert.equal(typeof parsed.has_open_items, 'boolean', 'must include has_open_items boolean');
     assert.equal(typeof parsed.counts, 'object', 'must include counts object');

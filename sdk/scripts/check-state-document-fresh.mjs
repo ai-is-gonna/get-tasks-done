@@ -101,7 +101,7 @@ const expected = [
   '',
 ].join('\n');
 
-const committedPath = resolve(here, '..', '..', 'get-shit-done', 'bin', 'lib', 'state-document.generated.cjs');
+const committedPath = resolve(here, '..', '..', 'get-tasks-done', 'bin', 'lib', 'state-document.generated.cjs');
 const committed = await readFile(committedPath, 'utf-8');
 
 if (expected === committed) {

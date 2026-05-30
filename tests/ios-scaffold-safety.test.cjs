@@ -8,7 +8,7 @@
 /**
  * iOS Scaffold Safety Tests (#2023)
  *
- * Validates that GSD guidance:
+ * Validates that GTD guidance:
  * 1. Does NOT instruct using Package.swift + .executableTarget as the primary
  *    build system for iOS apps (which produces a macOS CLI, not an iOS app).
  * 2. DOES contain XcodeGen guidance (project.yml + xcodegen generate) for iOS
@@ -22,17 +22,17 @@ const fs = require('fs');
 const path = require('path');
 
 const IOS_SCAFFOLD_REF = path.join(
-  __dirname, '..', 'get-shit-done', 'references', 'ios-scaffold.md'
+  __dirname, '..', 'get-tasks-done', 'references', 'ios-scaffold.md'
 );
 const EXECUTOR_AGENT = path.join(
-  __dirname, '..', 'agents', 'gsd-executor.md'
+  __dirname, '..', 'agents', 'gtd-task-executor.md'
 );
 const UNIVERSAL_ANTI_PATTERNS = path.join(
-  __dirname, '..', 'get-shit-done', 'references', 'universal-anti-patterns.md'
+  __dirname, '..', 'get-tasks-done', 'references', 'universal-anti-patterns.md'
 );
 
 describe('ios-scaffold.md reference exists and contains XcodeGen guidance', () => {
-  test('reference file exists at get-shit-done/references/ios-scaffold.md', () => {
+  test('reference file exists at get-tasks-done/references/ios-scaffold.md', () => {
     assert.ok(
       fs.existsSync(IOS_SCAFFOLD_REF),
       `Expected iOS scaffold reference at ${IOS_SCAFFOLD_REF}`
@@ -107,12 +107,12 @@ describe('ios-scaffold.md reference exists and contains XcodeGen guidance', () =
   });
 });
 
-describe('gsd-executor.md references ios-scaffold guidance', () => {
+describe('gtd-task-executor.md references ios-scaffold guidance', () => {
   test('executor agent references ios-scaffold.md', () => {
     const content = fs.readFileSync(EXECUTOR_AGENT, 'utf-8');
     assert.ok(
       content.includes('ios-scaffold.md') || content.includes('ios-scaffold'),
-      'gsd-executor.md must reference ios-scaffold.md for iOS app scaffold guidance'
+      'gtd-task-executor.md must reference ios-scaffold.md for iOS app scaffold guidance'
     );
   });
 });

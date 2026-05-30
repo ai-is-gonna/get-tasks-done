@@ -6,7 +6,7 @@ import { fallbackBridgeNotices } from './query-dispatch-observability.js';
 
 export interface RunCjsFallbackDispatchInput {
   projectDir: string;
-  gsdToolsPath: string;
+  gtdToolsPath: string;
   normCmd: string;
   normArgs: string[];
   ws?: string;
@@ -23,11 +23,11 @@ function formatFallbackOutput(data: unknown, mode: 'json' | 'text', pickField?: 
 }
 
 export async function runCjsFallbackDispatch(input: RunCjsFallbackDispatchInput): Promise<QueryDispatchResult> {
-  const { projectDir, gsdToolsPath, normCmd, normArgs, ws, pickField } = input;
+  const { projectDir, gtdToolsPath, normCmd, normArgs, ws, pickField } = input;
   const stderr = fallbackBridgeNotices(normCmd);
 
   try {
-    const fallback = await runFallbackBridge({ projectDir, gsdToolsPath, normCmd, normArgs, ws });
+    const fallback = await runFallbackBridge({ projectDir, gtdToolsPath, normCmd, normArgs, ws });
     if (fallback.stderr.trim()) stderr.push(fallback.stderr.trimEnd());
     return {
       ok: true,

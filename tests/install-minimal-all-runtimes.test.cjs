@@ -3,13 +3,13 @@
  *
  * Background: #2923 reported that `--opencode --local --minimal` silently
  * installed the full surface. While auditing the central gate
- * (`stageSkillsForMode` in get-shit-done/bin/lib/install-profiles.cjs),
+ * (`stageSkillsForMode` in get-tasks-done/bin/lib/install-profiles.cjs),
  * we found that:
  *   - Skills are correctly filtered for every runtime in both `--global`
  *     and `--local` modes (the dispatch sites in install.js all call
  *     stageSkillsForMode unconditionally).
  *   - Agents are correctly suppressed under --minimal.
- *   - HOWEVER, the install manifest only recorded `commands/gsd/` for
+ *   - HOWEVER, the install manifest only recorded `commands/gtd/` for
  *     Gemini, leaving Claude Code local installs with an incomplete
  *     manifest. saveLocalPatches() then couldn't detect user edits and
  *     a minimal-mode reinstall couldn't be verified manifest-side.
@@ -17,7 +17,7 @@
  * This test pins per-runtime behavior end-to-end: spawn the installer
  * with --minimal for each runtime in each scope, parse the resulting
  * manifest JSON, assert that mode === 'minimal', the recorded skill set
- * equals MINIMAL_SKILL_ALLOWLIST, and zero gsd-* agents are present.
+ * equals MINIMAL_SKILL_ALLOWLIST, and zero gtd-* agents are present.
  *
  * Cline is rules-based and embeds the workflow in `.clinerules` rather
  * than emitting per-skill files. Asserted separately: mode === 'minimal',
@@ -36,10 +36,10 @@ const { spawnSync } = require('child_process');
 
 const {
   MINIMAL_SKILL_ALLOWLIST,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
 const INSTALL_SCRIPT = path.join(__dirname, '..', 'bin', 'install.js');
-const MANIFEST_NAME = 'gsd-file-manifest.json';
+const MANIFEST_NAME = 'gtd-file-manifest.json';
 
 // Per-runtime config dir name for local installs. Mirrors getDirName() in
 // bin/install.js; kept as a fixture to avoid coupling the test to that
@@ -85,7 +85,7 @@ const ALL_RUNTIMES = [...SKILL_RUNTIMES, 'cline'];
  * manifest (or null if no manifest was written).
  */
 function runInstall({ runtime, scope, extraArgs = [] }) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), `gsd-${runtime}-${scope}-`));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `gtd-${runtime}-${scope}-`));
   try {
     let configDir;
     let cwd = process.cwd();
@@ -106,9 +106,9 @@ function runInstall({ runtime, scope, extraArgs = [] }) {
     const result = spawnSync(process.execPath, args, {
       cwd,
       encoding: 'utf8',
-      // #3037: isolate HOME so the developer's real ~/.gemini/commands/gsd/
+      // #3037: isolate HOME so the developer's real ~/.gemini/commands/gtd/
       // doesn't leak into Gemini local-install conflict detection. The
-      // installer reads os.homedir() to detect prior global GSD installs;
+      // installer reads os.homedir() to detect prior global GTD installs;
       // without this, the dev's existing global install causes the local
       // install to skip (correct behavior for end users, wrong for tests
       // that want to assert the local install path).
@@ -140,8 +140,8 @@ function runInstall({ runtime, scope, extraArgs = [] }) {
  *   skills/<name>/...         (Claude global, Codex, Copilot, Antigravity,
  *                              Cursor, Windsurf, Augment, Trae, Qwen,
  *                              CodeBuddy)
- *   command/gsd-<name>.md     (OpenCode, Kilo)
- *   commands/gsd/<name>.md    (Gemini, Claude local — fixed in #2923)
+ *   command/gtd-<name>.md     (OpenCode, Kilo)
+ *   commands/gtd/<name>.md    (Gemini, Claude local — fixed in #2923)
  *
  * Returns the unique set of skill basenames recorded in the manifest.
  */
@@ -150,18 +150,18 @@ function manifestSkillSet(manifest) {
   const out = new Set();
   for (const key of Object.keys(manifest.files)) {
     if (key.startsWith('skills/')) {
-      // Strip both the optional `gsd-` prefix (used by Claude/Codex/etc as
+      // Strip both the optional `gtd-` prefix (used by Claude/Codex/etc as
       // a per-skill subdir name) and any trailing `.md` (Codex flat layout).
-      const seg = key.split('/')[1].replace(/^gsd-/, '').replace(/\.md$/, '');
+      const seg = key.split('/')[1].replace(/^gtd-/, '').replace(/\.md$/, '');
       out.add(seg);
     } else if (key.startsWith('command/')) {
       const file = key.split('/')[1];
-      // Strip `gsd-` prefix and `.md` suffix. Subdirs flatten with `-`,
+      // Strip `gtd-` prefix and `.md` suffix. Subdirs flatten with `-`,
       // but our minimal allowlist is flat (top-level files only) so this
       // is safe here.
-      const base = file.replace(/^gsd-/, '').replace(/\.md$/, '');
+      const base = file.replace(/^gtd-/, '').replace(/\.md$/, '');
       out.add(base);
-    } else if (key.startsWith('commands/gsd/')) {
+    } else if (key.startsWith('commands/gtd/')) {
       // Gemini transforms .md → .toml on emit; Claude local keeps .md.
       const file = key.split('/')[2];
       out.add(file.replace(/\.(md|toml)$/, ''));
@@ -207,7 +207,7 @@ describe('install: --minimal honoured for every runtime in --global mode', () =>
           `${runtime} global should record exactly the MINIMAL allowlist in the manifest`,
         );
         assert.strictEqual(manifestAgentCount(manifest), 0,
-          `${runtime} global --minimal should record zero gsd-* agents`);
+          `${runtime} global --minimal should record zero gtd-* agents`);
       } finally {
         fs.rmSync(root, { recursive: true, force: true });
       }
@@ -233,7 +233,7 @@ describe('install: --minimal honoured for every runtime in --local mode', () => 
           `${runtime} local should record exactly the MINIMAL allowlist in the manifest (regression guard for #2923)`,
         );
         assert.strictEqual(manifestAgentCount(manifest), 0,
-          `${runtime} local --minimal should record zero gsd-* agents`);
+          `${runtime} local --minimal should record zero gtd-* agents`);
       } finally {
         fs.rmSync(root, { recursive: true, force: true });
       }
@@ -253,7 +253,7 @@ describe('install: Cline --minimal (rules-based runtime — no skills/ dir)', ()
         assert.ok(manifest, `cline ${scope} install must produce a manifest`);
         assert.strictEqual(manifest.mode, 'minimal');
         assert.strictEqual(manifestAgentCount(manifest), 0,
-          `cline ${scope} --minimal should record zero gsd-* agents`);
+          `cline ${scope} --minimal should record zero gtd-* agents`);
 
         // .clinerules exists (Cline embeds the workflow there in lieu of
         // per-skill files).
@@ -269,7 +269,7 @@ describe('install: Cline --minimal (rules-based runtime — no skills/ dir)', ()
 
 describe('install: directory-on-disk matches manifest for --minimal', () => {
   // Cross-check that the manifest isn't lying — actually walk the install
-  // dir and verify the gsd-* surface on disk equals what the manifest claims.
+  // dir and verify the gtd-* surface on disk equals what the manifest claims.
   // This catches the inverse of #2923: manifest says minimal, but disk has
   // full surface (or vice versa).
   for (const runtime of SKILL_RUNTIMES) {
@@ -292,14 +292,14 @@ describe('install: directory-on-disk matches manifest for --minimal', () => {
             [...inManifest].sort(),
             `${runtime} ${scope}: on-disk skills must match manifest record`,
           );
-          // And no gsd-*.md agent file should exist on disk either:
+          // And no gtd-*.md agent file should exist on disk either:
           const agentsDir = path.join(configDir, 'agents');
           if (fs.existsSync(agentsDir)) {
-            const gsdAgents = fs.readdirSync(agentsDir).filter(
-              (f) => f.startsWith('gsd-') && f.endsWith('.md'),
+            const gtdAgents = fs.readdirSync(agentsDir).filter(
+              (f) => f.startsWith('gtd-') && f.endsWith('.md'),
             );
-            assert.deepStrictEqual(gsdAgents, [],
-              `${runtime} ${scope} --minimal should not write gsd-*.md agents on disk`);
+            assert.deepStrictEqual(gtdAgents, [],
+              `${runtime} ${scope} --minimal should not write gtd-*.md agents on disk`);
           }
         } finally {
           fs.rmSync(root, { recursive: true, force: true });
@@ -321,29 +321,29 @@ function collectSkillBasenamesOnDisk(configDir) {
   const skillsDir = path.join(configDir, 'skills');
   if (fs.existsSync(skillsDir)) {
     for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
-      if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
-        out.add(entry.name.replace(/^gsd-/, ''));
-      } else if (entry.isFile() && entry.name.startsWith('gsd-') && entry.name.endsWith('.md')) {
-        // Codex flat skills/ layout: skills/gsd-<name>.md
-        out.add(entry.name.replace(/^gsd-/, '').replace(/\.md$/, ''));
+      if (entry.isDirectory() && entry.name.startsWith('gtd-')) {
+        out.add(entry.name.replace(/^gtd-/, ''));
+      } else if (entry.isFile() && entry.name.startsWith('gtd-') && entry.name.endsWith('.md')) {
+        // Codex flat skills/ layout: skills/gtd-<name>.md
+        out.add(entry.name.replace(/^gtd-/, '').replace(/\.md$/, ''));
       }
     }
   }
 
-  // command/gsd-<name>.md (OpenCode, Kilo)
+  // command/gtd-<name>.md (OpenCode, Kilo)
   const commandDir = path.join(configDir, 'command');
   if (fs.existsSync(commandDir)) {
     for (const file of fs.readdirSync(commandDir)) {
-      if (file.startsWith('gsd-') && file.endsWith('.md')) {
-        out.add(file.replace(/^gsd-/, '').replace(/\.md$/, ''));
+      if (file.startsWith('gtd-') && file.endsWith('.md')) {
+        out.add(file.replace(/^gtd-/, '').replace(/\.md$/, ''));
       }
     }
   }
 
-  // commands/gsd/<name>.{md,toml} (Claude local emits .md; Gemini emits .toml)
-  const commandsGsdDir = path.join(configDir, 'commands', 'gsd');
-  if (fs.existsSync(commandsGsdDir)) {
-    for (const file of fs.readdirSync(commandsGsdDir)) {
+  // commands/gtd/<name>.{md,toml} (Claude local emits .md; Gemini emits .toml)
+  const commandsGtdDir = path.join(configDir, 'commands', 'gtd');
+  if (fs.existsSync(commandsGtdDir)) {
+    for (const file of fs.readdirSync(commandsGtdDir)) {
       if (file.endsWith('.md') || file.endsWith('.toml')) {
         out.add(file.replace(/\.(md|toml)$/, ''));
       }

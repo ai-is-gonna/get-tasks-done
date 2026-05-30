@@ -1,7 +1,7 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md files ARE what the runtime loads — testing their
+// commands/gtd/*.md files ARE what the runtime loads — testing their
 // frontmatter content tests the deployed system-prompt contract.
 
 const { describe, test } = require('node:test');
@@ -9,24 +9,24 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 const NAMESPACE_SKILLS = [
-  { file: 'ns-workflow.md', name: 'gsd-workflow' },
-  { file: 'ns-project.md',  name: 'gsd-project' },
-  { file: 'ns-review.md',   name: 'gsd-quality' },
-  { file: 'ns-context.md',  name: 'gsd-context' },
-  { file: 'ns-manage.md',   name: 'gsd-manage' },
-  { file: 'ns-ideate.md',   name: 'gsd-ideate' },
+  { file: 'ns-workflow.md', name: 'gtd-workflow' },
+  { file: 'ns-project.md',  name: 'gtd-project' },
+  { file: 'ns-review.md',   name: 'gtd-quality' },
+  { file: 'ns-context.md',  name: 'gtd-context' },
+  { file: 'ns-manage.md',   name: 'gtd-manage' },
+  { file: 'ns-ideate.md',   name: 'gtd-ideate' },
 ];
 
 // Route targets named in any namespace body. The cross-reference test below
 // asserts that every one of these resolves to a surviving command file or to
 // a known consolidated parent (which absorbs flag-form invocations of folded
-// skills, e.g. `gsd-map-codebase --fast` for the former `gsd-scan`).
+// skills, e.g. `gtd-map-codebase --fast` for the former `gtd-scan`).
 const FLAG_FORM_PARENTS = new Set([
-  'gsd-code-review',     // --fix absorbs former gsd-code-review-fix
-  'gsd-map-codebase',    // --fast absorbs scan, --query absorbs intel
+  'gtd-code-review',     // --fix absorbs former gtd-code-review-fix
+  'gtd-map-codebase',    // --fast absorbs scan, --query absorbs intel
 ]);
 
 /**
@@ -144,23 +144,23 @@ describe('Namespace skill bodies carry a routing table', () => {
 
     test(`${file} — body has at least one Invoke target`, () => {
       const fm = readNamespaceFile(file);
-      const hasInvoke = /\bgsd-[a-z-]+/i.test(fm._body);
-      assert.ok(hasInvoke, `${file} body must reference at least one gsd-* sub-skill`);
+      const hasInvoke = /\bgtd-[a-z-]+/i.test(fm._body);
+      assert.ok(hasInvoke, `${file} body must reference at least one gtd-* sub-skill`);
     });
   }
 });
 
-// ── Context guard contract on gsd-health ──────────────────────────────
+// ── Context guard contract on gtd-health ──────────────────────────────
 // Asserts the `--context` surface promised by #2792 is wired through to
 // both the command frontmatter and the workflow body. The classifier
 // itself is covered by tests/context-utilization.test.cjs and the SDK
 // CLI by tests/validate-context.test.cjs.
 
-describe('gsd-health --context flag is wired into command + workflow', () => {
+describe('gtd-health --context flag is wired into command + workflow', () => {
   const HEALTH_CMD = path.join(COMMANDS_DIR, 'health.md');
-  const HEALTH_WORKFLOW = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'health.md');
+  const HEALTH_WORKFLOW = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'health.md');
 
-  test('commands/gsd/health.md argument-hint advertises --context', () => {
+  test('commands/gtd/health.md argument-hint advertises --context', () => {
     const raw = fs.readFileSync(HEALTH_CMD, 'utf-8');
     const fm = parseFrontmatter(raw);
     assert.ok(
@@ -169,7 +169,7 @@ describe('gsd-health --context flag is wired into command + workflow', () => {
     );
   });
 
-  test('commands/gsd/health.md body documents the three-state utilization table', () => {
+  test('commands/gtd/health.md body documents the three-state utilization table', () => {
     const raw = fs.readFileSync(HEALTH_CMD, 'utf-8');
     const body = parseFrontmatter(raw)._body.toLowerCase();
     assert.ok(body.includes('healthy'), 'body must name the healthy state');
@@ -181,7 +181,7 @@ describe('gsd-health --context flag is wired into command + workflow', () => {
     );
   });
 
-  test('get-shit-done/workflows/health.md has a context_check step', () => {
+  test('get-tasks-done/workflows/health.md has a context_check step', () => {
     const raw = fs.readFileSync(HEALTH_WORKFLOW, 'utf-8');
     assert.match(
       raw,
@@ -190,7 +190,7 @@ describe('gsd-health --context flag is wired into command + workflow', () => {
     );
   });
 
-  test('workflow context_check invokes gsd-sdk query validate.context', () => {
+  test('workflow context_check invokes gtd-sdk query validate.context', () => {
     const raw = fs.readFileSync(HEALTH_WORKFLOW, 'utf-8');
     // Extract just the context_check step's body so a stray reference
     // elsewhere in the file can't satisfy this assertion.
@@ -199,8 +199,8 @@ describe('gsd-health --context flag is wired into command + workflow', () => {
     const stepBody = stepMatch[1];
     assert.match(
       stepBody,
-      /gsd-sdk\s+query\s+validate\.context/,
-      'context_check must call `gsd-sdk query validate.context`',
+      /gtd-sdk\s+query\s+validate\.context/,
+      'context_check must call `gtd-sdk query validate.context`',
     );
     assert.match(stepBody, /--tokens-used/, 'context_check must pass --tokens-used');
     assert.match(stepBody, /--context-window/, 'context_check must pass --context-window');
@@ -218,18 +218,18 @@ describe('Namespace router targets resolve to surviving skills', () => {
     if (!f.endsWith('.md')) continue;
     const base = f.replace(/\.md$/, '');
     if (base.startsWith('ns-')) continue; // namespace routers themselves
-    surviving.add(`gsd-${base}`);
+    surviving.add(`gtd-${base}`);
     // The PR #2858 rename canonicalized extract_learnings → extract-learnings.
     // Until #2790 rebases onto current main, accept either source filename
     // as resolving to the canonical hyphenated identifier.
-    if (base === 'extract_learnings') surviving.add('gsd-extract-learnings');
+    if (base === 'extract_learnings') surviving.add('gtd-extract-learnings');
   }
 
   for (const { file } of NAMESPACE_SKILLS) {
     test(`${file} — every routing target resolves`, () => {
       const fm = readNamespaceFile(file);
-      // Extract every gsd-<name> token that appears in a table-row right column.
-      // Strip flag suffixes (`gsd-foo --bar` → `gsd-foo`) before resolving.
+      // Extract every gtd-<name> token that appears in a table-row right column.
+      // Strip flag suffixes (`gtd-foo --bar` → `gtd-foo`) before resolving.
       const targets = new Set();
       for (const line of fm._body.split('\n')) {
         // Only consider markdown table data rows: lines that start with `|`
@@ -237,18 +237,18 @@ describe('Namespace router targets resolve to surviving skills', () => {
         if (!line.startsWith('|') || /^\|[\s\-:|]+\|?\s*$/.test(line)) continue;
         const cells = line.split('|').map((c) => c.trim()).filter(Boolean);
         if (cells.length < 2) continue;
-        for (const m of cells[cells.length - 1].matchAll(/\bgsd-[a-z][a-z0-9-]*/g)) {
+        for (const m of cells[cells.length - 1].matchAll(/\bgtd-[a-z][a-z0-9-]*/g)) {
           targets.add(m[0]);
         }
       }
-      assert.ok(targets.size > 0, `${file} routing table must reference at least one gsd-* target`);
+      assert.ok(targets.size > 0, `${file} routing table must reference at least one gtd-* target`);
       const unresolved = [...targets].filter(
         (t) => !surviving.has(t) && !FLAG_FORM_PARENTS.has(t),
       );
       assert.deepStrictEqual(
         unresolved,
         [],
-        `${file} routes to skills that don't exist in commands/gsd/: ${unresolved.join(', ')}`,
+        `${file} routes to skills that don't exist in commands/gtd/: ${unresolved.join(', ')}`,
       );
     });
   }

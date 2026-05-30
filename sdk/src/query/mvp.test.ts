@@ -22,7 +22,7 @@ import {
 import { roadmapGetPhase } from './roadmap.js';
 
 function tmpProject(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'gsd-mvp-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'gtd-mvp-test-'));
   mkdirSync(join(dir, '.planning'), { recursive: true });
   return dir;
 }

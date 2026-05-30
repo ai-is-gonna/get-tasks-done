@@ -9,13 +9,14 @@ import type { CommandTopology, CommandTopologyMatch } from './command-topology.j
 import { unknownCommandError, validationError, fallbackDispatchErrorFromSignal, nativeDispatchErrorFromSignal } from './query-error-taxonomy.js';
 import { canUseCjsFallback } from './query-fallback-policy.js';
 import { toFailureSignal } from '../query-failure-classification.js';
+import { ErrorClassification, GTDError } from '../errors.js';
 
 export interface QueryDispatchDeps {
   registry: QueryRegistry;
   projectDir: string;
   ws?: string;
   cjsFallbackEnabled: boolean;
-  resolveGsdToolsPath: (projectDir: string) => string;
+  resolveGtdToolsPath: (projectDir: string) => string;
   /** @deprecated use topology */
   dispatchNative?: (cmd: string, args: string[]) => Promise<QueryResult>;
   /** @deprecated use topology */
@@ -66,6 +67,12 @@ export function toDispatchFailure(error: QueryDispatchError, stderr: string[] = 
 }
 
 export function mapNativeDispatchError(error: unknown, command: string, args: string[]): QueryDispatchError {
+  if (error instanceof GTDError && error.classification === ErrorClassification.Validation) {
+    return validationError({
+      message: error.message,
+      details: { command, args },
+    });
+  }
   return nativeDispatchErrorFromSignal(toFailureSignal(error), command, args);
 }
 
@@ -108,7 +115,7 @@ export function validateQueryDispatchInput(queryArgv: string[]): DispatchInputVa
       return {
         queryArgs,
         error: dispatchFailure(validationError({
-          message: 'Error: "gsd-sdk query" requires a command',
+          message: 'Error: "gtd-sdk query" requires a command',
           details: { reason: 'missing_command' },
         })),
       };
@@ -120,13 +127,24 @@ export function validateQueryDispatchInput(queryArgv: string[]): DispatchInputVa
     return {
       queryArgs,
       error: dispatchFailure(validationError({
-        message: 'Error: "gsd-sdk query" requires a command',
+        message: 'Error: "gtd-sdk query" requires a command',
         details: { reason: 'missing_command' },
       })),
     };
   }
 
   return { queryArgs };
+}
+
+function deprecatedTaskWorkflowCommand(command: string): string | null {
+  const normalized = String(command || '').trim();
+  if (normalized === 'execute-phase') {
+    return 'execute-phase has been removed. Use export-phase-issues, work-task-issue, and orchestrate-tasks for task issue work; use work-task-issue --complete-phase <phase> --execute for phase finalization.';
+  }
+  if (normalized === 'check-ship-ready' || normalized === 'ship') {
+    return `${normalized} has been removed. Use export-phase-issues, work-task-issue, orchestrate-tasks, and work-task-issue --complete-phase <phase> --execute under the task issue workflow.`;
+  }
+  return null;
 }
 
 export function planQueryDispatch(
@@ -172,12 +190,26 @@ export async function runQueryDispatch(deps: QueryDispatchDeps, queryArgv: strin
 
   const { queryArgs, pickField } = validated;
 
+  const deprecatedGuidance = deprecatedTaskWorkflowCommand(queryArgs[0]);
+  if (deprecatedGuidance) {
+    return fail(unknownCommandError({
+      message: `Error: Unknown command: "${queryArgs[0]}". ${deprecatedGuidance}`,
+      normalized: queryArgs.join(' '),
+      attempted: [queryArgs[0]],
+      hints: [
+        'Use export-phase-issues to create GitHub task issues.',
+        'Use work-task-issue for single-task work and phase finalization.',
+        'Use orchestrate-tasks for exact child issue batches.',
+      ],
+    }));
+  }
+
   const plan = planQueryDispatch(queryArgs, deps.topology, deps.cjsFallbackEnabled);
   const normCmd = plan.normalized.command;
   const normArgs = plan.normalized.args;
 
   if (!normCmd || !String(normCmd).trim()) {
-    return fail(validationError({ message: 'Error: "gsd-sdk query" requires a command', details: { reason: 'empty_normalized_command' } }));
+    return fail(validationError({ message: 'Error: "gtd-sdk query" requires a command', details: { reason: 'empty_normalized_command' } }));
   }
 
   if (plan.mode === 'error') {
@@ -192,10 +224,10 @@ export async function runQueryDispatch(deps: QueryDispatchDeps, queryArgv: strin
   if (plan.mode === 'cjs') {
     if (canUseCjsFallback({ cjsFallbackEnabled: deps.cjsFallbackEnabled })) {
       try {
-        const gsdPath = deps.resolveGsdToolsPath(deps.projectDir);
+        const gtdPath = deps.resolveGtdToolsPath(deps.projectDir);
         return await runCjsFallbackDispatch({
           projectDir: deps.projectDir,
-          gsdToolsPath: gsdPath,
+          gtdToolsPath: gtdPath,
           normCmd,
           normArgs,
           ws: deps.ws,
@@ -222,7 +254,7 @@ export async function runQueryDispatch(deps: QueryDispatchDeps, queryArgv: strin
   if (helpFlagPresent && matched.mutation) {
     return dispatchSuccess(
       formatSuccess(
-        { help: `Usage: gsd-sdk query ${matched.canonical} [args...]` },
+        { help: `Usage: gtd-sdk query ${matched.canonical} [args...]` },
         undefined,
       ),
     );

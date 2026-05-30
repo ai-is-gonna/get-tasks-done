@@ -1,10 +1,10 @@
 /**
  * Regression tests for bug #2346
  *
- * Multiple GSD agents (gsd-ui-checker, gsd-planner) entered unbounded Read
+ * Multiple GTD agents (gtd-ui-checker, gtd-planner) entered unbounded Read
  * loops — re-reading the same file hundreds of times in a single run. Root
  * cause: no explicit no-re-read rule or tool-budget cap in the agent prompts.
- * gsd-pattern-mapper was fixed in #2312; this covers the remaining agents.
+ * gtd-pattern-mapper was fixed in #2312; this covers the remaining agents.
  *
  * Fix: add <critical_rules> block to each affected agent with:
  *   1. No-re-read constraint
@@ -26,18 +26,18 @@ const AGENTS_DIR = path.join(__dirname, '..', 'agents');
 // prevents unbounded Read loops. There is no behavioral equivalent without a live LLM run.
 describe('bug #2346: agent read loop guards', () => {
 
-  describe('gsd-ui-checker', () => {
-    const agentPath = path.join(AGENTS_DIR, 'gsd-ui-checker.md');
+  describe('gtd-ui-checker', () => {
+    const agentPath = path.join(AGENTS_DIR, 'gtd-ui-checker.md');
     const content = fs.readFileSync(agentPath, 'utf-8');
 
     test('agent file exists', () => {
-      assert.ok(fs.existsSync(agentPath), 'agents/gsd-ui-checker.md must exist');
+      assert.ok(fs.existsSync(agentPath), 'agents/gtd-ui-checker.md must exist');
     });
 
     test('has <critical_rules> block', () => {
       assert.ok(
         content.includes('<critical_rules>'),
-        'gsd-ui-checker.md must have a <critical_rules> block to prevent unbounded read loops (#2346)'
+        'gtd-ui-checker.md must have a <critical_rules> block to prevent unbounded read loops (#2346)'
       );
     });
 
@@ -63,18 +63,18 @@ describe('bug #2346: agent read loop guards', () => {
     });
   });
 
-  describe('gsd-planner', () => {
-    const agentPath = path.join(AGENTS_DIR, 'gsd-planner.md');
+  describe('gtd-planner', () => {
+    const agentPath = path.join(AGENTS_DIR, 'gtd-planner.md');
     const content = fs.readFileSync(agentPath, 'utf-8');
 
     test('agent file exists', () => {
-      assert.ok(fs.existsSync(agentPath), 'agents/gsd-planner.md must exist');
+      assert.ok(fs.existsSync(agentPath), 'agents/gtd-planner.md must exist');
     });
 
     test('has <critical_rules> block', () => {
       assert.ok(
         content.includes('<critical_rules>'),
-        'gsd-planner.md must have a <critical_rules> block to prevent unbounded read loops (#2346)'
+        'gtd-planner.md must have a <critical_rules> block to prevent unbounded read loops (#2346)'
       );
     });
 

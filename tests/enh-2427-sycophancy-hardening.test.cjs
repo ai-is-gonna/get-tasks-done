@@ -3,7 +3,7 @@
 /**
  * Tests for #2427 — prompt-level sycophancy hardening of audit-class agents.
  * Verifies the four required changes are present in each agent file:
- *   1. Third-person framing (no "You are a GSD X" opening in <role>)
+ *   1. Third-person framing (no "You are a GTD X" opening in <role>)
  *   2. FORCE adversarial stance block
  *   3. Explicit failure modes list
  *   4. BLOCKER/WARNING classification requirement
@@ -17,15 +17,15 @@ const path = require('node:path');
 const AGENTS_DIR = path.join(__dirname, '../agents');
 
 const AUDIT_AGENTS = [
-  'gsd-plan-checker.md',
-  'gsd-code-reviewer.md',
-  'gsd-security-auditor.md',
-  'gsd-verifier.md',
-  'gsd-eval-auditor.md',
-  'gsd-nyquist-auditor.md',
-  'gsd-ui-auditor.md',
-  'gsd-integration-checker.md',
-  'gsd-doc-verifier.md',
+  'gtd-plan-checker.md',
+  'gtd-code-reviewer.md',
+  'gtd-security-auditor.md',
+  'gtd-verifier.md',
+  'gtd-eval-auditor.md',
+  'gtd-nyquist-auditor.md',
+  'gtd-ui-auditor.md',
+  'gtd-integration-checker.md',
+  'gtd-doc-verifier.md',
 ];
 
 function readAgent(agentsDir, filename) {
@@ -52,13 +52,13 @@ describe('enh-2427 — sycophancy hardening: audit-class agents', () => {
         assert.ok(content.length > 0, `${filename} should not be empty`);
       });
 
-      test('(1) third-person framing — <role> does not open with "You are a GSD"', () => {
+      test('(1) third-person framing — <role> does not open with "You are a GTD"', () => {
         content = content || readAgent(AGENTS_DIR, filename);
         role = role || extractRole(content);
         const firstSentence = role.trim().slice(0, 80);
         assert.ok(
-          !firstSentence.startsWith('You are a GSD'),
-          `${filename}: <role> must not open with "You are a GSD" — use third-person submission framing. Got: "${firstSentence}"`
+          !firstSentence.startsWith('You are a GTD'),
+          `${filename}: <role> must not open with "You are a GTD" — use third-person submission framing. Got: "${firstSentence}"`
         );
       });
 

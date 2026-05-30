@@ -1,272 +1,282 @@
-<div align="center">
+<p align="center">
+  <img src="assets/gtd-logo-2000-transparent.svg" alt="Get Tasks Done logo" width="220"></br>
+  <i>Get Tasks Done keeps the useful part of spec-driven development: shared context and careful planning. Then it moves execution into task-sized GitHub issues, branches, PRs, and verification with a human in the loop.</i>
+</p>
 
-# GET SHIT DONE
+Get Tasks Done (GTD) is a workflow layer for AI-assisted software development. It turns product and engineering intent into local planning artifacts, exports implementation work to GitHub task issues, and keeps code changes small enough to review through isolated branches, pull requests, validation evidence, and explicit human approval. Instead of asking an agent to carry a feature in one opaque session, GTD gives the work a shape your team can inspect.
 
-**English** · [Português](README.pt-BR.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md) · [한국어](README.ko-KR.md)
+The project started from <a href="https://github.com/open-gsd/get-shit-done-redux" target="_blank">open-gsd/get-shit-done-redux</a> and has since been rebuilt around task issue execution, PR review, reconciliation, and verification. The design is deliberately conservative: give agents enough context, give them bounded work, and keep scope, review, merge, and final acceptance with people.
 
-**A light-weight meta-prompting, context engineering, and spec-driven development system for Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, and more.**
+## Quick start
 
-**Solves context rot — the quality degradation that happens as your AI fills its context window.**
+1. Install GTD for Codex:
 
-[![npm version](https://img.shields.io/npm/v/get-shit-done-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/get-shit-done-cc)
-[![npm downloads](https://img.shields.io/npm/dm/get-shit-done-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/get-shit-done-cc)
-[![Tests](https://img.shields.io/github/actions/workflow/status/gsd-build/get-shit-done/test.yml?branch=main&style=for-the-badge&logo=github&label=Tests)](https://github.com/gsd-build/get-shit-done/actions/workflows/test.yml)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/mYgfVNfA2r)
-[![X (Twitter)](https://img.shields.io/badge/X-@gsd__foundation-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/gsd_foundation)
-[![$GSD Token](https://img.shields.io/badge/$GSD-Dexscreener-1C1C1C?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwRkYwMCIvPjwvc3ZnPg==&logoColor=00FF00)](https://dexscreener.com/solana/dwudwjvan7bzkw9zwlbyv6kspdlvhwzrqy6ebk8xzxkv)
-[![GitHub stars](https://img.shields.io/github/stars/gsd-build/get-shit-done?style=for-the-badge&logo=github&color=181717)](https://github.com/gsd-build/get-shit-done)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
+   ```bash
+   npx @ai-is-gonna/get-tasks-done@latest --codex --global
+   ```
 
-<br>
+2. In a GitHub-backed test repo:
 
-```bash
-npx get-shit-done-cc@latest
-```
+   ```text
+   $gtd-new-project
+   ```
 
-**Works on Mac, Windows, and Linux.**
+3. Ask GTD to plan a small first phase:
 
-<br>
+   ```text
+   $gtd-spec-phase 1
+   $gtd-plan-phase 1
+   ```
 
-![GSD Install](assets/terminal.svg)
+4. Export only when the preview looks right:
 
-<br>
+   ```text
+   $gtd-export-phase-issues 1
+   ```
 
-*"If you know clearly what you want, this WILL build it for you. No bs."*
+5. Implement the first 2 tasks:
 
-*"I've done SpecKit, OpenSpec and Taskmaster — this has produced the best results for me."*
+   ```text
+   $gtd-orchestrate-tasks the first 2 tasks
+   ```
 
-*"By far the most powerful addition to my Claude Code. Nothing over-engineered. Literally just gets shit done."*
-
-<br>
-
-**Trusted by engineers at Amazon, Google, Shopify, and Webflow.**
-
-</div>
-
----
-
-> [!IMPORTANT]
-> **Returning to GSD?**
->
-> Run `/gsd-map-codebase` to re-index your codebase, then `/gsd-new-project` to rebuild GSD's planning context. Your code is fine — GSD just needs its context rebuilt. See the [CHANGELOG](CHANGELOG.md) for what's new.
-
----
-
-## Why I Built This
-
-I'm a solo developer. I don't write code — Claude Code does.
-
-Other spec-driven tools exist, but they're all built for 50-person engineering orgs — sprint ceremonies, story points, stakeholder syncs, Jira workflows. I'm not that. I'm a creative person trying to build great things consistently.
-
-So I built GSD. The complexity is in the system, not in your workflow. Behind the scenes: context engineering, XML prompt formatting, subagent orchestration, state management. What you see: a few commands that just work.
-
-The system gives Claude everything it needs to do the work *and* verify it. I trust the workflow. It just does a good job.
-
-— **TÂCHES**
-
----
-
-## How It Works
-
-The loop is six commands. Each one does exactly one thing.
-
-### 1. Initialize
+You may swap the runtime flag for your agent:
 
 ```bash
-/gsd-new-project
+--claude
+--codex
+--gemini
+--opencode
+--cursor
+--all
 ```
 
-Questions → research → requirements → roadmap. You approve it, then you're ready to build.
+## Technical evaluation
 
-> **Already have code?** Run `/gsd-map-codebase` first. It analyzes your stack, architecture, and conventions so `/gsd-new-project` asks the right questions.
+GTD is most useful for teams that already review work in GitHub and want AI agents to operate inside the same delivery controls as human contributors. It is a poor fit for unattended coding, projects without PR discipline, or prototypes where planning and careful human validation would slow the work down more than they help.
 
-### 2. Discuss
+At a system level, GTD has five moving parts:
+
+| Part | Responsibility |
+| --- | --- |
+| Runtime commands | Slash-command style workflows installed into Codex, Claude Code, Gemini, OpenCode, Cursor, and other supported agents. |
+| Planning artifacts | `.planning/` project memory, requirements, roadmap, phase plans, summaries, verification records, and workflow configuration. |
+| GitHub task workflow | Parent plan issues, child task issues, labels, task branches, PRs, and reconciliation after human merge. |
+| Agents and prompts | Specialized planning, research, execution, review, UI, security, and verification instructions. |
+| SDK | Typed query and automation surface for scripts, CI checks, dashboards, and command internals. |
+
+Local setup writes runtime command files and project planning files. Export writes GitHub issues and labels. Task execution creates branches, comments, PRs, and validation records. Batch orchestration can create temporary task worktrees and an integration branch. Use `--dry-run` and `--read-only` when you want to inspect what GTD would do before it mutates anything.
+
+## Planning hierarchy
+
+GTD stores work in a nested planning model. The same structure carries through local artifacts, GitHub issues, task branches, PRs, and verification.
+
+| Level | What it corresponds to |
+| --- | --- |
+| Project | The repository-level context: product intent, constraints, workflow settings, codebase knowledge, and long-lived state. |
+| Milestone | A coherent delivery objective inside the project. |
+| Phase | A milestone step that can be planned, executed, reviewed, and verified as one unit. |
+| Plan | One implementation plan inside a phase, with scope, files, acceptance criteria, and verification commands. |
+| Task | The smallest execution unit. GTD exports tasks to child GitHub issues and works them through task branches and PRs. |
+
+The task is the unit that matters most:
+
+```text
+one planned task -> one GitHub issue -> one branch -> one PR -> human review
+```
+
+For related work, GTD can orchestrate batches while still keeping task lanes, review boundaries, validation evidence, and one final human merge gate.
+
+## How it works
+
+```mermaid
+flowchart TD
+    A["👤 Human + repo context"]
+    B["📄 Project artifacts<br/>PROJECT / REQUIREMENTS / ROADMAP"]
+    X["🤖 /gtd-map-codebase<br/>architecture + codebase map"]
+    Y["📄 Codebase artifacts<br/>ARCHITECTURE / STRUCTURE / CONVENTIONS"]
+    C["🤖 /gtd-new-project<br/>agent prepares project memory"]
+    D["👤 /gtd-discuss-phase<br/>human decisions + constraints"]
+    R["🤖 /gtd-plan-phase --research-phase<br/>RESEARCH.md when discovery is needed"]
+    U["🤖 /gtd-ui-phase<br/>UI-SPEC.md for frontend phases"]
+    E["🤖 /gtd-plan-phase<br/>plans, tasks, acceptance criteria"]
+    F{"✓ Plan check<br/>task atomicity"}
+    G["🔎 /gtd-export-phase-issues --dry-run<br/>preview issue graph"]
+    H["GitHub issues<br/>parent plans + child tasks"]
+    I{"Work mode"}
+    J["Git branch + PR<br/>/gtd-work-task-issue"]
+    K["Git task lanes + final PR<br/>/gtd-orchestrate-tasks"]
+    L{"👤 Human PR review<br/>merge or request changes"}
+    M["📄 Reconcile merged task work<br/>summary artifacts"]
+    N["✓ /gtd-work-task-issue --complete-phase<br/>phase completion gates"]
+    O["🔎 /gtd-verify-work<br/>human UAT + verification evidence"]
+    P{"✓ Verification gaps?"}
+
+    A -->|"👤 input"| C
+    A -->|"brownfield scan"| X
+    X -->|"📄 architecture"| Y
+    Y -->|"codebase context"| E
+    C -->|"📄 artifacts"| B
+    B --> D
+    D -->|"👤 locked decisions"| E
+    D -->|"research question"| R
+    R -->|"📄 research"| E
+    D -->|"frontend phase"| U
+    U -->|"📄 UI contract"| E
+    E -->|"📄 PLAN.md tasks"| F
+    F -->|"revise plan"| E
+    F -->|"✓ passes"| G
+    G -->|"👤 approved preview"| H
+    H -->|"issue queue"| I
+    I -->|"single task"| J
+    I -->|"related batch"| K
+    J -->|"PR"| L
+    K -->|"PR"| L
+    L -->|"changes requested"| J
+    L -->|"merged"| M
+    M --> N
+    N --> O
+    O --> P
+    P -->|"yes: plan fixes"| E
+    P -->|"no: done"| Q["Phase complete"]
+
+    classDef human fill:#f7efe0,stroke:#9b6a2f,color:#21180f
+    classDef agent fill:#e8f1ff,stroke:#3569a8,color:#081827
+    classDef artifact fill:#eef7ec,stroke:#4f8b46,color:#10210d
+    classDef git fill:#f2edff,stroke:#6d55a8,color:#161026
+    classDef gate fill:#fff6d8,stroke:#aa8523,color:#201700
+    classDef verify fill:#eefafa,stroke:#3d8a8a,color:#071f1f
+
+    class A,L human
+    class C,D,E,J,K,R,U,X agent
+    class B,M,N,Y artifact
+    class G,H git
+    class F,I,P gate
+    class O,Q verify
+```
+
+## Adoption guide
+
+Requirements:
+
+- Node.js `22+`
+- npm `10+`
+- GitHub CLI (`gh`) installed and authenticated
+- A GitHub repository with issues and pull requests enabled
+- Permission to create issues, labels, branches, pull requests, comments, and local `.planning/` files
+
+Recommended install for Codex:
 
 ```bash
-/gsd-discuss-phase 1
+npx @ai-is-gonna/get-tasks-done@latest --codex --global
 ```
 
-Your roadmap has a sentence per phase. That's not enough to build it the way *you* imagine it. Discuss captures your decisions before anything gets planned: layouts, API shapes, error handling, data structures — whatever gray areas exist for this specific phase.
+The installer currently supports Claude Code, Codex, Gemini, Kilo, OpenCode, GitHub Copilot, Antigravity, Cursor, Windsurf, Augment, Trae, Qwen Code, Hermes Agent, CodeBuddy, and Cline.
 
-The output feeds directly into research and planning. Skip it, get reasonable defaults. Use it, get your vision.
-
-### 3. Plan
+Use installer help as the source of truth for profiles, local installs, custom config paths, and runtime-specific flags:
 
 ```bash
-/gsd-plan-phase 1
+npx @ai-is-gonna/get-tasks-done@latest --help
 ```
 
-Research → plan → verify, in a loop until the plans pass. Each plan is small enough to execute in a fresh context window.
+After installation, run `$gtd-help` in the target runtime to confirm the installed command surface. For a first repository, run `$gtd-new-project` and keep the generated `.planning/config.json` defaults until you have exercised the basic flow once.
 
-### 4. Execute
+## Install the SDK
+
+Use the SDK when a script, CI job, or dashboard needs to read GTD state or call registered workflow handlers without driving an agent session.
 
 ```bash
-/gsd-execute-phase 1
+npm install @ai-is-gonna/gtd-sdk
 ```
 
-Plans run in parallel waves. Each executor gets a fresh 200k-token context. Each task gets its own atomic commit. Walk away, come back to completed work with a clean git history.
-
-Your main context window stays at 30–40%. The work happens in the subagents.
-
-### 5. Verify
+Useful read-only queries:
 
 ```bash
-/gsd-verify-work 1
+node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query state.json
+node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query roadmap.analyze
+node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query check phase-ready 1 --pick next_step
 ```
 
-Walk through what was built. Anything broken gets a diagnosed fix plan — ready for immediate re-execution. You don't debug manually; you just run execute again.
+Programmatic use can stay small:
 
-### 6. Repeat → Ship
+```typescript
+import { GTD, createRegistry } from '@ai-is-gonna/gtd-sdk';
 
-```bash
-/gsd-ship 1
-/gsd-complete-milestone
-/gsd-new-milestone
+const gtd = new GTD({ projectDir: process.cwd(), sessionId: 'release-check' });
+const registry = createRegistry(gtd.eventStream, 'release-check');
+
+const ready = await registry.dispatch('check.phase-ready', ['1'], process.cwd());
+const data = ready.data as { next_step?: string };
+console.log(data.next_step);
 ```
 
-Loop discuss → plan → execute → verify → ship until the milestone is done. Then archive, tag, and start the next one fresh.
+For CI/CD, phase finalization can be compact once task PRs are merged:
 
----
-
-## Getting Started
-
-```bash
-npx get-shit-done-cc@latest
+```javascript
+import { execFileSync as sh } from 'node:child_process';
+const q = (...a) => JSON.parse(sh('node', ['./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js', 'query', ...a], { encoding: 'utf8' })).data;
+const phase = process.env.GTD_PHASE ?? '1', done = q('check.completion', 'phase', phase);
+if (!done.complete || done.missing_summaries.length) process.exit(0);
+q('work-task-issue', '--complete-phase', phase, '--execute');
+if (q('check.verification-status', phase).status !== 'pass') process.exit(1);
 ```
 
-The installer prompts for your runtime (Claude Code, OpenCode, Gemini CLI, Kilo, Codex, Copilot, Cursor, Windsurf, and more) and whether to install globally or locally.
+## Workflow commands
 
-```bash
-claude --dangerously-skip-permissions
-```
+Command names below use the generic `/gtd-*` form. The installer adapts the command surface for runtimes with a different invocation style.
 
-GSD is built for frictionless automation. Skip-permissions is how it's intended to run.
+Most users should follow GTD's prompts instead of memorizing this table. The commands are listed so the flow is inspectable.
 
-Install only the skills you need with `--profile=core` (six core-loop skills), `--profile=standard` (core + phase management), or the default full install. Profiles compose: `--profile=core,audit`. `--minimal` is an alias for `--profile=core`. See **[docs/USER-GUIDE.md](docs/USER-GUIDE.md)** for the full walkthrough, non-interactive install flags for all 15 runtimes, and permissions configuration. See [ADR-0011](docs/adr/0011-skill-surface-budget-module.md) for the profile model and runtime surface control.
+| Command | Outcome |
+| --- | --- |
+| `/gtd-map-codebase [--fast]` | Builds `.planning/codebase/` docs, including architecture, structure, conventions, testing, integrations, and concerns. |
+| `/gtd-new-project` | Creates project memory, requirements, roadmap, workflow config, and initial planning state. |
+| `/gtd-spec-phase <phase>` | Clarifies what a phase must deliver before implementation planning starts. |
+| `/gtd-discuss-phase <phase>` | Turns unclear product or engineering intent into decisions the planner can use. |
+| `/gtd-plan-phase --research-phase <phase>` | Writes or refreshes `RESEARCH.md` before the planner commits to an implementation approach. |
+| `/gtd-ui-phase <phase>` | Produces `UI-SPEC.md` for frontend phases and checks the design contract before planning. |
+| `/gtd-plan-phase <phase>` | Produces task-ready plans with scope, boundaries, acceptance criteria, and verification commands. |
+| `/gtd-export-phase-issues <phase> --dry-run` | Previews the GitHub issue hierarchy before writing labels, issues, dependencies, or manifests. |
+| `/gtd-export-phase-issues <phase>` | Writes parent plan issues, child task issues, labels, dependency links, and the local export manifest. |
+| `/gtd-work-task-issue --read-only --phase <phase>` | Checks which task is workable without claiming issues, creating branches, or opening PRs. |
+| `/gtd-work-task-issue [task] --phase <phase>` | Works one exported task through an isolated branch, validation, and a task PR. |
+| `/gtd-orchestrate-tasks <child-issue>...` | Coordinates a small related batch through task lanes and one final comprehensive PR. |
+| `/gtd-code-review <phase>` | Reviews phase changes for bugs, security issues, and code quality problems before final verification. |
+| `/gtd-work-task-issue --complete-phase <phase> --execute` | Runs phase completion after merged task PRs have been reconciled into summary artifacts. |
+| `/gtd-verify-work <phase>` | Runs conversational UAT, records verification evidence, and routes gaps back into planning. |
+| `/gtd-progress` | Shows project status and the next recommended command. |
+| `/gtd-config` | Views or updates project workflow configuration. |
+| `/gtd-update` | Updates installed GTD runtime files. |
+| `/gtd-help` | Shows the installed command surface for the current runtime. |
 
-Current release highlights are in [docs/RELEASE-v1.42.1.md](docs/RELEASE-v1.42.1.md): package legitimacy checks, safer installer migrations, runtime surface control, custom ship PR sections, reviewer defaults, fallow structural review, and quota-aware execution recovery.
+## Why it works
 
----
+GTD keeps the parts of get-shit-done that are worth keeping: spec ingestion, context management, delivery without ceremony, and an SDK-backed command surface. Those pieces matter because models need structured context before they can do useful work.
 
-## Commands
+The important change is the execution boundary: GTD breaks planned work into smaller tasks, checks those tasks before execution, and sends each one through GitHub issues, branches, PRs, and validation evidence. That gives reviewers something concrete to inspect, retry, or reject.
 
-The main loop:
-
-| Command | What it does |
-|---------|--------------|
-| `/gsd-new-project` | Questions → research → requirements → roadmap |
-| `/gsd-discuss-phase [N]` | Capture implementation decisions before planning |
-| `/gsd-plan-phase [N]` | Research + plan + verify |
-| `/gsd-execute-phase <N>` | Execute plans in parallel waves |
-| `/gsd-verify-work [N]` | Manual acceptance testing |
-| `/gsd-ship [N]` | Create PR from verified phase work |
-| `/gsd-progress --next` | Auto-detect and run the next step |
-| `/gsd-complete-milestone` | Archive milestone and tag release |
-| `/gsd-new-milestone` | Start next version |
-| `/gsd:surface` | Enable/disable skill clusters at runtime without reinstall |
-
-For ad-hoc tasks, autonomous mode, codebase analysis, forensics, and the full command surface — see **[docs/COMMANDS.md](docs/COMMANDS.md)**.
-
----
-
-## Why It Works
-
-Three things most AI-coding setups get wrong:
-
-**1. Context bloat.** As a session grows, quality degrades. GSD keeps your main context clean by doing the heavy work in fresh subagent contexts. Researchers, planners, and executors each start fresh with exactly what they need.
-
-**2. No shared memory.** GSD maintains structured artifacts that survive session boundaries: `PROJECT.md` (vision), `REQUIREMENTS.md` (scope), `ROADMAP.md` (where you're going), `STATE.md` (current position and decisions), `CONTEXT.md` (per-phase implementation decisions). Every new session loads these and knows exactly where things stand.
-
-**3. No verification.** Code that "runs" isn't code that "works." GSD's verify step walks you through what was built, diagnoses failures with dedicated debug agents, and generates fix plans before you declare a phase done.
-
-See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for how the multi-agent orchestration and context engineering work in detail.
-
----
-
-## Configuration
-
-Settings live in `.planning/config.json`. Configure during `/gsd-new-project` or update with `/gsd-settings`.
-
-Key dials:
-
-| Setting | What it controls |
-|---------|-----------------|
-| `mode` | `interactive` (confirm each step) or `yolo` (auto-approve) |
-| Model profiles | `quality` / `balanced` / `budget` — controls which model each agent uses |
-| `workflow.research` / `plan_check` / `verifier` | Toggle the quality agents that add tokens and time |
-| `parallelization.enabled` | Run independent plans simultaneously |
-
-Optional structural review: set `code_quality.fallow.enabled` to `true` to add a fallow pre-pass to `/gsd-code-review`. GSD writes `.planning/phases/<phase>/FALLOW.json` and surfaces a `Structural Findings (fallow)` section in `REVIEW.md`. Install with `npm install -D fallow@^2.70.0` (or system-wide via `cargo install fallow`; note that the Rust binary's JSON schema must match the documented v2.70+ contract — older versions may produce silent zero-finding output).
-
-Package legitimacy checks are built into the research, planning, and execution path: recommended dependencies get audited, unverified packages require a human checkpoint, and failed installs stop instead of trying similarly named alternatives.
-
-For the full configuration reference — all settings, git branching strategies, per-runtime model overrides, workstream config inheritance, agent skills injection — see **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**.
-
----
+The review gates are intentional. Scope, task boundaries, checkpoint issues, PR review, merge approval, and final UAT stay with people because that is where mistakes get expensive.
 
 ## Documentation
 
-| Doc | What's in it |
-|-----|-------------|
-| [User Guide](docs/USER-GUIDE.md) | End-to-end walkthrough, install options, all runtime flags, configuration reference |
-| [Commands](docs/COMMANDS.md) | Every command with flags and examples |
-| [Configuration](docs/CONFIGURATION.md) | Full config schema, model profiles, git branching |
-| [Architecture](docs/ARCHITECTURE.md) | How the multi-agent orchestration works |
-| [CLI Tools](docs/CLI-TOOLS.md) | `gsd-sdk query` and programmatic SDK dispatch seams |
-| [Features](docs/FEATURES.md) | Complete feature index |
-| [Changelog](CHANGELOG.md) | What changed in each release |
+- [Documentation index](docs/README.md)
+- [Task issue operator guide](docs/task-issue-operator-guide.md)
+- [Command reference](docs/COMMANDS.md)
+- [Configuration](docs/CONFIGURATION.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Contributor standards](docs/contributor-standards.md)
+- [SDK README](sdk/README.md)
 
----
+## Maturity of this project
 
-## Troubleshooting
+GTD is usable today. I have tested it on a few personal projects, but it is still an early public project. The core workflow is covered by automated tests and shaped around real development work. The surface area is large, though, and some runtime integrations need more time in different teams and codebases.
 
-**Commands not showing up?** Restart your runtime after install. GSD installs to `~/.claude/skills/gsd-*/` (Claude Code), `~/.codex/skills/gsd-*/` (Codex), or the equivalent for your runtime.
+Before adopting it broadly, evaluate these points in your own environment:
 
-**Codex users — minimum supported CLI version is `0.130.0`.** Codex CLI 0.130.0 ([release notes](https://github.com/openai/codex/releases/tag/rust-v0.130.0)) removed extra-skill-roots discovery via [openai/codex#21485](https://github.com/openai/codex/pull/21485); from that version onward Codex discovers skills from standard roots (including `~/.codex/skills/<name>/SKILL.md`). GSD installs there directly. Earlier Codex CLI versions may still discover additional roots, which can surface duplicate `gsd-*` entries (one from extra-roots discovery, one from `~/.codex/skills/`); restart Codex after install and either upgrade or accept the duplicate listing.
+- Whether task-sized PRs match the way your team reviews code.
+- Whether GitHub issue and label writes are acceptable for agent-assisted planning.
+- Whether `.planning/` artifacts should be committed, ignored, or reviewed as delivery evidence.
+- Whether your preferred runtime integration is mature enough for your team.
+- Whether your CI can reuse SDK checks for phase readiness, completion, and verification status.
 
-**Something broken?** Re-run the installer — it's idempotent:
-```bash
-npx get-shit-done-cc@latest
-```
-
-**Containers or Docker?** Set `CLAUDE_CONFIG_DIR` before installing to avoid tilde-expansion issues:
-```bash
-CLAUDE_CONFIG_DIR=/home/youruser/.claude npx get-shit-done-cc --global
-```
-
-Full troubleshooting and uninstall instructions in **[docs/USER-GUIDE.md](docs/USER-GUIDE.md#troubleshooting)**.
-
----
-
-## Community
-
-| Project | Platform |
-|---------|----------|
-| [gsd-opencode](https://github.com/rokicool/gsd-opencode) | Original OpenCode port |
-| [Discord](https://discord.gg/mYgfVNfA2r) | Community support |
-
----
-
-## Star History
-
-<a href="https://star-history.com/#gsd-build/get-shit-done&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=gsd-build/get-shit-done&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=gsd-build/get-shit-done&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=gsd-build/get-shit-done&type=Date" />
- </picture>
-</a>
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-**Claude Code is powerful. GSD makes it reliable.**
-
-</div>
+Contributions, issue reports, and thoughtful feedback are welcome and appreciated!

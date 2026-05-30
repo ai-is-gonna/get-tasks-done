@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 
 import { findPhase, phasePlanIndex } from './phase.js';
 
@@ -87,7 +87,7 @@ let tmpDir: string;
 // ─── Setup / Teardown ──────────────────────────────────────────────────────
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-phase-test-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-phase-test-'));
   const planningDir = join(tmpDir, '.planning');
   const phasesDir = join(planningDir, 'phases');
 
@@ -160,12 +160,12 @@ describe('findPhase', () => {
     expect(data.summaries).toEqual([]);
   });
 
-  it('throws GSDError with Validation classification when no args', async () => {
-    await expect(findPhase([], tmpDir)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification when no args', async () => {
+    await expect(findPhase([], tmpDir)).rejects.toThrow(GTDError);
     try {
       await findPhase([], tmpDir);
     } catch (err) {
-      expect((err as GSDError).classification).toBe('validation');
+      expect((err as GTDError).classification).toBe('validation');
     }
   });
 
@@ -290,12 +290,12 @@ describe('phasePlanIndex', () => {
     expect(filesModified).toContain('sdk/src/errors.test.ts');
   });
 
-  it('throws GSDError with Validation classification when no args', async () => {
-    await expect(phasePlanIndex([], tmpDir)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification when no args', async () => {
+    await expect(phasePlanIndex([], tmpDir)).rejects.toThrow(GTDError);
     try {
       await phasePlanIndex([], tmpDir);
     } catch (err) {
-      expect((err as GSDError).classification).toBe('validation');
+      expect((err as GTDError).classification).toBe('validation');
     }
   });
 
@@ -460,7 +460,7 @@ describe('phasePlanIndex', () => {
     expect(w).toContain('2');  // computed
   });
 
-  it('#3266: cycle detection throws GSDError naming the cycle nodes', async () => {
+  it('#3266: cycle detection throws GTDError naming the cycle nodes', async () => {
     const phase14 = join(tmpDir, '.planning', 'phases', '14-cycle');
     await mkdir(phase14, { recursive: true });
     // A → B → A (cycle)
@@ -493,8 +493,8 @@ describe('phasePlanIndex', () => {
     } catch (err) {
       thrownError = err;
     }
-    expect(thrownError).toBeInstanceOf(GSDError);
-    const msg = (thrownError as GSDError).message;
+    expect(thrownError).toBeInstanceOf(GTDError);
+    const msg = (thrownError as GTDError).message;
     // Message must mention cycle and name the nodes
     expect(msg).toContain('cycle');
     expect(msg).toMatch(/14-0[12]/);

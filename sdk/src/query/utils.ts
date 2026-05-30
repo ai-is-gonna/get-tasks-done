@@ -1,7 +1,7 @@
 /**
  * Utility query handlers — pure SDK implementations of simple commands.
  *
- * These handlers are direct TypeScript ports of gsd-tools.cjs functions:
+ * These handlers are direct TypeScript ports of gtd-tools.cjs functions:
  * - `generateSlug` ← `cmdGenerateSlug` (commands.cjs lines 38-48)
  * - `currentTimestamp` ← `cmdCurrentTimestamp` (commands.cjs lines 50-71)
  *
@@ -17,7 +17,7 @@
  * ```
  */
 
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ export interface QueryResult<T = unknown> {
    * `'json'` (default) — JSON-stringify as usual.
    *
    * Only meaningful when `data` is a string and the consumer is the CLI.
-   * Used by `agent-skills` so workflows embedding `$(gsd-sdk query …)` receive
+   * Used by `agent-skills` so workflows embedding `$(gtd-sdk query …)` receive
    * a raw `<agent_skills>` XML block rather than a JSON-quoted string.
    */
   format?: 'json' | 'text';
@@ -48,19 +48,19 @@ export type QueryHandler<T = unknown> = (
 /**
  * Converts text into a URL-safe kebab-case slug.
  *
- * Port of `cmdGenerateSlug` from `get-shit-done/bin/lib/commands.cjs`.
+ * Port of `cmdGenerateSlug` from `get-tasks-done/bin/lib/commands.cjs`.
  * Algorithm: lowercase, replace non-alphanumeric with hyphens,
  * strip leading/trailing hyphens, truncate to 60 characters.
  *
  * @param args - `args[0]` is the text to slugify
  * @param _projectDir - Unused (pure function)
  * @returns Query result with `{ slug: string }`
- * @throws GSDError with Validation classification if text is missing or empty
+ * @throws GTDError with Validation classification if text is missing or empty
  */
 export const generateSlug: QueryHandler = async (args, _projectDir) => {
   const text = args[0];
   if (!text) {
-    throw new GSDError('text required for slug generation', ErrorClassification.Validation);
+    throw new GTDError('text required for slug generation', ErrorClassification.Validation);
   }
 
   const slug = text
@@ -77,7 +77,7 @@ export const generateSlug: QueryHandler = async (args, _projectDir) => {
 /**
  * Returns the current timestamp in the requested format.
  *
- * Port of `cmdCurrentTimestamp` from `get-shit-done/bin/lib/commands.cjs`.
+ * Port of `cmdCurrentTimestamp` from `get-tasks-done/bin/lib/commands.cjs`.
  * Formats: `'full'` (ISO 8601), `'date'` (YYYY-MM-DD), `'filename'` (colons replaced).
  *
  * @param args - `args[0]` is the format (`'full'` | `'date'` | `'filename'`), defaults to `'full'`

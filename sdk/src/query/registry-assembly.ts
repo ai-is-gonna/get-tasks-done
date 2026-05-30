@@ -1,5 +1,5 @@
 import { QueryRegistry } from './registry.js';
-import { GSDEventStream } from '../event-stream.js';
+import { GTDEventStream } from '../event-stream.js';
 import { registerAliasCatalog, registerStaticCatalog } from './command-catalog.js';
 import { QUERY_MUTATION_COMMAND_LIST, TRANSPORT_RAW_COMMANDS } from './query-policy-capability.js';
 import { decorateMutationsWithEvents } from './mutation-event-decorator.js';
@@ -60,7 +60,7 @@ export function buildRegistry(): QueryRegistry {
 
 export function decorateRegistryMutations(
   registry: QueryRegistry,
-  eventStream?: GSDEventStream,
+  eventStream?: GTDEventStream,
   correlationSessionId?: string,
 ): void {
   if (!eventStream) return;
@@ -69,7 +69,7 @@ export function decorateRegistryMutations(
 }
 
 export function createRegistry(
-  eventStream?: GSDEventStream,
+  eventStream?: GTDEventStream,
   correlationSessionId?: string,
 ): QueryRegistry {
   const registry = buildRegistry();

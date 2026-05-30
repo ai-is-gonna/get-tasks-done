@@ -12,7 +12,7 @@ describe('checkVerificationStatus', () => {
   let projectDir: string;
 
   beforeEach(async () => {
-    projectDir = join(tmpdir(), `gsd-check-ver-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    projectDir = join(tmpdir(), `gtd-check-ver-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(join(projectDir, '.planning', 'phases'), { recursive: true });
   });
 

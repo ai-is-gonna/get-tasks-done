@@ -50,8 +50,8 @@ const CONFIG_CONTENT = JSON.stringify({
   commit_docs: false,
   git: {
     branching_strategy: 'none',
-    phase_branch_template: 'gsd/phase-{phase}-{slug}',
-    milestone_branch_template: 'gsd/{milestone}-{slug}',
+    phase_branch_template: 'gtd/phase-{phase}-{slug}',
+    milestone_branch_template: 'gtd/{milestone}-{slug}',
     quick_branch_template: null,
   },
   workflow: { research: false, plan_check: false, verifier: false, nyquist_validation: false },
@@ -63,7 +63,7 @@ describe('initMilestoneOp workstream resolution (#3196)', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws-milestone-op-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws-milestone-op-'));
 
     // Root planning dir (has config, but no ROADMAP for the workstream)
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
@@ -113,9 +113,9 @@ describe('initMilestoneOp workstream resolution (#3196)', () => {
     // Write the active-workstream pointer
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'test-ws\n');
 
-    // Resolve context as the CLI would (no --ws arg, no GSD_WORKSTREAM env)
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    // Resolve context as the CLI would (no --ws arg, no GTD_WORKSTREAM env)
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBe('test-ws');
@@ -126,8 +126,8 @@ describe('initMilestoneOp workstream resolution (#3196)', () => {
       expect(data.roadmap_exists).toBe(true);
       expect(data.milestone_version).toBe('v2.0');
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
@@ -135,8 +135,8 @@ describe('initMilestoneOp workstream resolution (#3196)', () => {
     // Write a different active-workstream
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'other-ws\n');
 
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       // Explicitly pass --ws test-ws
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir, ws: 'test-ws' });
@@ -146,23 +146,23 @@ describe('initMilestoneOp workstream resolution (#3196)', () => {
       const data = result.data as Record<string, unknown>;
       expect(data.phase_count).toBe(2);
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
-  it('GSD_WORKSTREAM env overrides active-workstream file', async () => {
+  it('GTD_WORKSTREAM env overrides active-workstream file', async () => {
     // File says other-ws, env says test-ws
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'other-ws\n');
 
-    const prev = process.env.GSD_WORKSTREAM;
-    process.env.GSD_WORKSTREAM = 'test-ws';
+    const prev = process.env.GTD_WORKSTREAM;
+    process.env.GTD_WORKSTREAM = 'test-ws';
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBe('test-ws');
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 });
@@ -173,7 +173,7 @@ describe('roadmapAnalyze workstream resolution (#3196)', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws-roadmap-analyze-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws-roadmap-analyze-'));
 
     // Root planning dir — no ROADMAP
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
@@ -218,8 +218,8 @@ describe('roadmapAnalyze workstream resolution (#3196)', () => {
   it('resolves workstream via active-workstream file for roadmapAnalyze', async () => {
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'test-ws\n');
 
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBe('test-ws');
@@ -228,8 +228,8 @@ describe('roadmapAnalyze workstream resolution (#3196)', () => {
       const data = result.data as Record<string, unknown>;
       expect(data.phase_count).toBe(2);
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 });
@@ -240,7 +240,7 @@ describe('resolveQueryRuntimeContext active-workstream file fallback (#3196)', (
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-rtctx-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-rtctx-'));
     await mkdir(join(tmpDir, '.planning', 'workstreams', 'my-ws'), { recursive: true });
   });
 
@@ -248,58 +248,58 @@ describe('resolveQueryRuntimeContext active-workstream file fallback (#3196)', (
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('reads ws from active-workstream file when no --ws and no GSD_WORKSTREAM', async () => {
+  it('reads ws from active-workstream file when no --ws and no GTD_WORKSTREAM', async () => {
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'my-ws\n');
 
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBe('my-ws');
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
   it('returns ws: undefined when active-workstream file is missing', async () => {
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBeUndefined();
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
   it('returns ws: undefined when active-workstream names a non-existent dir', async () => {
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'nonexistent\n');
 
-    const prev = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_WORKSTREAM;
+    const prev = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_WORKSTREAM;
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBeUndefined();
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
-  it('GSD_WORKSTREAM env takes priority over active-workstream file', async () => {
+  it('GTD_WORKSTREAM env takes priority over active-workstream file', async () => {
     await writeFile(join(tmpDir, '.planning', 'active-workstream'), 'my-ws\n');
     await mkdir(join(tmpDir, '.planning', 'workstreams', 'env-ws'), { recursive: true });
 
-    const prev = process.env.GSD_WORKSTREAM;
-    process.env.GSD_WORKSTREAM = 'env-ws';
+    const prev = process.env.GTD_WORKSTREAM;
+    process.env.GTD_WORKSTREAM = 'env-ws';
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir });
       expect(ctx.ws).toBe('env-ws');
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 
@@ -308,14 +308,14 @@ describe('resolveQueryRuntimeContext active-workstream file fallback (#3196)', (
     await mkdir(join(tmpDir, '.planning', 'workstreams', 'env-ws'), { recursive: true });
     await mkdir(join(tmpDir, '.planning', 'workstreams', 'explicit-ws'), { recursive: true });
 
-    const prev = process.env.GSD_WORKSTREAM;
-    process.env.GSD_WORKSTREAM = 'env-ws';
+    const prev = process.env.GTD_WORKSTREAM;
+    process.env.GTD_WORKSTREAM = 'env-ws';
     try {
       const ctx = resolveQueryRuntimeContext({ projectDir: tmpDir, ws: 'explicit-ws' });
       expect(ctx.ws).toBe('explicit-ws');
     } finally {
-      if (prev === undefined) delete process.env.GSD_WORKSTREAM;
-      else process.env.GSD_WORKSTREAM = prev;
+      if (prev === undefined) delete process.env.GTD_WORKSTREAM;
+      else process.env.GTD_WORKSTREAM = prev;
     }
   });
 });

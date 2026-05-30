@@ -18,7 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 const expected = await buildWorkstreamInventoryBuilderCjs();
 
-const committedPath = resolve(here, '..', '..', 'get-shit-done', 'bin', 'lib', 'workstream-inventory-builder.generated.cjs');
+const committedPath = resolve(here, '..', '..', 'get-tasks-done', 'bin', 'lib', 'workstream-inventory-builder.generated.cjs');
 const committed = await readFile(committedPath, 'utf-8');
 
 if (expected === committed) {

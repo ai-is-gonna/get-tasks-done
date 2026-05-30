@@ -14,7 +14,7 @@ describe('workstreamList', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({ model_profile: 'balanced' }));
   });
@@ -35,7 +35,7 @@ describe('workstreamProgress', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws-progress-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws-progress-'));
     const wsDir = join(tmpDir, '.planning', 'workstreams', 'overflow');
     await mkdir(join(wsDir, 'phases', '01-one'), { recursive: true });
     await mkdir(join(wsDir, 'phases', '02-two'), { recursive: true });
@@ -63,7 +63,7 @@ describe('workstreamCreate', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws2-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws2-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({ model_profile: 'balanced' }));
   });
@@ -83,7 +83,7 @@ describe('workstreamSet root STATE.md mirror sync (#2618 gap 2)', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-ws-set-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-ws-set-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
@@ -93,7 +93,7 @@ describe('workstreamSet root STATE.md mirror sync (#2618 gap 2)', () => {
     // Root STATE.md with stale frontmatter (mirror of some prior workstream)
     const rootState = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'milestone: v0.stale',
       'milestone_name: Stale Mirror',
       'active_workstream: old-ws',
@@ -112,7 +112,7 @@ describe('workstreamSet root STATE.md mirror sync (#2618 gap 2)', () => {
     await mkdir(wsDir, { recursive: true });
     const wsState = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'milestone: v1.0',
       'milestone_name: Active Milestone',
       'active_workstream: active-ws',

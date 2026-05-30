@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 import {
   escapeRegex,
   normalizePhaseName,
@@ -194,8 +194,8 @@ describe('stateExtractField', () => {
 
 describe('planningPaths', () => {
   afterEach(() => {
-    delete process.env['GSD_WORKSTREAM'];
-    delete process.env['GSD_PROJECT'];
+    delete process.env['GTD_WORKSTREAM'];
+    delete process.env['GTD_PROJECT'];
   });
 
   it('returns all expected keys', () => {
@@ -215,14 +215,14 @@ describe('planningPaths', () => {
     expect(paths.config).toContain('.planning/config.json');
   });
 
-  it('uses GSD_PROJECT env when no explicit workstream is provided', () => {
-    process.env['GSD_PROJECT'] = 'proj-scope';
+  it('uses GTD_PROJECT env when no explicit workstream is provided', () => {
+    process.env['GTD_PROJECT'] = 'proj-scope';
     const paths = planningPaths('/proj');
     expect(paths.planning).toContain('/proj/.planning/proj-scope');
   });
 
-  it('explicit workstream overrides GSD_PROJECT env', () => {
-    process.env['GSD_PROJECT'] = 'proj-scope';
+  it('explicit workstream overrides GTD_PROJECT env', () => {
+    process.env['GTD_PROJECT'] = 'proj-scope';
     const paths = planningPaths('/proj', 'ws-a');
     expect(paths.planning).toContain('/proj/.planning/workstreams/ws-a');
     expect(paths.planning).not.toContain('proj-scope');
@@ -278,7 +278,7 @@ describe('resolvePathUnderProject', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-path-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-path-'));
     await writeFile(join(tmpDir, 'safe.md'), 'x', 'utf-8');
   });
 
@@ -292,14 +292,14 @@ describe('resolvePathUnderProject', () => {
   });
 
   it('rejects paths that escape the project root', async () => {
-    await expect(resolvePathUnderProject(tmpDir, '../../etc/passwd')).rejects.toThrow(GSDError);
+    await expect(resolvePathUnderProject(tmpDir, '../../etc/passwd')).rejects.toThrow(GTDError);
   });
 });
 
 // ─── Runtime-aware agents dir resolution (#2402) ───────────────────────────
 
 const RUNTIME_ENV_VARS = [
-  'GSD_AGENTS_DIR', 'GSD_RUNTIME', 'CLAUDE_CONFIG_DIR', 'OPENCODE_CONFIG_DIR',
+  'GTD_AGENTS_DIR', 'GTD_RUNTIME', 'CLAUDE_CONFIG_DIR', 'OPENCODE_CONFIG_DIR',
   'OPENCODE_CONFIG', 'KILO_CONFIG_DIR', 'KILO_CONFIG', 'XDG_CONFIG_HOME',
   'GEMINI_CONFIG_DIR', 'CODEX_HOME', 'COPILOT_CONFIG_DIR', 'ANTIGRAVITY_CONFIG_DIR',
   'CURSOR_CONFIG_DIR', 'WINDSURF_CONFIG_DIR', 'AUGMENT_CONFIG_DIR', 'TRAE_CONFIG_DIR',
@@ -398,22 +398,22 @@ describe('detectRuntime', () => {
     expect(detectRuntime()).toBe('claude');
   });
 
-  it('uses GSD_RUNTIME when set to a known runtime', () => {
-    process.env.GSD_RUNTIME = 'codex';
+  it('uses GTD_RUNTIME when set to a known runtime', () => {
+    process.env.GTD_RUNTIME = 'codex';
     expect(detectRuntime()).toBe('codex');
   });
 
-  it('falls back to config.runtime when GSD_RUNTIME unset', () => {
+  it('falls back to config.runtime when GTD_RUNTIME unset', () => {
     expect(detectRuntime({ runtime: 'gemini' })).toBe('gemini');
   });
 
-  it('GSD_RUNTIME wins over config.runtime', () => {
-    process.env.GSD_RUNTIME = 'codex';
+  it('GTD_RUNTIME wins over config.runtime', () => {
+    process.env.GTD_RUNTIME = 'codex';
     expect(detectRuntime({ runtime: 'gemini' })).toBe('codex');
   });
 
-  it('unknown GSD_RUNTIME falls through to config then claude', () => {
-    process.env.GSD_RUNTIME = 'bogus';
+  it('unknown GTD_RUNTIME falls through to config then claude', () => {
+    process.env.GTD_RUNTIME = 'bogus';
     expect(detectRuntime({ runtime: 'gemini' })).toBe('gemini');
     expect(detectRuntime()).toBe('claude');
   });
@@ -439,8 +439,8 @@ describe('resolveAgentsDir (runtime-aware)', () => {
     expect(resolveAgentsDir()).toBe(join(homedir(), '.claude', 'agents'));
   });
 
-  it('GSD_AGENTS_DIR short-circuits regardless of runtime', () => {
-    process.env.GSD_AGENTS_DIR = '/explicit/agents';
+  it('GTD_AGENTS_DIR short-circuits regardless of runtime', () => {
+    process.env.GTD_AGENTS_DIR = '/explicit/agents';
     expect(resolveAgentsDir('codex')).toBe('/explicit/agents');
     expect(resolveAgentsDir('claude')).toBe('/explicit/agents');
   });
@@ -506,7 +506,7 @@ describe('findProjectRoot (multi-repo .planning resolution)', () => {
   let workspace: string;
 
   beforeEach(async () => {
-    workspace = await mkdtemp(join(tmpdir(), 'gsd-find-root-'));
+    workspace = await mkdtemp(join(tmpdir(), 'gtd-find-root-'));
   });
 
   afterEach(async () => {

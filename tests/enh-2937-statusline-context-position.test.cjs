@@ -10,15 +10,15 @@
  *   - Explicit "front" puts ctx after model, before first " │ "
  *   - Empty ctx with "front" leaves no stray separator
  *   - Invalid value (e.g. "middle") silently falls back to "end" at runtime
- *   - gsdUpdate warning stays leftmost in both "front" and "end" modes
+ *   - gtdUpdate warning stays leftmost in both "front" and "end" modes
  */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { composeStatusline } = require('../hooks/gsd-statusline.js');
-const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { composeStatusline } = require('../hooks/gtd-statusline.js');
+const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ── Parity guard ─────────────────────────────────────────────────────────────
 
@@ -106,19 +106,19 @@ test('invalid position "banana" silently falls back to "end"', () => {
   assert.strictEqual(invalid, end, `invalid "banana" should fall back to "end"; got: ${invalid}`);
 });
 
-// ── gsdUpdate leftmost invariant ─────────────────────────────────────────────
+// ── gtdUpdate leftmost invariant ─────────────────────────────────────────────
 
-test('gsdUpdate warning is leftmost in "end" mode', () => {
-  const gsdUpdate = '\x1b[33m⬆ /gsd:update\x1b[0m │ ';
-  const out = composeStatusline({ gsdUpdate, model: 'Claude', dirname: 'proj', position: 'end' });
-  assert.ok(out.startsWith(gsdUpdate), `gsdUpdate should be leftmost in end mode; got: ${out}`);
+test('gtdUpdate warning is leftmost in "end" mode', () => {
+  const gtdUpdate = '\x1b[33m⬆ /gtd:update\x1b[0m │ ';
+  const out = composeStatusline({ gtdUpdate, model: 'Claude', dirname: 'proj', position: 'end' });
+  assert.ok(out.startsWith(gtdUpdate), `gtdUpdate should be leftmost in end mode; got: ${out}`);
 });
 
-test('gsdUpdate warning is leftmost in "front" mode', () => {
-  const gsdUpdate = '\x1b[33m⬆ /gsd:update\x1b[0m │ ';
+test('gtdUpdate warning is leftmost in "front" mode', () => {
+  const gtdUpdate = '\x1b[33m⬆ /gtd:update\x1b[0m │ ';
   const ctx = ' \x1b[32m████░░░░░░ 40%\x1b[0m';
-  const out = composeStatusline({ gsdUpdate, model: 'Claude', dirname: 'proj', ctx, position: 'front' });
-  assert.ok(out.startsWith(gsdUpdate), `gsdUpdate should be leftmost in front mode; got: ${out}`);
+  const out = composeStatusline({ gtdUpdate, model: 'Claude', dirname: 'proj', ctx, position: 'front' });
+  assert.ok(out.startsWith(gtdUpdate), `gtdUpdate should be leftmost in front mode; got: ${out}`);
 });
 
 // ── CLI write-path enforcement (config-set rejects invalid enum) ─────────────
@@ -130,7 +130,7 @@ test('gsdUpdate warning is leftmost in "front" mode', () => {
 test('config-set rejects invalid statusline.context_position', () => {
   const tmpDir = createTempProject();
   try {
-    const r = runGsdTools(
+    const r = runGtdTools(
       ['config-set', 'statusline.context_position', 'middle'],
       tmpDir,
     );

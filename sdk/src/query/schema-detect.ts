@@ -1,6 +1,6 @@
 /**
- * Schema drift detection — ports `get-shit-done/bin/lib/schema-detect.cjs`.
- * Used by `verify.schema-drift` to match gsd-tools.cjs JSON output.
+ * Schema drift detection — ports `get-tasks-done/bin/lib/schema-detect.cjs`.
+ * Used by `verify.schema-drift` to match gtd-tools.cjs JSON output.
  */
 
 // ─── ORM patterns ─────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ export function checkSchemaDrift(
     'Required push commands:',
     pushCommands,
     '',
-    'Run the appropriate push command, or set GSD_SKIP_SCHEMA_CHECK=true to bypass this gate.',
+    'Run the appropriate push command, or set GTD_SKIP_SCHEMA_CHECK=true to bypass this gate.',
   ].join('\n');
 
   if (skipCheck) {
@@ -174,7 +174,7 @@ export function checkSchemaDrift(
       schemaFiles: detection.matches,
       orms: detection.orms,
       unpushedOrms,
-      message: 'Schema drift detected but check was skipped (GSD_SKIP_SCHEMA_CHECK=true).',
+      message: 'Schema drift detected but check was skipped (GTD_SKIP_SCHEMA_CHECK=true).',
     };
   }
 

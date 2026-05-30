@@ -12,7 +12,7 @@
  * Kilo, and Codex converters.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -56,9 +56,9 @@ describe('convertClaudeToCopilotContent — bare ~/.claude (issue #2545)', () =>
   });
 
   test('does not double-replace trailing-slash form', () => {
-    const input = '@~/.claude/get-shit-done/foo.md\n';
+    const input = '@~/.claude/get-tasks-done/foo.md\n';
     const out = convertClaudeToCopilotContent(input, true);
-    assert.match(out, /~\/\.copilot\/get-shit-done\/foo\.md/);
+    assert.match(out, /~\/\.copilot\/get-tasks-done\/foo\.md/);
     assert.ok(!/\.copilot\/\.copilot/.test(out));
   });
 });

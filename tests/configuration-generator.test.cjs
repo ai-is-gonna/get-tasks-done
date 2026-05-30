@@ -17,12 +17,12 @@ const os = require('node:os');
 
 // ─── CJS side (synchronous require) ──────────────────────────────────────────
 
-const cjs = require('../get-shit-done/bin/lib/configuration.generated.cjs');
+const cjs = require('../get-tasks-done/bin/lib/configuration.generated.cjs');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeTmpProject() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-parity-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-parity-'));
   fs.mkdirSync(path.join(dir, '.planning'), { recursive: true });
   return dir;
 }
@@ -230,7 +230,7 @@ describe('mergeDefaults parity', () => {
 
 describe('loadConfig parity', () => {
   test('missing config.json returns defaults', async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-parity-lc-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-parity-lc-'));
     try {
       const esmR = await esm.loadConfig(dir);
       const cjsR = await cjs.loadConfig(dir);
@@ -340,7 +340,7 @@ describe('migrateOnDisk parity', () => {
   });
 
   test('missing file returns migrated:false, wrote:null', async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-parity-md-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-parity-md-'));
     try {
       const esmR = await esm.migrateOnDisk(dir);
       const cjsR = await cjs.migrateOnDisk(dir);

@@ -3,7 +3,7 @@
  *
  * The three-way merge baseline detection previously used `git log --diff-filter=A`
  * which returns the commit that FIRST added the file. On repos that have been
- * through multiple GSD update cycles, this returns a stale, many-versions-old
+ * through multiple GTD update cycles, this returns a stale, many-versions-old
  * baseline — not the version immediately prior to the current update.
  *
  * Fix: Option A must prefer `pristine_hashes` from backup-meta.json to locate
@@ -17,7 +17,7 @@
  */
 
 // allow-test-rule: source-text-is-the-product
-// get-shit-done/workflows/update.md is the installed runtime workflow —
+// get-tasks-done/workflows/update.md is the installed runtime workflow —
 // its text IS the deployed behavioral contract.
 
 const { describe, test } = require('node:test');
@@ -27,7 +27,7 @@ const path = require('path');
 
 // #2790: reapply-patches.md (command with inline workflow) was deleted.
 // The --reapply functionality is now in update.md.
-const UPDATE_MD = path.join(__dirname, '..', 'commands', 'gsd', 'update.md');
+const UPDATE_MD = path.join(__dirname, '..', 'commands', 'gtd', 'update.md');
 
 /**
  * Parse a field from YAML frontmatter between --- markers.
@@ -46,7 +46,7 @@ function parseFrontmatterField(content, field) {
 
 describe('reapply-patches pristine baseline detection (#2424)', () => {
   test('reapply-patches.md command is deleted (absorbed into update.md --reapply, #2790)', () => {
-    const oldPath = path.join(__dirname, '..', 'commands', 'gsd', 'reapply-patches.md');
+    const oldPath = path.join(__dirname, '..', 'commands', 'gtd', 'reapply-patches.md');
     assert.ok(!fs.existsSync(oldPath), 'reapply-patches.md should be absent (absorbed into update.md --reapply)');
   });
 
@@ -61,14 +61,14 @@ describe('reapply-patches pristine baseline detection (#2424)', () => {
 
   test('update.md workflow references backup-meta.json for pristine-hash baseline', () => {
     // #2790: The behavioral contract (pristine_hashes from backup-meta.json as primary
-    // baseline source) is implemented in the update.md workflow (get-shit-done/workflows/update.md),
+    // baseline source) is implemented in the update.md workflow (get-tasks-done/workflows/update.md),
     // not the command file. The command delegates via --reapply flag.
     // Verify the underlying workflow has this content.
-    const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'update.md');
+    const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'update.md');
     const workflowContent = fs.readFileSync(workflowPath, 'utf-8');
     assert.ok(
       workflowContent.includes('backup-meta.json'),
-      'get-shit-done/workflows/update.md must reference backup-meta.json (pristine_hashes baseline source)'
+      'get-tasks-done/workflows/update.md must reference backup-meta.json (pristine_hashes baseline source)'
     );
   });
 

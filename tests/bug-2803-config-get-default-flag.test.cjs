@@ -1,11 +1,11 @@
 /**
  * Regression test for bug #2803
  *
- * `gsd-sdk query config-get <key> --default <value>` silently ignored the
+ * `gtd-sdk query config-get <key> --default <value>` silently ignored the
  * --default flag. When the key was missing, the SDK threw "Error: Key not found"
  * and exited 1, identical to calling it without --default.
  *
- * The CJS path (gsd-tools.cjs config-get <key> --default <value>) honored
+ * The CJS path (gtd-tools.cjs config-get <key> --default <value>) honored
  * --default correctly since #1893. The SDK handler was never ported.
  *
  * Fix: configGet in sdk/src/query/config-query.ts now strips --default <value>
@@ -27,7 +27,7 @@ const REPO_ROOT = path.join(__dirname, '..');
 const SDK_CLI = path.join(REPO_ROOT, 'sdk', 'dist', 'cli.js');
 
 /**
- * Invoke `gsd-sdk query config-get <...args>` against a project dir.
+ * Invoke `gtd-sdk query config-get <...args>` against a project dir.
  * Returns { exitCode, stdout, stderr }.
  */
 function runConfigGet(args, projectDir) {
@@ -39,7 +39,7 @@ function runConfigGet(args, projectDir) {
     stdout = execFileSync(process.execPath, [SDK_CLI, ...argv], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, GSD_SESSION_KEY: '' },
+      env: { ...process.env, GTD_SESSION_KEY: '' },
     });
   } catch (err) {
     exitCode = err.status ?? 1;
@@ -55,7 +55,7 @@ describe('bug-2803: config-get --default flag honored in SDK', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-test-2803-');
+    tmpDir = createTempProject('gtd-test-2803-');
   });
 
   afterEach(() => {

@@ -60,7 +60,7 @@ export class PlanningJournal {
       projectionVersion?: number;
     },
   ) {
-    this.path = join(options.projectDir, '.gsd', 'journal.jsonl');
+    this.path = join(options.projectDir, '.gtd', 'journal.jsonl');
   }
 
   async append(input: PlanningJournalAppendInput): Promise<PlanningEvent> {
@@ -101,7 +101,7 @@ export class PlanningJournal {
       requestHash,
     };
 
-    await mkdir(join(this.options.projectDir, '.gsd'), { recursive: true });
+    await mkdir(join(this.options.projectDir, '.gtd'), { recursive: true });
     await appendFile(this.path, `${JSON.stringify(event)}\n`, 'utf8');
     return event;
   }
@@ -121,7 +121,7 @@ export class PlanningJournal {
   }
 
   async compact(events: PlanningEvent[]): Promise<void> {
-    await mkdir(join(this.options.projectDir, '.gsd'), { recursive: true });
+    await mkdir(join(this.options.projectDir, '.gtd'), { recursive: true });
     const tmp = `${this.path}.tmp`;
     await writeFile(
       tmp,

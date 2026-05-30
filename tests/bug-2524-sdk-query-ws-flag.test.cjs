@@ -5,7 +5,7 @@
 // "Prohibited: Raw Text Matching on Test Outputs". Do not copy this pattern.
 
 /**
- * Bug #2524: gsd-sdk query --ws <name> silently ignores the workstream flag.
+ * Bug #2524: gtd-sdk query --ws <name> silently ignores the workstream flag.
  *
  * This file is structural/static coverage only (source-file assertions).
  * Runtime forwarding coverage for the query adapter path lives in:

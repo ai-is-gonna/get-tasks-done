@@ -1,7 +1,7 @@
 /**
  * Config reader — loads `.planning/config.json` and merges with defaults.
  *
- * Mirrors the default structure from `get-shit-done/bin/lib/config.cjs`
+ * Mirrors the default structure from `get-tasks-done/bin/lib/config.cjs`
  * `buildNewProjectConfig()`.
  */
 
@@ -28,7 +28,7 @@ export interface WorkflowConfig {
   plan_check: boolean;
   verifier: boolean;
   nyquist_validation: boolean;
-  /** Mirrors gsd-tools flat `config.tdd_mode` (from `workflow.tdd_mode`). */
+  /** Mirrors gtd-tools flat `config.tdd_mode` (from `workflow.tdd_mode`). */
   tdd_mode: boolean;
   /**
    * Issue #3309. `end-of-phase` (default) suppresses mid-flight
@@ -55,7 +55,7 @@ export interface WorkflowConfig {
   skip_discuss: boolean;
   /** Maximum self-discuss passes in auto/headless mode before forcing proceed. Default: 3. */
   max_discuss_passes: number;
-  /** Subagent timeout in ms (matches `get-shit-done/bin/lib/core.cjs` default 300000). */
+  /** Subagent timeout in ms (matches `get-tasks-done/bin/lib/core.cjs` default 300000). */
   subagent_timeout: number;
   /**
    * Issue #2492. When true (default), enforces that every trackable decision in
@@ -70,7 +70,7 @@ export interface HooksConfig {
   context_warnings: boolean;
 }
 
-export interface GSDConfig {
+export interface GTDConfig {
   model_profile: string;
   commit_docs: boolean;
   parallelization: boolean;
@@ -82,9 +82,9 @@ export interface GSDConfig {
   workflow: WorkflowConfig;
   hooks: HooksConfig;
   agent_skills: Record<string, unknown>;
-  /** Project slug for branch templates; mirrors gsd-tools `config.project_code`. */
+  /** Project slug for branch templates; mirrors gtd-tools `config.project_code`. */
   project_code?: string | null;
-  /** Interactive vs headless; mirrors gsd-tools flat `config.mode`. */
+  /** Interactive vs headless; mirrors gtd-tools flat `config.mode`. */
   mode?: string;
   [key: string]: unknown;
 }
@@ -93,11 +93,11 @@ export interface GSDConfig {
 
 /**
  * Canonical CONFIG_DEFAULTS delegated to the Configuration Module (ADR-3524).
- * Cast to GSDConfig to preserve typed access for existing consumers.
- * The canonical manifest may include additional keys beyond GSDConfig's
+ * Cast to GTDConfig to preserve typed access for existing consumers.
+ * The canonical manifest may include additional keys beyond GTDConfig's
  * declared fields (e.g. resolve_model_ids, context_window, planning.*,
- * ship.*, workflow.security_*, workflow.code_review_*); these are accessible
- * via the [key: string]: unknown index signature on GSDConfig.
+ * workflow.security_*, workflow.code_review_*); these are accessible
+ * via the [key: string]: unknown index signature on GTDConfig.
  *
  * BEHAVIOR CHANGE (Cycle 3, #3536): CONFIG_DEFAULTS now includes all keys from
  * sdk/shared/config-defaults.manifest.json. Keys added vs old inline literal:
@@ -105,7 +105,7 @@ export interface GSDConfig {
  *               phase_naming ('sequential'), claude_md_path ('./CLAUDE.md')
  *   git: create_tag (true), base_branch (null)
  *   workflow: ai_integration_phase (true), code_review (true),
- *             code_review_depth ('standard'), code_review_command (null),
+ *             code_review_depth ('standard'),
  *             pattern_mapper (true), plan_bounce (false), plan_bounce_script (null),
  *             plan_bounce_passes (2), auto_prune_state (false),
  *             post_planning_gaps (true), security_enforcement (true),
@@ -113,19 +113,18 @@ export interface GSDConfig {
  *             context_coverage_gate: true (unchanged from old literal)
  *   planning: { commit_docs: true, search_gitignored: false, sub_repos: [], granularity: 'standard' }
  *   hooks: workflow_guard (false)
- *   ship: { pr_body_sections: [] }
  */
-export const CONFIG_DEFAULTS: GSDConfig = CANONICAL_CONFIG_DEFAULTS as unknown as GSDConfig;
+export const CONFIG_DEFAULTS: GTDConfig = CANONICAL_CONFIG_DEFAULTS as unknown as GTDConfig;
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
 
 /**
  * Load project config from `.planning/config.json`, merging with defaults.
  * When project config is missing or empty, this returns `mergeDefaults({})`
- * (built-in defaults only; no `~/.gsd/defaults.json` layering).
+ * (built-in defaults only; no `~/.gtd/defaults.json` layering).
  * Throws on malformed JSON with a helpful error message.
  */
-export async function loadConfig(projectDir: string, workstream?: string): Promise<GSDConfig> {
+export async function loadConfig(projectDir: string, workstream?: string): Promise<GTDConfig> {
   const configPath = join(projectDir, relPlanningPath(workstream), 'config.json');
   const rootConfigPath = join(projectDir, '.planning', 'config.json');
 
@@ -173,7 +172,7 @@ export async function loadConfig(projectDir: string, workstream?: string): Promi
   }
 
   // Project config exists — user-level defaults are ignored (CJS parity).
-  // `buildNewProjectConfig` already baked them into config.json at /gsd-new-project.
+  // `buildNewProjectConfig` already baked them into config.json at /gtd-new-project.
   // Normalize legacy top-level keys (branching_strategy → git.branching_strategy, etc.)
   // before merging with defaults, matching the Configuration Module's loadConfig pipeline.
   const { parsed: normalized } = normalizeLegacyKeys(parsed);
@@ -197,6 +196,6 @@ export async function loadConfig(projectDir: string, workstream?: string): Promi
  * (via loadConfig); for the raw mergeDefaults path, legacy key handling is
  * delegated to the canonical module.
  */
-function mergeDefaults(parsed: Record<string, unknown>): GSDConfig {
-  return canonicalMergeDefaults(parsed) as unknown as GSDConfig;
+function mergeDefaults(parsed: Record<string, unknown>): GTDConfig {
+  return canonicalMergeDefaults(parsed) as unknown as GTDConfig;
 }

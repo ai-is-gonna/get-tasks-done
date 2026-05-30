@@ -4,10 +4,10 @@
  *
  * Repro:
  *   After `node bin/install.js --global --claude`, the installed
- *   `~/.claude/get-shit-done/bin/lib/model-catalog.cjs` tries:
+ *   `~/.claude/get-tasks-done/bin/lib/model-catalog.cjs` tries:
  *     require(path.join(__dirname, '..', '..', '..', 'sdk', 'shared', 'model-catalog.json'))
  *   which resolves to `~/.claude/sdk/shared/model-catalog.json`.
- *   The installer copies `get-shit-done/` but never copies `sdk/shared/`,
+ *   The installer copies `get-tasks-done/` but never copies `sdk/shared/`,
  *   so the require throws MODULE_NOT_FOUND.
  *
  * Fix contract:
@@ -15,15 +15,15 @@
  *      path first (bin/shared/model-catalog.json) before the legacy
  *      source-repo path.
  *   2. bin/install.js must copy sdk/shared/model-catalog.json into
- *      get-shit-done/bin/shared/model-catalog.json (co-located inside the
- *      get-shit-done/ payload).
+ *      get-tasks-done/bin/shared/model-catalog.json (co-located inside the
+ *      get-tasks-done/ payload).
  *
  * Both halves must be true for the install layout to work.
  */
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -32,7 +32,7 @@ const path = require('node:path');
 const os = require('node:os');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const MODEL_CATALOG_CJS = path.join(REPO_ROOT, 'get-shit-done', 'bin', 'lib', 'model-catalog.cjs');
+const MODEL_CATALOG_CJS = path.join(REPO_ROOT, 'get-tasks-done', 'bin', 'lib', 'model-catalog.cjs');
 const MODEL_CATALOG_JSON = path.join(REPO_ROOT, 'sdk', 'shared', 'model-catalog.json');
 
 const { install } = require('../bin/install.js');
@@ -71,7 +71,7 @@ function silenceConsole(fn) {
 // ─── test 1: fake-install layout reproduces MODULE_NOT_FOUND ────────────────
 //
 // Build a fake post-install layout that mirrors what the OLD install did:
-//   <tmp>/.claude/get-shit-done/bin/lib/model-catalog.cjs  (copy of real file)
+//   <tmp>/.claude/get-tasks-done/bin/lib/model-catalog.cjs  (copy of real file)
 //   <tmp>/.claude/sdk/shared/model-catalog.json            ABSENT
 //
 // Then attempt to require model-catalog.cjs from that layout.
@@ -85,21 +85,21 @@ describe('bug #3288: model-catalog.cjs install-layout resolution', () => {
   let savedExplicitConfigDir;
 
   beforeEach(() => {
-    tmpRoot = makeTmpDir('gsd-3288-');
+    tmpRoot = makeTmpDir('gtd-3288-');
     savedHome = process.env.HOME;
     // Stash and clear explicitConfigDir via env so install() picks up our tmp dir.
     // Must delete (not just save) so any CI-set value doesn't leak into install()
     // and target a different directory than tmpRoot (CR finding, PR #3293).
-    savedExplicitConfigDir = process.env.GSD_EXPLICIT_CONFIG_DIR;
-    delete process.env.GSD_EXPLICIT_CONFIG_DIR;
+    savedExplicitConfigDir = process.env.GTD_EXPLICIT_CONFIG_DIR;
+    delete process.env.GTD_EXPLICIT_CONFIG_DIR;
   });
 
   afterEach(() => {
     process.env.HOME = savedHome;
     if (savedExplicitConfigDir === undefined) {
-      delete process.env.GSD_EXPLICIT_CONFIG_DIR;
+      delete process.env.GTD_EXPLICIT_CONFIG_DIR;
     } else {
-      process.env.GSD_EXPLICIT_CONFIG_DIR = savedExplicitConfigDir;
+      process.env.GTD_EXPLICIT_CONFIG_DIR = savedExplicitConfigDir;
     }
     rmTmpDir(tmpRoot);
   });
@@ -107,10 +107,10 @@ describe('bug #3288: model-catalog.cjs install-layout resolution', () => {
   // ── test A ──────────────────────────────────────────────────────────────────
   test('OLD layout (3-level __dirname, no co-located json) fails to require', () => {
     // Build the old install layout manually:
-    //   <tmpRoot>/.claude/get-shit-done/bin/lib/model-catalog.cjs  (copy of the real CJS)
+    //   <tmpRoot>/.claude/get-tasks-done/bin/lib/model-catalog.cjs  (copy of the real CJS)
     //   sdk/shared/model-catalog.json                              ABSENT
-    const gsdLibDir = path.join(tmpRoot, '.claude', 'get-shit-done', 'bin', 'lib');
-    fs.mkdirSync(gsdLibDir, { recursive: true });
+    const gtdLibDir = path.join(tmpRoot, '.claude', 'get-tasks-done', 'bin', 'lib');
+    fs.mkdirSync(gtdLibDir, { recursive: true });
 
     // Write a minimal model-catalog.cjs that uses ONLY the 3-level path (the old/broken path).
     const oldCjsContent = `'use strict';
@@ -119,7 +119,7 @@ const path = require('node:path');
 const catalog = require(path.join(__dirname, '..', '..', '..', 'sdk', 'shared', 'model-catalog.json'));
 module.exports = { catalog };
 `;
-    const catalogCjsPath = path.join(gsdLibDir, 'model-catalog.cjs');
+    const catalogCjsPath = path.join(gtdLibDir, 'model-catalog.cjs');
     fs.writeFileSync(catalogCjsPath, oldCjsContent);
 
     // Deliberately do NOT create sdk/shared/model-catalog.json (simulates missing file post-install).
@@ -145,20 +145,20 @@ module.exports = { catalog };
   // ── test B ──────────────────────────────────────────────────────────────────
   test('NEW layout (co-located bin/shared/model-catalog.json) resolves correctly', () => {
     // Build the new install layout:
-    //   <tmpRoot>/.claude/get-shit-done/bin/lib/model-catalog.cjs (copy of real CJS)
-    //   <tmpRoot>/.claude/get-shit-done/bin/shared/model-catalog.json (co-located copy)
-    const gsdBinDir = path.join(tmpRoot, '.claude', 'get-shit-done', 'bin');
-    const gsdLibDir = path.join(gsdBinDir, 'lib');
-    const gsdSharedDir = path.join(gsdBinDir, 'shared');
-    fs.mkdirSync(gsdLibDir, { recursive: true });
-    fs.mkdirSync(gsdSharedDir, { recursive: true });
+    //   <tmpRoot>/.claude/get-tasks-done/bin/lib/model-catalog.cjs (copy of real CJS)
+    //   <tmpRoot>/.claude/get-tasks-done/bin/shared/model-catalog.json (co-located copy)
+    const gtdBinDir = path.join(tmpRoot, '.claude', 'get-tasks-done', 'bin');
+    const gtdLibDir = path.join(gtdBinDir, 'lib');
+    const gtdSharedDir = path.join(gtdBinDir, 'shared');
+    fs.mkdirSync(gtdLibDir, { recursive: true });
+    fs.mkdirSync(gtdSharedDir, { recursive: true });
 
     // Copy the real model-catalog.cjs into the fake install.
-    const catalogCjsPath = path.join(gsdLibDir, 'model-catalog.cjs');
+    const catalogCjsPath = path.join(gtdLibDir, 'model-catalog.cjs');
     fs.copyFileSync(MODEL_CATALOG_CJS, catalogCjsPath);
 
     // Copy the real model-catalog.json to the co-located path.
-    fs.copyFileSync(MODEL_CATALOG_JSON, path.join(gsdSharedDir, 'model-catalog.json'));
+    fs.copyFileSync(MODEL_CATALOG_JSON, path.join(gtdSharedDir, 'model-catalog.json'));
 
     // Require must succeed and expose catalog with expected shape.
     delete require.cache[catalogCjsPath];
@@ -204,7 +204,7 @@ module.exports = { catalog };
     // The co-located json must be present after install.
     const colocatedJson = path.join(
       claudeDir,
-      'get-shit-done',
+      'get-tasks-done',
       'bin',
       'shared',
       'model-catalog.json',
@@ -226,7 +226,7 @@ module.exports = { catalog };
     // And the installed model-catalog.cjs must be requireable from its install location.
     const installedCjs = path.join(
       claudeDir,
-      'get-shit-done',
+      'get-tasks-done',
       'bin',
       'lib',
       'model-catalog.cjs',

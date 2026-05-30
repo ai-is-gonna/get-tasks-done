@@ -4,11 +4,11 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('bug #3150: stats.json includes contiguous decimal phases when .10 exists', () => {
   test('stats json preserves 06.7/06.8/06.9 alongside 06.10', () => {
-    const tmpDir = createTempProject('gsd-bug-3150-');
+    const tmpDir = createTempProject('gtd-bug-3150-');
     try {
       fs.writeFileSync(
         path.join(tmpDir, '.planning', 'ROADMAP.md'),
@@ -23,7 +23,7 @@ describe('bug #3150: stats.json includes contiguous decimal phases when .10 exis
         fs.writeFileSync(path.join(phaseDir, 'SUMMARY.md'), '# summary\n');
       }
 
-      const result = runGsdTools('stats json', tmpDir);
+      const result = runGtdTools('stats json', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       let output;

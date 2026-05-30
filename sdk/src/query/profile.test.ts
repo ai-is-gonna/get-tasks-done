@@ -14,7 +14,7 @@ describe('writeProfile', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-profile-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-profile-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
   });
 
@@ -56,7 +56,7 @@ describe('generateDevPreferences', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-dev-preferences-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-dev-preferences-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
   });
 
@@ -84,7 +84,7 @@ describe('generateDevPreferences', () => {
     try {
       const result = await generateDevPreferences(['--analysis', analysisPath], tmpDir);
       const data = result.data as Record<string, unknown>;
-      const expectedPath = join(codexHome, 'skills', 'gsd-dev-preferences', 'SKILL.md');
+      const expectedPath = join(codexHome, 'skills', 'gtd-dev-preferences', 'SKILL.md');
       expect(data.command_path).toBe(expectedPath);
       const md = await readFile(expectedPath, 'utf-8');
       expect(md).toContain('Behavioral Directives');
@@ -118,7 +118,7 @@ describe('learningsCopy', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-learn-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-learn-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
   });
 

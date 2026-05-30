@@ -1,5 +1,5 @@
 /**
- * gsd-planner agent — MVP-mode branch contract
+ * gtd-planner agent — MVP-mode branch contract
  * Verifies the agent definition contains the MVP-mode planning section,
  * conditional reference loading, and Walking Skeleton handling.
  */
@@ -8,11 +8,11 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const AGENT = path.join(__dirname, '..', 'agents', 'gsd-planner.md');
-const REF_MVP = path.join(__dirname, '..', 'get-shit-done', 'references', 'planner-mvp-mode.md');
-const REF_SKEL = path.join(__dirname, '..', 'get-shit-done', 'references', 'skeleton-template.md');
+const AGENT = path.join(__dirname, '..', 'agents', 'gtd-planner.md');
+const REF_MVP = path.join(__dirname, '..', 'get-tasks-done', 'references', 'planner-mvp-mode.md');
+const REF_SKEL = path.join(__dirname, '..', 'get-tasks-done', 'references', 'skeleton-template.md');
 
-describe('gsd-planner — MVP-mode branch', () => {
+describe('gtd-planner — MVP-mode branch', () => {
   const content = fs.readFileSync(AGENT, 'utf-8');
 
   test('agent defines an MVP Mode Detection section', () => {

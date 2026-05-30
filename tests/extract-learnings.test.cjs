@@ -16,17 +16,17 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'extract-learnings.md');
-const WORKFLOW_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'extract-learnings.md');
+const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'extract-learnings.md');
+const WORKFLOW_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'extract-learnings.md');
 
 describe('extract-learnings command', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(COMMAND_PATH), 'commands/gsd/extract-learnings.md should exist');
+    assert.ok(fs.existsSync(COMMAND_PATH), 'commands/gtd/extract-learnings.md should exist');
   });
 
   test('command file has correct name frontmatter', () => {
     const content = fs.readFileSync(COMMAND_PATH, 'utf-8');
-    assert.ok(content.includes('name: gsd:extract-learnings'), 'Command must have name: gsd:extract-learnings');
+    assert.ok(content.includes('name: gtd:extract-learnings'), 'Command must have name: gtd:extract-learnings');
   });
 
   test('command file has description frontmatter', () => {

@@ -9,9 +9,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const { CLUSTERS, allClusteredSkills } = require('../get-shit-done/bin/lib/clusters.cjs');
+const { CLUSTERS, allClusteredSkills } = require('../get-tasks-done/bin/lib/clusters.cjs');
 
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 function realSkillStems() {
   const entries = fs.readdirSync(COMMANDS_DIR, { withFileTypes: true });
@@ -29,20 +29,20 @@ describe('CLUSTERS data structure', () => {
     }
   });
 
-  test('every cluster member is a real skill stem in commands/gsd/', () => {
+  test('every cluster member is a real skill stem in commands/gtd/', () => {
     const realStems = realSkillStems();
     const mismatches = [];
     for (const [cluster, members] of Object.entries(CLUSTERS)) {
       for (const stem of members) {
         if (!realStems.has(stem)) {
-          mismatches.push(`${cluster}: "${stem}" not found in commands/gsd/`);
+          mismatches.push(`${cluster}: "${stem}" not found in commands/gtd/`);
         }
       }
     }
     assert.deepStrictEqual(mismatches, [], `Cluster members missing from disk:\n${mismatches.join('\n')}`);
   });
 
-  test('union of all clusters covers every skill in commands/gsd/', () => {
+  test('union of all clusters covers every skill in commands/gtd/', () => {
     const realStems = realSkillStems();
     const clustered = allClusteredSkills();
     const uncategorized = [];
@@ -66,6 +66,7 @@ describe('CLUSTERS data structure', () => {
   test('cluster names match expected set from research memo §3.2', () => {
     const expectedClusterNames = new Set([
       'core_loop',
+      'issue_task_loop',
       'audit_review',
       'milestone',
       'research_ideate',

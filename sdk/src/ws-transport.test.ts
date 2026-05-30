@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { WebSocket } from 'ws';
 import { WSTransport } from './ws-transport.js';
-import { GSDEventType, type GSDEvent, type GSDEventBase } from './types.js';
+import { GTDEventType, type GTDEvent, type GTDEventBase } from './types.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeBase(overrides: Partial<GSDEventBase> = {}): Omit<GSDEventBase, 'type'> {
+function makeBase(overrides: Partial<GTDEventBase> = {}): Omit<GTDEventBase, 'type'> {
   return {
     timestamp: '2025-06-15T14:30:45.123Z',
     sessionId: 'test-session',
@@ -67,13 +67,13 @@ describe('WSTransport', () => {
     const address = (transport as any).server?.address();
     const client = await connectClient(address.port);
 
-    const event: GSDEvent = {
+    const event: GTDEvent = {
       ...makeBase(),
-      type: GSDEventType.SessionInit,
+      type: GTDEventType.SessionInit,
       model: 'claude-sonnet-4-20250514',
       tools: ['Read', 'Write'],
       cwd: '/tmp/test',
-    } as GSDEvent;
+    } as GTDEvent;
 
     const msgPromise = waitForMessage(client);
     transport.onEvent(event);
@@ -97,10 +97,10 @@ describe('WSTransport', () => {
     expect(() => {
       transport.onEvent({
         ...makeBase(),
-        type: GSDEventType.MilestoneStart,
+        type: GTDEventType.MilestoneStart,
         phaseCount: 2,
         prompt: 'test',
-      } as GSDEvent);
+      } as GTDEvent);
     }).not.toThrow();
   });
 
@@ -135,14 +135,14 @@ describe('WSTransport', () => {
     const client1 = await connectClient(address.port);
     const client2 = await connectClient(address.port);
 
-    const event: GSDEvent = {
+    const event: GTDEvent = {
       ...makeBase(),
-      type: GSDEventType.MilestoneComplete,
+      type: GTDEventType.MilestoneComplete,
       success: true,
       totalCostUsd: 5.0,
       totalDurationMs: 120000,
       phasesCompleted: 3,
-    } as GSDEvent;
+    } as GTDEvent;
 
     const msg1Promise = waitForMessage(client1);
     const msg2Promise = waitForMessage(client2);

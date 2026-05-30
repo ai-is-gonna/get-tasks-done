@@ -3,10 +3,10 @@
 
 // Regression guard for bug #3096.
 //
-// ai-integration-phase.md listed Steps 7+8 (gsd-ai-researcher +
-// gsd-domain-researcher) without an explicit sequential ordering constraint.
+// ai-integration-phase.md listed Steps 7+8 (gtd-ai-researcher +
+// gtd-domain-researcher) without an explicit sequential ordering constraint.
 // An orchestrator optimizing for speed could reasonably parallelize them
-// since the sections appeared disjoint. When parallelized, gsd-domain-researcher's
+// since the sections appeared disjoint. When parallelized, gtd-domain-researcher's
 // Write call at finalization replaced the whole AI-SPEC.md file with its
 // in-memory copy (pre-researcher state), silently overwriting Sections 3/4.
 //
@@ -24,7 +24,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const src = fs.readFileSync(
-  path.join(ROOT, 'get-shit-done', 'workflows', 'ai-integration-phase.md'),
+  path.join(ROOT, 'get-tasks-done', 'workflows', 'ai-integration-phase.md'),
   'utf8',
 );
 
@@ -36,10 +36,10 @@ describe('bug #3096: ai-integration-phase sequential ordering and Edit-only disc
     );
   });
 
-  test('Step 7 gsd-ai-researcher prompt includes Edit-only tool discipline', () => {
-    // The discipline block must appear before </objective> for gsd-ai-researcher
-    const step7Idx = src.indexOf('## 7. Spawn gsd-ai-researcher');
-    const step8Idx = src.indexOf('## 8. Spawn gsd-domain-researcher');
+  test('Step 7 gtd-ai-researcher prompt includes Edit-only tool discipline', () => {
+    // The discipline block must appear before </objective> for gtd-ai-researcher
+    const step7Idx = src.indexOf('## 7. Spawn gtd-ai-researcher');
+    const step8Idx = src.indexOf('## 8. Spawn gtd-domain-researcher');
     assert.ok(step7Idx !== -1, 'Step 7 not found');
     assert.ok(step8Idx !== -1, 'Step 8 not found');
     const step7Block = src.slice(step7Idx, step8Idx);
@@ -49,9 +49,9 @@ describe('bug #3096: ai-integration-phase sequential ordering and Edit-only disc
     );
   });
 
-  test('Step 8 gsd-domain-researcher prompt includes Edit-only tool discipline', () => {
-    const step8Idx = src.indexOf('## 8. Spawn gsd-domain-researcher');
-    const step9Idx = src.indexOf('## 9. Spawn gsd-eval-planner');
+  test('Step 8 gtd-domain-researcher prompt includes Edit-only tool discipline', () => {
+    const step8Idx = src.indexOf('## 8. Spawn gtd-domain-researcher');
+    const step9Idx = src.indexOf('## 9. Spawn gtd-eval-planner');
     assert.ok(step8Idx !== -1, 'Step 8 not found');
     assert.ok(step9Idx !== -1, 'Step 9 not found');
     const step8Block = src.slice(step8Idx, step9Idx);
@@ -62,8 +62,8 @@ describe('bug #3096: ai-integration-phase sequential ordering and Edit-only disc
   });
 
   test('Step 8 references the wait instruction', () => {
-    const step8Idx = src.indexOf('## 8. Spawn gsd-domain-researcher');
-    const step9Idx = src.indexOf('## 9. Spawn gsd-eval-planner');
+    const step8Idx = src.indexOf('## 8. Spawn gtd-domain-researcher');
+    const step9Idx = src.indexOf('## 9. Spawn gtd-eval-planner');
     const step8Block = src.slice(step8Idx, step9Idx);
     assert.ok(
       step8Block.includes('Wait') || step8Block.includes('wait') || step8Block.includes('complete'),

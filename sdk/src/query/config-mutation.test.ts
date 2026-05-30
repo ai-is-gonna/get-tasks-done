@@ -9,14 +9,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, writeFile, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 
 // ─── Test setup ─────────────────────────────────────────────────────────────
 
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-cfgmut-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-cfgmut-'));
   await mkdir(join(tmpDir, '.planning'), { recursive: true });
 });
 
@@ -43,7 +43,7 @@ describe('isValidConfigKey', () => {
 
   it('accepts wildcard agent_skills.* patterns', async () => {
     const { isValidConfigKey } = await import('./config-mutation.js');
-    expect(isValidConfigKey('agent_skills.gsd-planner').valid).toBe(true);
+    expect(isValidConfigKey('agent_skills.gtd-planner').valid).toBe(true);
     expect(isValidConfigKey('agent_skills.custom_agent').valid).toBe(true);
   });
 
@@ -105,7 +105,7 @@ describe('isValidConfigKey', () => {
   it('#2653 — accepts sample dynamic keys from every DYNAMIC_KEY_PATTERN', async () => {
     const { isValidConfigKey } = await import('./config-mutation.js');
     const samples = [
-      'agent_skills.gsd-planner',
+      'agent_skills.gtd-planner',
       'review.models.claude',
       'features.some_feature',
       'claude_md_assembly.blocks.intro',
@@ -252,8 +252,8 @@ describe('configNewProject nested globalDefaults merging (fix #2673)', () => {
   let originalHome: string | undefined;
 
   beforeEach(async () => {
-    fakeHome = await mkdtemp(join(tmpdir(), 'gsd-fakehome-'));
-    await mkdir(join(fakeHome, '.gsd'), { recursive: true });
+    fakeHome = await mkdtemp(join(tmpdir(), 'gtd-fakehome-'));
+    await mkdir(join(fakeHome, '.gtd'), { recursive: true });
     originalHome = process.env.HOME;
     process.env.HOME = fakeHome;
   });
@@ -269,7 +269,7 @@ describe('configNewProject nested globalDefaults merging (fix #2673)', () => {
 
   it('preserves nested workflow keys from globalDefaults', async () => {
     await writeFile(
-      join(fakeHome, '.gsd', 'defaults.json'),
+      join(fakeHome, '.gtd', 'defaults.json'),
       JSON.stringify({
         workflow: { auto_advance: true, discuss_mode: 'skip' },
         git: { branching_strategy: 'milestone' },
@@ -289,12 +289,12 @@ describe('configNewProject nested globalDefaults merging (fix #2673)', () => {
     // Nested git key from globalDefaults must survive
     expect(raw.git.branching_strategy).toBe('milestone');
     // Hardcoded git defaults not overridden must still be present
-    expect(raw.git.phase_branch_template).toBe('gsd/phase-{phase}-{slug}');
+    expect(raw.git.phase_branch_template).toBe('gtd/phase-{phase}-{slug}');
   });
 
   it('lets userChoices override globalDefaults nested keys', async () => {
     await writeFile(
-      join(fakeHome, '.gsd', 'defaults.json'),
+      join(fakeHome, '.gtd', 'defaults.json'),
       JSON.stringify({
         workflow: { auto_advance: true },
       }),
@@ -312,7 +312,7 @@ describe('configNewProject nested globalDefaults merging (fix #2673)', () => {
 
   it('preserves nested hooks, agent_skills, and features keys from globalDefaults', async () => {
     await writeFile(
-      join(fakeHome, '.gsd', 'defaults.json'),
+      join(fakeHome, '.gtd', 'defaults.json'),
       JSON.stringify({
         hooks: { context_warnings: false },
         agent_skills: { my_skill: true },
@@ -370,13 +370,13 @@ describe('configSet', () => {
     expect(raw.workflow.research).toBe(true);
   });
 
-  it('rejects invalid key with GSDError', async () => {
+  it('rejects invalid key with GTDError', async () => {
     const { configSet } = await import('./config-mutation.js');
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({}),
     );
-    await expect(configSet(['totally_bogus_key', 'value'], tmpDir)).rejects.toThrow(GSDError);
+    await expect(configSet(['totally_bogus_key', 'value'], tmpDir)).rejects.toThrow(GTDError);
   });
 
   it('coerces values through parseConfigValue', async () => {
@@ -390,42 +390,6 @@ describe('configSet', () => {
     expect(raw.commit_docs).toBe(true);
   });
 
-  it('validates ship.pr_body_sections arrays (#3167)', async () => {
-    const { configSet } = await import('./config-mutation.js');
-    await writeFile(
-      join(tmpDir, '.planning', 'config.json'),
-      JSON.stringify({}),
-    );
-
-    const sections = JSON.stringify([
-      {
-        heading: 'Risks & Rollback',
-        enabled: true,
-        source: 'PLAN.md ## Risks || PLAN.md ## Rollback',
-        fallback: '- Rollback: revert this PR.',
-      },
-      {
-        heading: 'Stakeholder Sign-off',
-        enabled: false,
-        template: '- Product owner: {phase_name}',
-      },
-    ]);
-    const result = await configSet(['ship.pr_body_sections', sections], tmpDir);
-    expect((result.data as { updated: boolean }).updated).toBe(true);
-
-    const raw = JSON.parse(await readFile(join(tmpDir, '.planning', 'config.json'), 'utf-8'));
-    expect(raw.ship.pr_body_sections).toHaveLength(2);
-    expect(raw.ship.pr_body_sections[1].enabled).toBe(false);
-
-    await expect(configSet(
-      ['ship.pr_body_sections', JSON.stringify([{ heading: 'Bad', enabled: 'yes', fallback: '- item' }])],
-      tmpDir,
-    )).rejects.toThrow(/enabled/);
-    await expect(configSet(
-      ['ship.pr_body_sections', JSON.stringify([{ heading: 'Bad', template: '- {unknown}' }])],
-      tmpDir,
-    )).rejects.toThrow(/Unsupported template token/);
-  });
 });
 
 // ─── configSetModelProfile ─────────────────────────────────────────────────
@@ -445,13 +409,13 @@ describe('configSetModelProfile', () => {
     expect(raw.model_profile).toBe('quality');
   });
 
-  it('rejects invalid profile with GSDError', async () => {
+  it('rejects invalid profile with GTDError', async () => {
     const { configSetModelProfile } = await import('./config-mutation.js');
     await writeFile(
       join(tmpDir, '.planning', 'config.json'),
       JSON.stringify({}),
     );
-    await expect(configSetModelProfile(['invalid_profile'], tmpDir)).rejects.toThrow(GSDError);
+    await expect(configSetModelProfile(['invalid_profile'], tmpDir)).rejects.toThrow(GTDError);
   });
 
   it('normalizes profile name to lowercase', async () => {
@@ -468,6 +432,32 @@ describe('configSetModelProfile', () => {
 // ─── configNewProject ──────────────────────────────────────────────────────
 
 describe('configNewProject', () => {
+  let fakeHome: string;
+  let originalHome: string | undefined;
+  let originalGtdHome: string | undefined;
+
+  beforeEach(async () => {
+    fakeHome = await mkdtemp(join(tmpdir(), 'gtd-cfgmut-home-'));
+    originalHome = process.env.HOME;
+    originalGtdHome = process.env.GTD_HOME;
+    process.env.HOME = fakeHome;
+    delete process.env.GTD_HOME;
+  });
+
+  afterEach(async () => {
+    if (originalHome !== undefined) {
+      process.env.HOME = originalHome;
+    } else {
+      delete process.env.HOME;
+    }
+    if (originalGtdHome !== undefined) {
+      process.env.GTD_HOME = originalGtdHome;
+    } else {
+      delete process.env.GTD_HOME;
+    }
+    await rm(fakeHome, { recursive: true, force: true });
+  });
+
   it('creates config.json with defaults', async () => {
     const { configNewProject } = await import('./config-mutation.js');
     const result = await configNewProject([], tmpDir);
@@ -487,22 +477,6 @@ describe('configNewProject', () => {
     const raw = JSON.parse(await readFile(join(tmpDir, '.planning', 'config.json'), 'utf-8'));
     expect(raw.model_profile).toBe('quality');
     expect(raw.commit_docs).toBe(true);
-  });
-
-  it('validates ship.pr_body_sections choices before writing config', async () => {
-    const { configNewProject } = await import('./config-mutation.js');
-    const choices = JSON.stringify({
-      ship: {
-        pr_body_sections: [
-          {
-            heading: 'Invalid source',
-            source: 'package.json ## Scripts',
-          },
-        ],
-      },
-    });
-
-    await expect(configNewProject([choices], tmpDir)).rejects.toThrow(GSDError);
   });
 
   it('does not overwrite existing config', async () => {

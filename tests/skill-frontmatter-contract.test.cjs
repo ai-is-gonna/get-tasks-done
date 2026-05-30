@@ -1,5 +1,5 @@
 // allow-test-rule: source-text-is-the-product
-// The commands/gsd/*.md and get-shit-done/workflows/*.md files are the
+// The commands/gtd/*.md and get-tasks-done/workflows/*.md files are the
 // installed agent stubs — their frontmatter and workflow body IS the
 // deployed contract. These assertions check structural fields (argument-hint,
 // description, early-exit prose) that govern runtime routing.
@@ -43,12 +43,12 @@ function exists(rel) {
   return fs.existsSync(path.join(ROOT, rel));
 }
 
-// ─── #3042: --research-phase flag wired into /gsd-plan-phase ────────────────
+// ─── #3042: --research-phase flag wired into /gtd-plan-phase ────────────────
 // (Moved from bug-3042-3044-research-flag-and-stale-refs.test.cjs)
 
-describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the standalone research command', () => {
-  test('commands/gsd/plan-phase.md argument-hint advertises --research-phase', () => {
-    const content = read('commands/gsd/plan-phase.md');
+describe('skill frontmatter: /gtd-plan-phase --research-phase flag absorbs the standalone research command', () => {
+  test('commands/gtd/plan-phase.md argument-hint advertises --research-phase', () => {
+    const content = read('commands/gtd/plan-phase.md');
     // Frontmatter argument-hint is the structural place users discover
     // the flag. Parse the line that starts with "argument-hint:" and
     // assert the flag token is present.
@@ -61,7 +61,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('plan-phase.md frontmatter description still advertises plan capability (no semantics drift)', () => {
-    const content = read('commands/gsd/plan-phase.md');
+    const content = read('commands/gtd/plan-phase.md');
     const m = content.match(/^description:\s*(.+)$/m);
     assert.ok(m, 'plan-phase.md must have a description field');
     // The description should still describe planning — the flag is
@@ -73,7 +73,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('workflows/plan-phase.md parses --research-phase and sets a research-only mode', () => {
-    const content = read('get-shit-done/workflows/plan-phase.md');
+    const content = read('get-tasks-done/workflows/plan-phase.md');
     // The arg-parsing section of the workflow must mention the new flag
     // by name. This is the structural seam the LLM follows.
     // Anchored to the argument/flags section to avoid false positives from prose.
@@ -87,7 +87,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('workflows/plan-phase.md skips planner/verifier when in research-only mode', () => {
-    const content = read('get-shit-done/workflows/plan-phase.md');
+    const content = read('get-tasks-done/workflows/plan-phase.md');
     // Look for explicit early-exit prose so the LLM knows to stop after
     // research. We accept any of: "research-only", "research only mode",
     // "skip if --research-phase", "RESEARCH_ONLY", "exit after research".
@@ -107,14 +107,14 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
 
   test('orphaned workflows/research-phase.md is removed', () => {
     assert.equal(
-      exists('get-shit-done/workflows/research-phase.md'),
+      exists('get-tasks-done/workflows/research-phase.md'),
       false,
-      'workflows/research-phase.md must be removed; the capability now lives on /gsd-plan-phase --research-phase'
+      'workflows/research-phase.md must be removed; the capability now lives on /gtd-plan-phase --research-phase'
     );
   });
 
   test('argument-hint advertises --view as a research-only modifier', () => {
-    const content = read('commands/gsd/plan-phase.md');
+    const content = read('commands/gtd/plan-phase.md');
     const m = content.match(/^argument-hint:\s*"([^"]+)"/m);
     assert.ok(m, 'plan-phase.md must declare an argument-hint frontmatter field');
     assert.ok(
@@ -124,7 +124,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('workflow handles --view by printing existing RESEARCH.md without spawning', () => {
-    const content = read('get-shit-done/workflows/plan-phase.md');
+    const content = read('get-tasks-done/workflows/plan-phase.md');
     // The workflow must reference the --view flag as a no-spawn mode
     // for research-only invocations. We accept any of: "view-only",
     // "VIEW_ONLY", "skip if --view", "no spawn" alongside --view.
@@ -148,7 +148,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('workflow uses --research as the force-refresh signal in research-only mode', () => {
-    const content = read('get-shit-done/workflows/plan-phase.md');
+    const content = read('get-tasks-done/workflows/plan-phase.md');
     // The plan-phase workflow already had a --research flag with
     // "force re-research" semantics. In research-only mode, that flag
     // must short-circuit the "RESEARCH.md exists, what do you want to
@@ -173,7 +173,7 @@ describe('skill frontmatter: /gsd-plan-phase --research-phase flag absorbs the s
   });
 
   test('workflow has an existing-RESEARCH.md prompt path (update/view/skip) within proximity', () => {
-    const content = read('get-shit-done/workflows/plan-phase.md');
+    const content = read('get-tasks-done/workflows/plan-phase.md');
     // CR #3045 finding: the previous version of this test asserted
     // `update`, `view`, `skip` appeared anywhere in the file, which was
     // tautological — those words occur all over the workflow for

@@ -1,5 +1,5 @@
 /**
- * Tests for the isNewer() semver comparison function used in gsd-check-update.js.
+ * Tests for the isNewer() semver comparison function used in gtd-check-update.js.
  *
  * WHY DUPLICATED: isNewer() lives inside a template literal string passed to
  * spawn(process.execPath, ['-e', `...`]) — it runs in a detached child process
@@ -15,7 +15,7 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 
-// Mirror of isNewer() from hooks/gsd-check-update.js (inside spawn template)
+// Mirror of isNewer() from hooks/gtd-check-update.js (inside spawn template)
 function isNewer(a, b) {
   const pa = (a || '').split('.').map(s => Number(s.replace(/-.*/, '')) || 0);
   const pb = (b || '').split('.').map(s => Number(s.replace(/-.*/, '')) || 0);

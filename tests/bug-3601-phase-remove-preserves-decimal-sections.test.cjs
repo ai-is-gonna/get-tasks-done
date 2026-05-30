@@ -4,7 +4,7 @@
  * peer-level header at the same depth as the integer being removed.
  *
  * Root cause: the section-removal regex in
- * `get-shit-done/bin/lib/phase.cjs:updateRoadmapAfterPhaseRemoval` used a
+ * `get-tasks-done/bin/lib/phase.cjs:updateRoadmapAfterPhaseRemoval` used a
  * depth-blind lookahead (`(?=\n#{2,4}\s+Phase\s+\d+\s*:|$)`) that required
  * the next header's digits to be followed by `\s*:`. `### Phase 2.1:`
  * (depth 3, decimal) did not satisfy `\d+\s*:` because of the `.1`, so
@@ -25,13 +25,13 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeRoadmap(tmpDir, body) {
   fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), body);
@@ -46,7 +46,7 @@ function ensurePhaseDir(tmpDir, name) {
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', name), { recursive: true });
 }
 function getPhase(tmpDir, phaseNum) {
-  const r = runGsdTools(['roadmap', 'get-phase', phaseNum, '--json'], tmpDir);
+  const r = runGtdTools(['roadmap', 'get-phase', phaseNum, '--json'], tmpDir);
   if (!r.success) return { found: false, error: r.error };
   return JSON.parse(r.output);
 }
@@ -84,7 +84,7 @@ describe('bug #3601: phase remove preserves peer-depth decimal sections', () => 
     ensurePhaseDir(tmpDir, '02.1-follow-up');
     ensurePhaseDir(tmpDir, '03-trailing');
 
-    const r = runGsdTools(['phase', 'remove', '2'], tmpDir);
+    const r = runGtdTools(['phase', 'remove', '2'], tmpDir);
     assert.ok(r.success, `phase remove failed: ${r.error || r.output}`);
 
     // The peer-depth decimal (Phase 2.1) must still be queryable — its
@@ -141,7 +141,7 @@ describe('bug #3601: phase remove preserves peer-depth decimal sections', () => 
     ensurePhaseDir(tmpDir, '05.2-second-child');
     ensurePhaseDir(tmpDir, '06-tail');
 
-    const r = runGsdTools(['phase', 'remove', '5'], tmpDir);
+    const r = runGtdTools(['phase', 'remove', '5'], tmpDir);
     assert.ok(r.success);
 
     const decimalA = getPhase(tmpDir, '5.1');

@@ -7,7 +7,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const ROADMAP_BEFORE = `# Roadmap
 
@@ -39,14 +39,14 @@ describe('mvp-phase — ROADMAP mutation result', () => {
 
   test('after spec mutation, roadmap.get-phase reports mode=mvp', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_AFTER_MVP);
-    const result = runGsdTools('roadmap get-phase 1 --pick mode', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1 --pick mode', tmpDir);
     assert.ok(result.success);
     assert.strictEqual(result.output.trim(), 'mvp');
   });
 
   test('after spec mutation, roadmap.get-phase reports the full user story as goal', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_AFTER_MVP);
-    const result = runGsdTools('roadmap get-phase 1 --pick goal', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1 --pick goal', tmpDir);
     assert.ok(result.success);
     assert.strictEqual(
       result.output.trim(),
@@ -56,8 +56,8 @@ describe('mvp-phase — ROADMAP mutation result', () => {
 
   test('before mutation, mode is null and goal is the original short text', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), ROADMAP_BEFORE);
-    const modeResult = runGsdTools('roadmap get-phase 1 --pick mode', tmpDir);
-    const goalResult = runGsdTools('roadmap get-phase 1 --pick goal', tmpDir);
+    const modeResult = runGtdTools('roadmap get-phase 1 --pick mode', tmpDir);
+    const goalResult = runGtdTools('roadmap get-phase 1 --pick goal', tmpDir);
     assert.ok(modeResult.success && goalResult.success);
     // mode field absent → empty/null per Phase 1 parser contract
     assert.ok(modeResult.output.trim() === '' || modeResult.output.trim() === 'null');
@@ -74,7 +74,7 @@ describe('mvp-phase — ROADMAP mutation result', () => {
       longStory
     );
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), variant);
-    const result = runGsdTools('roadmap get-phase 1 --pick goal', tmpDir);
+    const result = runGtdTools('roadmap get-phase 1 --pick goal', tmpDir);
     assert.ok(result.success);
     assert.strictEqual(result.output.trim(), longStory);
   });

@@ -1,9 +1,9 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
- * Bug #2962: --sdk install flag on Windows leaves gsd-sdk un-shimmed.
+ * Bug #2962: --sdk install flag on Windows leaves gtd-sdk un-shimmed.
  *
  * Tests are split into two layers, each at the right level of abstraction:
  *
@@ -12,7 +12,7 @@ process.env.GSD_TEST_MODE = '1';
  *      No filesystem, no spawn, no text reads. This is the level where
  *      structural correctness lives.
  *
- *   2. trySelfLinkGsdSdkWindows — fs/spawn driver that calls the IR builder
+ *   2. trySelfLinkGtdSdkWindows — fs/spawn driver that calls the IR builder
  *      and writes the rendered shims to disk. Tests assert FILESYSTEM FACTS
  *      (file exists, file is non-empty, file mtime advanced after replace,
  *      function return value). No reads, no parsing, no substring matching.
@@ -35,14 +35,14 @@ const installModule = require(path.join(ROOT, 'bin', 'install.js'));
 
 describe('Bug #2962: buildWindowsShimTriple — pure IR builder', () => {
   test('resolves shimSrc to an absolute path on the invocation.target field', () => {
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
     const triple = installModule.buildWindowsShimTriple(shimSrc);
     assert.equal(triple.invocation.target, path.resolve(shimSrc));
     assert.equal(triple.invocation.interpreter, 'node');
   });
 
   test('produces a structured IR with the documented shape', () => {
-    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gsd-sdk.js'));
+    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gtd-sdk.js'));
     // Lock the public IR shape — adding/removing a key requires updating this assertion.
     assert.deepEqual(Object.keys(triple).sort(), ['eol', 'fileNames', 'invocation', 'render']);
     assert.deepEqual(Object.keys(triple.invocation).sort(), ['interpreter', 'target']);
@@ -52,20 +52,20 @@ describe('Bug #2962: buildWindowsShimTriple — pure IR builder', () => {
   });
 
   test('declares CRLF line endings on the .cmd file, LF on .ps1 and bash wrapper', () => {
-    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gsd-sdk.js'));
+    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gtd-sdk.js'));
     assert.deepEqual(triple.eol, { cmd: '\r\n', ps1: '\n', sh: '\n' });
   });
 
   test('declares the standard npm-style filenames for the shim triple', () => {
-    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gsd-sdk.js'));
-    assert.deepEqual(triple.fileNames, { cmd: 'gsd-sdk.cmd', ps1: 'gsd-sdk.ps1', sh: 'gsd-sdk' });
+    const triple = installModule.buildWindowsShimTriple(path.join(ROOT, 'bin', 'gtd-sdk.js'));
+    assert.deepEqual(triple.fileNames, { cmd: 'gtd-sdk.cmd', ps1: 'gtd-sdk.ps1', sh: 'gtd-sdk' });
   });
 
   test('IR is purely a function of shimSrc — no fs / spawn side effects', () => {
     // If buildWindowsShimTriple touched the filesystem, calling it twice with
     // different shimSrc paths would leave two different artifacts. Asserting
     // pure-function behavior structurally: same input → identical IR.
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
     const a = installModule.buildWindowsShimTriple(shimSrc);
     const b = installModule.buildWindowsShimTriple(shimSrc);
     assert.deepEqual(a.invocation, b.invocation);
@@ -74,12 +74,12 @@ describe('Bug #2962: buildWindowsShimTriple — pure IR builder', () => {
   });
 });
 
-describe('Bug #2962: trySelfLinkGsdSdkWindows — fs/spawn driver', () => {
+describe('Bug #2962: trySelfLinkGtdSdkWindows — fs/spawn driver', () => {
   let tmpDir;
   let origExecSync;
 
   before(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2962-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2962-'));
     origExecSync = cp.execSync;
     cp.execSync = (cmd) => {
       if (typeof cmd === 'string' && cmd.trim() === 'npm prefix -g') {
@@ -95,9 +95,9 @@ describe('Bug #2962: trySelfLinkGsdSdkWindows — fs/spawn driver', () => {
   });
 
   test('returns the .cmd path on success and writes all three shim files', () => {
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
     const triple = installModule.buildWindowsShimTriple(shimSrc);
-    const result = installModule.trySelfLinkGsdSdkWindows(shimSrc);
+    const result = installModule.trySelfLinkGtdSdkWindows(shimSrc);
 
     assert.equal(result, path.join(tmpDir, triple.fileNames.cmd));
     for (const fileName of Object.values(triple.fileNames)) {
@@ -112,9 +112,9 @@ describe('Bug #2962: trySelfLinkGsdSdkWindows — fs/spawn driver', () => {
     // Asserts the writer writes exactly what the renderer produces — no mutation,
     // no double-write, no truncation. We compare BYTE LENGTHS, not contents:
     // length is a structural property; content equality would re-introduce text matching.
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
     const triple = installModule.buildWindowsShimTriple(shimSrc);
-    installModule.trySelfLinkGsdSdkWindows(shimSrc);
+    installModule.trySelfLinkGtdSdkWindows(shimSrc);
     for (const kind of ['cmd', 'ps1', 'sh']) {
       const target = path.join(tmpDir, triple.fileNames[kind]);
       const expected = Buffer.byteLength(triple.render[kind](), 'utf8');
@@ -123,16 +123,16 @@ describe('Bug #2962: trySelfLinkGsdSdkWindows — fs/spawn driver', () => {
   });
 
   test('replaces stale shims atomically (mtime advances on rewrite)', () => {
-    const shimSrc = path.join(ROOT, 'bin', 'gsd-sdk.js');
-    installModule.trySelfLinkGsdSdkWindows(shimSrc);
-    const cmdPath = path.join(tmpDir, 'gsd-sdk.cmd');
+    const shimSrc = path.join(ROOT, 'bin', 'gtd-sdk.js');
+    installModule.trySelfLinkGtdSdkWindows(shimSrc);
+    const cmdPath = path.join(tmpDir, 'gtd-sdk.cmd');
     const beforeMtime = fs.statSync(cmdPath).mtimeMs;
 
     // Wait at least 10ms so mtime granularity (1ms on most fs, 1s on some) records the change.
     const wait = Date.now() + 20;
     while (Date.now() < wait) { /* busy-wait, intentional */ }
 
-    installModule.trySelfLinkGsdSdkWindows(shimSrc);
+    installModule.trySelfLinkGtdSdkWindows(shimSrc);
     const afterMtime = fs.statSync(cmdPath).mtimeMs;
     assert.ok(afterMtime > beforeMtime, `mtime must advance: before=${beforeMtime} after=${afterMtime}`);
   });
@@ -141,7 +141,7 @@ describe('Bug #2962: trySelfLinkGsdSdkWindows — fs/spawn driver', () => {
     const restore = cp.execSync;
     cp.execSync = () => { throw new Error('npm not on PATH'); };
     try {
-      const result = installModule.trySelfLinkGsdSdkWindows(path.join(ROOT, 'bin', 'gsd-sdk.js'));
+      const result = installModule.trySelfLinkGtdSdkWindows(path.join(ROOT, 'bin', 'gtd-sdk.js'));
       assert.equal(result, null);
     } finally {
       cp.execSync = restore;

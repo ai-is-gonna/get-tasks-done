@@ -144,7 +144,7 @@ describe('extractFrontmatter', () => {
 // ─── extractFrontmatterLeading ─────────────────────────────────────────────
 
 describe('extractFrontmatterLeading', () => {
-  it('parses only the first leading block (gsd-tools.cjs / frontmatter.cjs parity)', () => {
+  it('parses only the first leading block (gtd-tools.cjs / frontmatter.cjs parity)', () => {
     const content = '---\nfirst: 1\n---\n---\nsecond: 2\n---\nbody';
     expect(extractFrontmatterLeading(content)).toEqual({ first: '1' });
   });
@@ -185,7 +185,7 @@ describe('frontmatterGet', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-fm-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-fm-'));
   });
 
   afterEach(async () => {
@@ -209,9 +209,9 @@ describe('frontmatterGet', () => {
     expect(result.data).toEqual({ error: 'File not found', path: 'missing.md' });
   });
 
-  it('throws GSDError for null bytes in path', async () => {
-    const { GSDError } = await import('../errors.js');
-    await expect(frontmatterGet(['bad\0path.md'], tmpDir)).rejects.toThrow(GSDError);
+  it('throws GTDError for null bytes in path', async () => {
+    const { GTDError } = await import('../errors.js');
+    await expect(frontmatterGet(['bad\0path.md'], tmpDir)).rejects.toThrow(GTDError);
   });
 });
 

@@ -39,7 +39,7 @@ const { spawnSync } = require('node:child_process');
 const { createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
 const TEST_ENV_BASE = {
-  GSD_SESSION_KEY: '',
+  GTD_SESSION_KEY: '',
   CODEX_THREAD_ID: '',
   CLAUDE_SESSION_ID: '',
   CLAUDE_CODE_SSE_PORT: '',
@@ -56,7 +56,7 @@ const TEST_ENV_BASE = {
 };
 
 /**
- * Run gsd-tools and return { stdout, stderr, status }.
+ * Run gtd-tools and return { stdout, stderr, status }.
  * Always captures stderr even when exit code is 0.
  */
 function runWithStderr(args, cwd, env = {}) {
@@ -83,7 +83,7 @@ describe('bug-3523 — no warning for legacy top-level branching_strategy', () =
   });
 
   test('loadConfig emits no stderr when config.json has top-level branching_strategy', () => {
-    tmpDir = createTempProject('gsd-3523-warn-');
+    tmpDir = createTempProject('gtd-3523-warn-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -105,7 +105,7 @@ describe('bug-3523 — no warning for legacy top-level branching_strategy', () =
   });
 
   test('branching_strategy value is still surfaced after loadConfig on legacy shape', () => {
-    tmpDir = createTempProject('gsd-3523-value-');
+    tmpDir = createTempProject('gtd-3523-value-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -160,13 +160,13 @@ describe('bug-3523 — double-emission reduced to single-emission', () => {
     // fixed) to verify the deduplication guard works for other keys too.
     // We verify that the count of warning lines for a single unknown key is
     // exactly once — not zero and not two — even if loadConfig is invoked twice internally.
-    tmpDir = createTempProject('gsd-3523-dedup-');
+    tmpDir = createTempProject('gtd-3523-dedup-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
       JSON.stringify({
         // intentionally_unknown_key_for_dedup_test: a key that can never be valid
-        __gsd3523_dedup_sentinel__: true,
+        __gtd3523_dedup_sentinel__: true,
       }, null, 2),
       'utf-8'
     );
@@ -176,7 +176,7 @@ describe('bug-3523 — double-emission reduced to single-emission', () => {
     // Count how many times the sentinel key appears in warnings
     const warningLines = result.stderr
       .split('\n')
-      .filter(l => l.includes('__gsd3523_dedup_sentinel__'));
+      .filter(l => l.includes('__gtd3523_dedup_sentinel__'));
 
     assert.equal(
       warningLines.length,
@@ -198,7 +198,7 @@ describe('bug-3523 — option 3 on-disk migration of branching_strategy', () => 
   });
 
   test('after loadConfig, on-disk config.json has branching_strategy under git.*', () => {
-    tmpDir = createTempProject('gsd-3523-writeback-');
+    tmpDir = createTempProject('gtd-3523-writeback-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -229,7 +229,7 @@ describe('bug-3523 — option 3 on-disk migration of branching_strategy', () => 
   test('migration does not clobber existing git.branching_strategy', () => {
     // If git.branching_strategy is already set, the top-level value should
     // not overwrite it (nested wins, matching SDK mergeDefaults precedence).
-    tmpDir = createTempProject('gsd-3523-no-clobber-');
+    tmpDir = createTempProject('gtd-3523-no-clobber-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -261,7 +261,7 @@ describe('bug-3523 — option 3 on-disk migration of branching_strategy', () => 
   });
 
   test('workstream load also self-heals legacy root branching_strategy', () => {
-    tmpDir = createTempProject('gsd-3523-workstream-root-');
+    tmpDir = createTempProject('gtd-3523-workstream-root-');
     const rootConfigPath = path.join(tmpDir, '.planning', 'config.json');
     const workstreamDir = path.join(tmpDir, '.planning', 'workstreams', 'alpha');
     fs.mkdirSync(workstreamDir, { recursive: true });
@@ -280,7 +280,7 @@ describe('bug-3523 — option 3 on-disk migration of branching_strategy', () => 
     );
 
     const triggerResult = runWithStderr(['resolve-model', 'planner'], tmpDir, {
-      GSD_WORKSTREAM: 'alpha',
+      GTD_WORKSTREAM: 'alpha',
     });
 
     assert.equal(
@@ -341,7 +341,7 @@ describe('bug-3523 — CJS↔SDK contract: both agree on legacy branching_strate
   });
 
   test('CJS loadConfig surfaces branching_strategy matching SDK mergeDefaults behavior', () => {
-    tmpDir = createTempProject('gsd-3523-parity-');
+    tmpDir = createTempProject('gtd-3523-parity-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     // The fixture that the SDK's mergeDefaults handles correctly (PR #3116).
     fs.writeFileSync(

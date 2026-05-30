@@ -18,7 +18,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -28,16 +28,16 @@ const os = require('node:os');
 
 const {
   resolveModelInternal,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../get-tasks-done/bin/lib/core.cjs');
 const {
   AGENT_TO_PHASE_TYPE,
   VALID_PHASE_TYPES,
   MODEL_PROFILES,
-} = require('../get-shit-done/bin/lib/model-profiles.cjs');
-const { isValidConfigKey } = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/model-profiles.cjs');
+const { isValidConfigKey } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 function makeTmp(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `gsd-3023-${prefix}-`));
+  return fs.mkdtempSync(path.join(os.tmpdir(), `gtd-3023-${prefix}-`));
 }
 
 function writeConfig(projectDir, config) {
@@ -98,27 +98,27 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'balanced',
       models: { research: 'haiku' },
     });
-    // gsd-phase-researcher is a research agent — should pick up 'haiku'
+    // gtd-phase-researcher is a research agent — should pick up 'haiku'
     // from the phase-type slot, not 'sonnet' from the balanced profile.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'haiku');
-    // gsd-codebase-mapper is also research → haiku
-    assert.equal(resolveModelInternal(projectDir, 'gsd-codebase-mapper'), 'haiku');
-    // gsd-planner is planning, no models.planning set → falls through to
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'haiku');
+    // gtd-codebase-mapper is also research → haiku
+    assert.equal(resolveModelInternal(projectDir, 'gtd-codebase-mapper'), 'haiku');
+    // gtd-planner is planning, no models.planning set → falls through to
     // profile (balanced → opus per MODEL_PROFILES).
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'opus');
   });
 
   test('per-agent override beats phase-type (acceptance criterion b)', () => {
     writeConfig(projectDir, {
       model_profile: 'balanced',
       models: { research: 'haiku' },
-      model_overrides: { 'gsd-phase-researcher': 'opus' },
+      model_overrides: { 'gtd-phase-researcher': 'opus' },
     });
     // The targeted per-agent override wins for that one agent.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'opus');
     // Other research agents still pick up the phase-type tier.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-codebase-mapper'), 'haiku');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-research-synthesizer'), 'haiku');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-codebase-mapper'), 'haiku');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-research-synthesizer'), 'haiku');
   });
 
   test('phase-type beats profile (acceptance criterion c)', () => {
@@ -128,10 +128,10 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'quality',
       models: { research: 'haiku' },
     });
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'haiku');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-codebase-mapper'), 'haiku');
-    // gsd-planner is planning, no slot set, profile=quality → opus.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'haiku');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-codebase-mapper'), 'haiku');
+    // gtd-planner is planning, no slot set, profile=quality → opus.
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'opus');
   });
 
   test('issue example: opus for planning/discuss/execution, sonnet for research/verification/completion', () => {
@@ -147,13 +147,13 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       },
     });
     // Planning agents → opus
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'opus');
     // Execution agents → opus
-    assert.equal(resolveModelInternal(projectDir, 'gsd-executor'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-task-executor'), 'opus');
     // Research agents → sonnet
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'sonnet');
     // Verification agents → sonnet
-    assert.equal(resolveModelInternal(projectDir, 'gsd-verifier'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-verifier'), 'sonnet');
   });
 
   test('phase-type "inherit" is honored (preserves existing inherit semantics)', () => {
@@ -161,7 +161,7 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'balanced',
       models: { research: 'inherit' },
     });
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'inherit');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'inherit');
   });
 
   test('empty models block is a no-op (acceptance criterion: backward compat)', () => {
@@ -170,16 +170,16 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       models: {},
     });
     // Behavior must match no-models config (balanced profile).
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'sonnet');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'opus');
   });
 
   test('no models block at all is a no-op (acceptance criterion: backward compat)', () => {
     writeConfig(projectDir, {
       model_profile: 'balanced',
     });
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'sonnet');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'opus');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'opus');
   });
 
   test('unrecognized tier value falls through to profile (typo safety) — CR follow-up', () => {
@@ -193,9 +193,9 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       models: { research: 'haiku3' }, // typo; not a valid tier alias
     });
     // Falls back to balanced → sonnet for research agents.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'sonnet');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-codebase-mapper'), 'haiku',
-      'gsd-codebase-mapper at balanced is haiku per profile, unaffected by typo');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-codebase-mapper'), 'haiku',
+      'gtd-codebase-mapper at balanced is haiku per profile, unaffected by typo');
   });
 
   test('full model ID in models.<phase_type> is rejected; falls through to profile — CR follow-up', () => {
@@ -206,7 +206,7 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'balanced',
       models: { research: 'openai/gpt-5' },
     });
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'sonnet');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'sonnet');
   });
 
   // ─── CR Major: phase-type beats inherit profile ─────────────────────────
@@ -220,8 +220,8 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'inherit',
       models: { execution: 'opus' },
     });
-    // gsd-executor (execution) must get the phase-type opus, not inherit.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-executor'), 'opus');
+    // gtd-task-executor (execution) must get the phase-type opus, not inherit.
+    assert.equal(resolveModelInternal(projectDir, 'gtd-task-executor'), 'opus');
   });
 
   test('phase-type "haiku" wins over profile=inherit; agents without a slot still inherit', () => {
@@ -230,18 +230,18 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       models: { research: 'haiku' },
     });
     // research agents → haiku (phase-type wins)
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'haiku');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-codebase-mapper'), 'haiku');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'haiku');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-codebase-mapper'), 'haiku');
     // planning agent has no slot set → falls through to profile=inherit.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-planner'), 'inherit');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-planner'), 'inherit');
   });
 
   test('profile=inherit with no models block still returns inherit (no regression)', () => {
     writeConfig(projectDir, {
       model_profile: 'inherit',
     });
-    assert.equal(resolveModelInternal(projectDir, 'gsd-executor'), 'inherit');
-    assert.equal(resolveModelInternal(projectDir, 'gsd-phase-researcher'), 'inherit');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-task-executor'), 'inherit');
+    assert.equal(resolveModelInternal(projectDir, 'gtd-phase-researcher'), 'inherit');
   });
 
   test('profile=inherit with models block but agent has no slot → inherit', () => {
@@ -249,14 +249,14 @@ describe('#3023 resolver: models.<phase_type> overrides profile-based tier', () 
       model_profile: 'inherit',
       models: { research: 'haiku' },
     });
-    // gsd-executor (execution slot) is not set → falls through to inherit.
-    assert.equal(resolveModelInternal(projectDir, 'gsd-executor'), 'inherit');
+    // gtd-task-executor (execution slot) is not set → falls through to inherit.
+    assert.equal(resolveModelInternal(projectDir, 'gtd-task-executor'), 'inherit');
   });
 });
 
 // ─── #3030 CR Major outside-diff: reasoning_effort honors phase-type ───────
 
-const { resolveReasoningEffortInternal } = require('../get-shit-done/bin/lib/core.cjs');
+const { resolveReasoningEffortInternal } = require('../get-tasks-done/bin/lib/core.cjs');
 
 describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tier (Codex)', () => {
   let projectDir;
@@ -269,7 +269,7 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
 
   test('phase-type override flips both model AND reasoning_effort to the same tier (Codex)', () => {
     // The CR Major bug: previously the model was resolved from the
-    // phase-type tier (opus → gpt-5.4) but reasoning_effort still came
+    // phase-type tier (opus → gpt-5.5) but reasoning_effort still came
     // from the profile-derived sonnet tier (medium) — leading to a
     // mismatched (model, effort) pair on Codex spawn.
     writeConfig(projectDir, {
@@ -277,10 +277,10 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
       model_profile: 'balanced',
       models: { execution: 'opus' },
     });
-    // gsd-executor's profile tier under balanced is sonnet, so without
-    // the phase-type lookup mirror, model would resolve to opus (xhigh)
+    // gtd-task-executor's profile tier under balanced is sonnet, so without
+    // the phase-type lookup mirror, model would resolve to opus (high)
     // but effort to medium. Both must derive from the same tier source.
-    const effort = resolveReasoningEffortInternal(projectDir, 'gsd-executor');
+    const effort = resolveReasoningEffortInternal(projectDir, 'gtd-task-executor');
     // The exact effort value depends on the runtime tier map's opus row;
     // the test guards the relationship: it must NOT be the sonnet/medium
     // value when the phase-type forced opus.
@@ -293,7 +293,7 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
         writeConfig(sonnetDir, {
           runtime: 'codex', model_profile: 'balanced',
         });
-        return resolveReasoningEffortInternal(sonnetDir, 'gsd-executor');
+        return resolveReasoningEffortInternal(sonnetDir, 'gtd-task-executor');
       } finally {
         rmr(sonnetDir);
       }
@@ -304,7 +304,7 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
         writeConfig(opusDir, {
           runtime: 'codex', model_profile: 'quality',  // quality → executor=opus
         });
-        return resolveReasoningEffortInternal(opusDir, 'gsd-executor');
+        return resolveReasoningEffortInternal(opusDir, 'gtd-task-executor');
       } finally {
         rmr(opusDir);
       }
@@ -327,7 +327,7 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
       models: { execution: 'inherit' },
     });
     // 'inherit' has no runtime-tier entry, so the resolver returns null.
-    const effort = resolveReasoningEffortInternal(projectDir, 'gsd-executor');
+    const effort = resolveReasoningEffortInternal(projectDir, 'gtd-task-executor');
     assert.equal(effort, null);
   });
 
@@ -336,11 +336,11 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
       runtime: 'codex',
       model_profile: 'balanced',
       models: { execution: 'opus' },
-      model_overrides: { 'gsd-executor': 'openai/gpt-5' },
+      model_overrides: { 'gtd-task-executor': 'openai/gpt-5' },
     });
     // model_overrides[agent] short-circuits resolveReasoningEffortInternal
     // (the user supplied a fully-qualified ID; effort must be set per-agent).
-    assert.equal(resolveReasoningEffortInternal(projectDir, 'gsd-executor'), null);
+    assert.equal(resolveReasoningEffortInternal(projectDir, 'gtd-task-executor'), null);
   });
 
   test('claude runtime ignores models.* for reasoning_effort (returns null)', () => {
@@ -349,7 +349,7 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
       model_profile: 'balanced',
       models: { execution: 'opus' },
     });
-    assert.equal(resolveReasoningEffortInternal(projectDir, 'gsd-executor'), null);
+    assert.equal(resolveReasoningEffortInternal(projectDir, 'gtd-task-executor'), null);
   });
 
   test('phase-type override wins over profile=inherit for effort (CR Major #3030)', () => {
@@ -360,19 +360,19 @@ describe('#3023 + #3030 CR: resolveReasoningEffortInternal honors phase-type tie
       model_profile: 'inherit',
       models: { execution: 'opus' },
     });
-    // Compute the expected effort by reading what gsd-executor would
+    // Compute the expected effort by reading what gtd-task-executor would
     // get under a profile-only opus config — the phase-type override
     // must produce the SAME result.
     const expected = (() => {
       const dir = makeTmp('effort-opus2');
       try {
         writeConfig(dir, { runtime: 'codex', model_profile: 'quality' });
-        return resolveReasoningEffortInternal(dir, 'gsd-executor');
+        return resolveReasoningEffortInternal(dir, 'gtd-task-executor');
       } finally {
         rmr(dir);
       }
     })();
-    const actual = resolveReasoningEffortInternal(projectDir, 'gsd-executor');
+    const actual = resolveReasoningEffortInternal(projectDir, 'gtd-task-executor');
     assert.equal(actual, expected,
       `phase-type override over profile=inherit must produce the opus-tier effort; got ${actual}, expected ${expected}`);
     assert.notEqual(actual, null,
@@ -397,7 +397,7 @@ describe('#3023 config-schema: models.<phase_type> validation', () => {
   test('unknown phase-type is rejected (acceptance criterion d)', () => {
     assert.equal(isValidConfigKey('models.deployment'), false,
       'unknown phase-type must NOT be accepted');
-    assert.equal(isValidConfigKey('models.gsd-planner'), false,
+    assert.equal(isValidConfigKey('models.gtd-planner'), false,
       'agent name in models.* must NOT be accepted (use model_overrides for agents)');
   });
 

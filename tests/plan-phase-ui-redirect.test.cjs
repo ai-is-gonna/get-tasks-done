@@ -14,7 +14,7 @@ describe('plan-phase UI-SPEC missing behavior', () => {
   const workflowPath = path.join(
     __dirname,
     '..',
-    'get-shit-done',
+    'get-tasks-done',
     'workflows',
     'plan-phase.md'
   );
@@ -23,9 +23,9 @@ describe('plan-phase UI-SPEC missing behavior', () => {
     assert.ok(fs.existsSync(workflowPath), `Expected workflow file at ${workflowPath}`);
   });
 
-  test('does NOT contain hard-blocking exit redirect to /gsd-ui-phase', () => {
+  test('does NOT contain hard-blocking exit redirect to /gtd-ui-phase', () => {
     const text = fs.readFileSync(workflowPath, 'utf8');
-    // The hard redirect pattern: AskUserQuestion option exits with "Run /gsd-ui-phase... Exit workflow."
+    // The hard redirect pattern: AskUserQuestion option exits with "Run /gtd-ui-phase... Exit workflow."
     // This is the pattern from line ~503 in the original file
     const hardExitPattern = /Generate UI-SPEC first.*Exit workflow/s;
     assert.ok(
@@ -47,10 +47,10 @@ describe('plan-phase UI-SPEC missing behavior', () => {
     const text = fs.readFileSync(workflowPath, 'utf8');
     const hasRecommendationPattern =
       text.includes('Recommended next step') &&
-      text.includes('gsd-ui-phase');
+      text.includes('gtd-ui-phase');
     assert.ok(
       hasRecommendationPattern,
-      'plan-phase.md must include a "Recommended next step" recommendation for /gsd-ui-phase when UI-SPEC.md is missing'
+      'plan-phase.md must include a "Recommended next step" recommendation for /gtd-ui-phase when UI-SPEC.md is missing'
     );
   });
 });

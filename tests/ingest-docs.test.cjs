@@ -5,7 +5,7 @@
 /**
  * Ingest Docs Tests — ingest-docs.test.cjs
  *
- * Structural assertions for /gsd-ingest-docs (#2387). Agents and workflows
+ * Structural assertions for /gtd-ingest-docs (#2387). Agents and workflows
  * are prompt-based; these tests guard the contract (files exist, frontmatter
  * present, required references wired up, safety semantics preserved).
  */
@@ -14,29 +14,29 @@ const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
 
 const ROOT = path.join(__dirname, '..');
-const CMD_PATH = path.join(ROOT, 'commands', 'gsd', 'ingest-docs.md');
-const WF_PATH = path.join(ROOT, 'get-shit-done', 'workflows', 'ingest-docs.md');
-const CLASSIFIER_PATH = path.join(ROOT, 'agents', 'gsd-doc-classifier.md');
-const SYNTHESIZER_PATH = path.join(ROOT, 'agents', 'gsd-doc-synthesizer.md');
-const CONFLICT_ENGINE_PATH = path.join(ROOT, 'get-shit-done', 'references', 'doc-conflict-engine.md');
+const CMD_PATH = path.join(ROOT, 'commands', 'gtd', 'ingest-docs.md');
+const WF_PATH = path.join(ROOT, 'get-tasks-done', 'workflows', 'ingest-docs.md');
+const CLASSIFIER_PATH = path.join(ROOT, 'agents', 'gtd-doc-classifier.md');
+const SYNTHESIZER_PATH = path.join(ROOT, 'agents', 'gtd-doc-synthesizer.md');
+const CONFLICT_ENGINE_PATH = path.join(ROOT, 'get-tasks-done', 'references', 'doc-conflict-engine.md');
 
 // ─── File Existence ────────────────────────────────────────────────────────────
 
 describe('ingest-docs file structure (#2387)', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(CMD_PATH), 'commands/gsd/ingest-docs.md should exist');
+    assert.ok(fs.existsSync(CMD_PATH), 'commands/gtd/ingest-docs.md should exist');
   });
   test('workflow file exists', () => {
-    assert.ok(fs.existsSync(WF_PATH), 'get-shit-done/workflows/ingest-docs.md should exist');
+    assert.ok(fs.existsSync(WF_PATH), 'get-tasks-done/workflows/ingest-docs.md should exist');
   });
   test('classifier agent exists', () => {
-    assert.ok(fs.existsSync(CLASSIFIER_PATH), 'agents/gsd-doc-classifier.md should exist');
+    assert.ok(fs.existsSync(CLASSIFIER_PATH), 'agents/gtd-doc-classifier.md should exist');
   });
   test('synthesizer agent exists', () => {
-    assert.ok(fs.existsSync(SYNTHESIZER_PATH), 'agents/gsd-doc-synthesizer.md should exist');
+    assert.ok(fs.existsSync(SYNTHESIZER_PATH), 'agents/gtd-doc-synthesizer.md should exist');
   });
   test('shared conflict-engine reference exists', () => {
     assert.ok(fs.existsSync(CONFLICT_ENGINE_PATH), 'references/doc-conflict-engine.md should exist');
@@ -49,7 +49,7 @@ describe('ingest-docs command frontmatter', () => {
   const content = fs.readFileSync(CMD_PATH, 'utf-8');
 
   test('has name field', () => {
-    assert.match(content, /^name:\s*gsd:ingest-docs$/m);
+    assert.match(content, /^name:\s*gtd:ingest-docs$/m);
   });
   test('has description field', () => {
     assert.match(content, /^description:\s*.+$/m);
@@ -77,19 +77,19 @@ describe('ingest-docs command references', () => {
 
   test('references the ingest-docs workflow', () => {
     assert.ok(
-      content.includes('@~/.claude/get-shit-done/workflows/ingest-docs.md'),
+      content.includes('@~/.claude/get-tasks-done/workflows/ingest-docs.md'),
       'command must @-reference its workflow'
     );
   });
   test('references the doc-conflict-engine', () => {
     assert.ok(
-      content.includes('@~/.claude/get-shit-done/references/doc-conflict-engine.md'),
+      content.includes('@~/.claude/get-tasks-done/references/doc-conflict-engine.md'),
       'command must load the shared conflict-engine contract'
     );
   });
   test('references gate-prompts', () => {
     assert.ok(
-      content.includes('@~/.claude/get-shit-done/references/gate-prompts.md'),
+      content.includes('@~/.claude/get-tasks-done/references/gate-prompts.md'),
       'command must load gate-prompts for AskUserQuestion patterns'
     );
   });
@@ -138,14 +138,14 @@ describe('ingest-docs workflow content', () => {
     assert.ok(content.includes('spec'), 'workflow must match SPEC/RFC directory convention');
   });
 
-  test('spawns gsd-doc-classifier and gsd-doc-synthesizer', () => {
+  test('spawns gtd-doc-classifier and gtd-doc-synthesizer', () => {
     assert.ok(
-      content.includes('gsd-doc-classifier'),
-      'workflow must spawn gsd-doc-classifier'
+      content.includes('gtd-doc-classifier'),
+      'workflow must spawn gtd-doc-classifier'
     );
     assert.ok(
-      content.includes('gsd-doc-synthesizer'),
-      'workflow must spawn gsd-doc-synthesizer'
+      content.includes('gtd-doc-synthesizer'),
+      'workflow must spawn gtd-doc-synthesizer'
     );
   });
 
@@ -168,10 +168,10 @@ describe('ingest-docs workflow content', () => {
     );
   });
 
-  test('routes to gsd-roadmapper in new mode', () => {
+  test('routes to gtd-roadmapper in new mode', () => {
     assert.ok(
-      content.includes('gsd-roadmapper'),
-      'new mode must delegate to gsd-roadmapper'
+      content.includes('gtd-roadmapper'),
+      'new mode must delegate to gtd-roadmapper'
     );
   });
 
@@ -193,7 +193,7 @@ describe('ingest-docs workflow content', () => {
 
 // ─── Classifier Agent ───────────────────────────────────────────────────────────
 
-describe('gsd-doc-classifier agent', () => {
+describe('gtd-doc-classifier agent', () => {
   const content = fs.readFileSync(CLASSIFIER_PATH, 'utf-8');
 
   test('has Read and Write tools', () => {
@@ -221,7 +221,7 @@ describe('gsd-doc-classifier agent', () => {
 
 // ─── Synthesizer Agent ──────────────────────────────────────────────────────────
 
-describe('gsd-doc-synthesizer agent', () => {
+describe('gtd-doc-synthesizer agent', () => {
   const content = fs.readFileSync(SYNTHESIZER_PATH, 'utf-8');
 
   test('has Read/Write/Bash tools', () => {
@@ -291,13 +291,13 @@ describe('doc-conflict-engine shared reference', () => {
 // ─── Import command still consumes the shared reference (#2387 refactor) ───────
 
 describe('import command adopts shared conflict-engine', () => {
-  const cmdContent = fs.readFileSync(path.join(ROOT, 'commands', 'gsd', 'import.md'), 'utf-8');
-  const wfContent = fs.readFileSync(path.join(ROOT, 'get-shit-done', 'workflows', 'import.md'), 'utf-8');
+  const cmdContent = fs.readFileSync(path.join(ROOT, 'commands', 'gtd', 'import.md'), 'utf-8');
+  const wfContent = fs.readFileSync(path.join(ROOT, 'get-tasks-done', 'workflows', 'import.md'), 'utf-8');
 
   test('import command loads doc-conflict-engine reference', () => {
     assert.ok(
-      cmdContent.includes('@~/.claude/get-shit-done/references/doc-conflict-engine.md'),
-      '/gsd-import must load the shared conflict-engine contract'
+      cmdContent.includes('@~/.claude/get-tasks-done/references/doc-conflict-engine.md'),
+      '/gtd-import must load the shared conflict-engine contract'
     );
   });
   test('import workflow cites the shared reference', () => {

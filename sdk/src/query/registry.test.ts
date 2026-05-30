@@ -81,7 +81,7 @@ describe('QueryRegistry', () => {
     expect(result).toEqual({ data: { value: 'arg1' } });
   });
 
-  it('dispatch throws GSDError for unregistered command', async () => {
+  it('dispatch throws GTDError for unregistered command', async () => {
     const registry = new QueryRegistry();
     // Bridge removed in v3.0 — unknown commands throw, not fallback
     await expect(registry.dispatch('unknown-cmd', ['arg1'], '/tmp/project'))
@@ -180,12 +180,12 @@ describe('resolveQueryArgv', () => {
   });
 
   // Regression: #2597 — dotted command token followed by positional args.
-  // Before the fix, argv like ['init.execute-phase', '1'] returned null because
+  // Before the fix, argv like ['init.plan-phase', '1'] returned null because
   // expansion only ran for single-token input.
   it('matches a dotted command token when positional args follow (#2597)', () => {
     const registry = createRegistry();
-    expect(resolveQueryArgv(['init.execute-phase', '1'], registry)).toEqual({
-      cmd: 'init.execute-phase',
+    expect(resolveQueryArgv(['init.plan-phase', '1'], registry)).toEqual({
+      cmd: 'init.plan-phase',
       args: ['1'],
     });
   });

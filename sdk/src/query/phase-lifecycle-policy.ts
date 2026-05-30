@@ -1,4 +1,4 @@
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { escapeRegex } from './helpers.js';
 
 export interface PhaseDirectoryComputation {
@@ -14,20 +14,20 @@ export interface NextDecimalPhaseResult {
 /** Reject strings containing null bytes (path traversal defense). */
 export function assertNoNullBytes(value: string, label: string): void {
   if (value.includes('\0')) {
-    throw new GSDError(`${label} contains null byte`, ErrorClassification.Validation);
+    throw new GTDError(`${label} contains null byte`, ErrorClassification.Validation);
   }
 }
 
 /** Reject `..` or path separators in phase directory names. */
 export function assertSafePhaseDirName(dirName: string, label = 'phase directory'): void {
   if (/[/\\]|\.\./.test(dirName)) {
-    throw new GSDError(`${label} contains invalid path segments`, ErrorClassification.Validation);
+    throw new GTDError(`${label} contains invalid path segments`, ErrorClassification.Validation);
   }
 }
 
 export function assertSafeProjectCode(code: string): void {
   if (code && /[/\\]|\.\./.test(code)) {
-    throw new GSDError('project_code contains invalid characters', ErrorClassification.Validation);
+    throw new GTDError('project_code contains invalid characters', ErrorClassification.Validation);
   }
 }
 
@@ -108,7 +108,7 @@ export function computePhaseDirectory(
   if (customId || namingMode === 'custom') {
     const phaseId = customId || descriptionSlug.toUpperCase().replace(/-/g, '_');
     if (!phaseId) {
-      throw new GSDError('--id required when phase_naming is "custom"', ErrorClassification.Validation);
+      throw new GTDError('--id required when phase_naming is "custom"', ErrorClassification.Validation);
     }
     assertSafePhaseDirName(String(phaseId), 'custom phase id');
     const dirName = `${prefix}${phaseId}-${descriptionSlug}`;
@@ -132,7 +132,7 @@ export function buildPhaseRoadmapEntry(
   const dependsOn = namingMode === 'custom' || prevPhase === null || prevPhase < 1
     ? ''
     : `\n**Depends on:** Phase ${prevPhase}`;
-  return `\n### Phase ${phaseId}: ${description}\n\n**Goal:** [To be planned]\n**Requirements**: TBD${dependsOn}\n**Plans:** 0 plans\n\nPlans:\n- [ ] TBD (run /gsd-plan-phase ${phaseId} to break down)\n`;
+  return `\n### Phase ${phaseId}: ${description}\n\n**Goal:** [To be planned]\n**Requirements**: TBD${dependsOn}\n**Plans:** 0 plans\n\nPlans:\n- [ ] TBD (run /gtd-plan-phase ${phaseId} to break down)\n`;
 }
 
 export function collectDecimalSuffixesFromDirNames(basePhase: string, dirNames: string[]): Set<number> {

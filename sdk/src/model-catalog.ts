@@ -14,6 +14,7 @@ interface AgentCatalogEntry {
   budget: 'opus' | 'sonnet' | 'haiku';
   phaseType: string;
   routingTier: 'light' | 'standard' | 'heavy';
+  runtimeDefaults?: Record<string, RuntimeTierEntry>;
 }
 
 interface ModelCatalog {
@@ -46,6 +47,12 @@ export const AGENT_TO_PHASE_TYPE: Record<string, string> = Object.fromEntries(
 
 export const AGENT_DEFAULT_TIERS: Record<string, string> = Object.fromEntries(
   Object.entries(catalog.agents).map(([agent, meta]) => [agent, meta.routingTier])
+);
+
+export const AGENT_RUNTIME_DEFAULTS: Record<string, Record<string, RuntimeTierEntry>> = Object.fromEntries(
+  Object.entries(catalog.agents)
+    .filter(([, meta]) => meta.runtimeDefaults && typeof meta.runtimeDefaults === 'object')
+    .map(([agent, meta]) => [agent, meta.runtimeDefaults as Record<string, RuntimeTierEntry>])
 );
 
 export function getAgentToModelMapForProfile(normalizedProfile: string): Record<string, string> {

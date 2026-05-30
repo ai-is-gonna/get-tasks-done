@@ -9,7 +9,7 @@
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('review.models.<cli> config key', () => {
   let tmpDir;
@@ -17,7 +17,7 @@ describe('review.models.<cli> config key', () => {
   beforeEach(() => {
     tmpDir = createTempProject();
     // Ensure config exists for set/get
-    runGsdTools('config-ensure-section', tmpDir, { HOME: tmpDir, USERPROFILE: tmpDir });
+    runGtdTools('config-ensure-section', tmpDir, { HOME: tmpDir, USERPROFILE: tmpDir });
   });
 
   afterEach(() => {
@@ -27,7 +27,7 @@ describe('review.models.<cli> config key', () => {
   test('isValidConfigKey accepts review.models.gemini', () => {
     // Exercised via config-set, which calls isValidConfigKey internally and
     // errors out if the key is not valid.
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.models.gemini', 'gemini-3.1-pro-preview'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -36,7 +36,7 @@ describe('review.models.<cli> config key', () => {
   });
 
   test('isValidConfigKey accepts review.models.codex', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.models.codex', 'gpt-5-codex'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -45,7 +45,7 @@ describe('review.models.<cli> config key', () => {
   });
 
   test('isValidConfigKey accepts review.models.claude (#2688)', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.models.claude', 'claude-opus-4-6'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -54,14 +54,14 @@ describe('review.models.<cli> config key', () => {
   });
 
   test('round-trip: review.models.claude config-set then config-get (#2688)', () => {
-    const setResult = runGsdTools(
+    const setResult = runGtdTools(
       ['config-set', 'review.models.claude', 'claude-opus-4-6'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
     );
     assert.ok(setResult.success, `config-set failed: ${setResult.error}`);
 
-    const getResult = runGsdTools(
+    const getResult = runGtdTools(
       ['config-get', 'review.models.claude', '--raw'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -77,7 +77,7 @@ describe('review.models.<cli> config key', () => {
   test('review.model is rejected and suggests review.models.<cli-name>', () => {
     // The suggestion path goes through validateKnownConfigKeyPath, which is
     // called before isValidConfigKey in cmdConfigSet.
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.model', 'gemini-3.1-pro-preview'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -90,14 +90,14 @@ describe('review.models.<cli> config key', () => {
   });
 
   test('round-trip: config-set then config-get for a model ID', () => {
-    const setResult = runGsdTools(
+    const setResult = runGtdTools(
       ['config-set', 'review.models.gemini', 'gemini-3.1-pro-preview'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
     );
     assert.ok(setResult.success, `config-set failed: ${setResult.error}`);
 
-    const getResult = runGsdTools(
+    const getResult = runGtdTools(
       ['config-get', 'review.models.gemini', '--raw'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -115,14 +115,14 @@ describe('review.models.<cli> config key', () => {
     // cmdConfigSet does not parse 'null' as JSON null — it stores the literal
     // string 'null'. config-get --raw returns the string 'null', and the
     // workflow's `[ "$VAR" != "null" ]` guard handles this.
-    const setResult = runGsdTools(
+    const setResult = runGtdTools(
       ['config-set', 'review.models.gemini', 'null'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
     );
     assert.ok(setResult.success, `config-set null failed: ${setResult.error}`);
 
-    const getResult = runGsdTools(
+    const getResult = runGtdTools(
       ['config-get', 'review.models.gemini', '--raw'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }

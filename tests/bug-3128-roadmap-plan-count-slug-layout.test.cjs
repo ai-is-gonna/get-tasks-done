@@ -5,7 +5,7 @@
 //
 // roadmap.cjs countPhasePlansAndSummaries() used to filter plan files with:
 //   f.endsWith('-PLAN.md') || f === 'PLAN.md'
-// This misses the {N}-PLAN-{NN}-{slug}.md layout that gsd-plan-phase
+// This misses the {N}-PLAN-{NN}-{slug}.md layout that gtd-plan-phase
 // actually writes (e.g. 5-PLAN-01-setup-database.md), ending in -database.md.
 // Result: init manager returned plan_count=0 and disk_status='discussed' for
 // fully-planned phases, triggering unnecessary background planner agents.
@@ -23,8 +23,8 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 // Require the module under test directly
-const roadmapLib = path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'roadmap.cjs');
-const planScanLib = path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'plan-scan.cjs');
+const roadmapLib = path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'roadmap.cjs');
+const planScanLib = path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'plan-scan.cjs');
 
 // We test countPhasePlansAndSummaries indirectly via getManagerInfo since
 // it is not exported. We build a real phaseDir on disk and call the full
@@ -35,7 +35,7 @@ const planScanLib = path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'plan-scan.cj
 
 // Build a temporary phase directory with the slug layout
 function makeTempPhase(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3128-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3128-'));
   for (const f of files) {
     fs.writeFileSync(path.join(dir, f), `# ${f}\n`);
   }

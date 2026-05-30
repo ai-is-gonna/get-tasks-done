@@ -1,7 +1,7 @@
 /**
  * State query handlers — STATE.md loading, field extraction, and snapshots.
  *
- * Ported from get-shit-done/bin/lib/state.cjs and core.cjs.
+ * Ported from get-tasks-done/bin/lib/state.cjs and core.cjs.
  * Provides `state json` / `state.json` (rebuilt frontmatter JSON, `stateJson`), `state.get`
  * (field/section extraction), and state-snapshot (structured snapshot).
  *
@@ -10,7 +10,7 @@
  * import { stateJson, stateGet, stateSnapshot } from './state.js';
  *
  * const loaded = await stateJson([], '/project');
- * // { data: { gsd_state_version: '1.0', milestone: 'v3.0', ... } }
+ * // { data: { gtd_state_version: '1.0', milestone: 'v3.0', ... } }
  *
  * const field = await stateGet(['Status'], '/project');
  * // { data: { Status: 'executing' } }
@@ -185,7 +185,7 @@ export async function buildStateFrontmatter(
     normalizedStatus = existingFm.status;
   }
 
-  const fm: Record<string, unknown> = { gsd_state_version: '1.0' };
+  const fm: Record<string, unknown> = { gtd_state_version: '1.0' };
 
   if (milestone) fm.milestone = milestone;
   if (milestoneName) fm.milestone_name = milestoneName;
@@ -385,7 +385,7 @@ export const stateSnapshot: QueryHandler = async (_args, projectDir, workstream)
   // Parse numeric fields
   const totalPhases = totalPhasesRaw ? parseInt(totalPhasesRaw, 10) : null;
   const totalPlansInPhase = totalPlansRaw ? parseInt(totalPlansRaw, 10) : null;
-  // Match gsd-tools `cmdStateSnapshot` (state.cjs): parseInt(progressRaw.replace('%',''), 10) — NaN → null
+  // Match gtd-tools `cmdStateSnapshot` (state.cjs): parseInt(progressRaw.replace('%',''), 10) — NaN → null
   let progressPercent: number | null = null;
   if (progressRaw) {
     const n = parseInt(progressRaw.replace(/%/g, ''), 10);

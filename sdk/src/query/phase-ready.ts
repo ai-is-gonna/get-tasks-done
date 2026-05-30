@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync, readdirSync } from 'node:fs';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { comparePhaseNum, escapeRegex, normalizePhaseName, planningPaths } from './helpers.js';
 import { findPhase } from './phase.js';
 import { roadmapAnalyze } from './roadmap.js';
@@ -93,7 +93,7 @@ function inferNextStep(params: {
 export const checkPhaseReady: QueryHandler = async (args, projectDir, workstream) => {
   const raw = args[0];
   if (!raw) {
-    throw new GSDError('phase number required for check phase-ready', ErrorClassification.Validation);
+    throw new GTDError('phase number required for check phase-ready', ErrorClassification.Validation);
   }
   const phaseArg = normalizePhaseName(raw);
 

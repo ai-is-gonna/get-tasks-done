@@ -3,7 +3,7 @@
  *
  * roadmap.update-plan-progress used positional-only arg destructuring:
  * `const phaseNum = args[0]`. When called with the flag form documented in
- * execute-phase.md:228 (`--phase "TEST" --plan "01" --status "complete"`),
+ * work-task-issue.md:228 (`--phase "TEST" --plan "01" --status "complete"`),
  * args[0] was the literal string "--phase", which was passed to findPhase().
  * findPhase found no phase named "--phase" and returned `updated: false` with
  * `reason: "no matching checkbox found"`, silently no-oping. ROADMAP.md plan
@@ -37,7 +37,7 @@ function runSdkQuery(subcommand, args, projectDir) {
     stdout = execFileSync(process.execPath, [SDK_CLI, ...argv], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, GSD_SESSION_KEY: '' },
+      env: { ...process.env, GTD_SESSION_KEY: '' },
     });
   } catch (err) {
     exitCode = err.status ?? 1;
@@ -91,7 +91,7 @@ describe('bug-2796: roadmap update-plan-progress accepts --phase flag', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempGitProject('gsd-test-2796-');
+    tmpDir = createTempGitProject('gtd-test-2796-');
   });
 
   afterEach(() => {
@@ -101,7 +101,7 @@ describe('bug-2796: roadmap update-plan-progress accepts --phase flag', () => {
   test('flag form --phase <N> resolves the correct phase (not literal "--phase")', () => {
     createRoadmap(tmpDir, '9', '01');
 
-    // Flag form: this is the form execute-phase.md:228 uses
+    // Flag form: this is the form work-task-issue.md:228 uses
     const result = runSdkQuery(
       'roadmap.update-plan-progress',
       ['--phase', '9'],

@@ -4,10 +4,10 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - frontmatter CLI integration
+ * GTD Tools Tests - frontmatter CLI integration
  *
  * Integration tests for the 4 frontmatter subcommands (get, set, merge, validate)
- * exercised through gsd-tools.cjs via execSync.
+ * exercised through gtd-tools.cjs via execSync.
  *
  * Each test creates its own temp file, runs the CLI command, asserts output,
  * and cleans up in afterEach (per-test cleanup with individual temp files).
@@ -18,13 +18,13 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { runGsdTools } = require('./helpers.cjs');
+const { runGtdTools } = require('./helpers.cjs');
 
 // Track temp files for cleanup
 let tempFiles = [];
 
 function writeTempFile(content) {
-  const tmpFile = path.join(os.tmpdir(), `gsd-fm-test-${Date.now()}-${Math.random().toString(36).slice(2)}.md`);
+  const tmpFile = path.join(os.tmpdir(), `gtd-fm-test-${Date.now()}-${Math.random().toString(36).slice(2)}.md`);
   fs.writeFileSync(tmpFile, content, 'utf-8');
   tempFiles.push(tmpFile);
   return tmpFile;
@@ -42,7 +42,7 @@ afterEach(() => {
 describe('frontmatter get', () => {
   test('returns all fields as JSON', () => {
     const file = writeTempFile('---\nphase: 01\nplan: 01\ntype: execute\n---\nbody text');
-    const result = runGsdTools(['frontmatter', 'get', file]);
+    const result = runGtdTools(['frontmatter', 'get', file]);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.phase, '01');
@@ -52,7 +52,7 @@ describe('frontmatter get', () => {
 
   test('returns specific field with --field', () => {
     const file = writeTempFile('---\nphase: 01\nplan: 02\ntype: tdd\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'get', file, '--field', 'phase']);
+    const result = runGtdTools(['frontmatter', 'get', file, '--field', 'phase']);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.phase, '01');
@@ -60,7 +60,7 @@ describe('frontmatter get', () => {
 
   test('returns error for missing field', () => {
     const file = writeTempFile('---\nphase: 01\n---\n');
-    const result = runGsdTools(['frontmatter', 'get', file, '--field', 'nonexistent']);
+    const result = runGtdTools(['frontmatter', 'get', file, '--field', 'nonexistent']);
     // The command succeeds (exit 0) but returns an error object in JSON
     assert.ok(result.success, 'Command should exit 0');
     const parsed = JSON.parse(result.output);
@@ -69,7 +69,7 @@ describe('frontmatter get', () => {
   });
 
   test('returns error for missing file', () => {
-    const result = runGsdTools('frontmatter get /nonexistent/path/file.md');
+    const result = runGtdTools('frontmatter get /nonexistent/path/file.md');
     assert.ok(result.success, 'Command should exit 0 with error JSON');
     const parsed = JSON.parse(result.output);
     assert.ok(parsed.error, 'Should have error field');
@@ -77,7 +77,7 @@ describe('frontmatter get', () => {
 
   test('handles file with no frontmatter', () => {
     const file = writeTempFile('Plain text with no frontmatter delimiters.');
-    const result = runGsdTools(['frontmatter', 'get', file]);
+    const result = runGtdTools(['frontmatter', 'get', file]);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.deepStrictEqual(parsed, {}, 'Should return empty object for no frontmatter');
@@ -89,41 +89,41 @@ describe('frontmatter get', () => {
 describe('frontmatter set', () => {
   test('updates existing field', () => {
     const file = writeTempFile('---\nphase: 01\ntype: execute\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'set', file, '--field', 'phase', '--value', '02']);
+    const result = runGtdTools(['frontmatter', 'set', file, '--field', 'phase', '--value', '02']);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     // Read back and verify
     const content = fs.readFileSync(file, 'utf-8');
-    const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+    const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
     const fm = extractFrontmatter(content);
     assert.strictEqual(fm.phase, '02');
   });
 
   test('adds new field', () => {
     const file = writeTempFile('---\nphase: 01\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'set', file, '--field', 'status', '--value', 'active']);
+    const result = runGtdTools(['frontmatter', 'set', file, '--field', 'status', '--value', 'active']);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(file, 'utf-8');
-    const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+    const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
     const fm = extractFrontmatter(content);
     assert.strictEqual(fm.status, 'active');
   });
 
   test('handles JSON array value', () => {
     const file = writeTempFile('---\nphase: 01\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'set', file, '--field', 'tags', '--value', '["a","b"]']);
+    const result = runGtdTools(['frontmatter', 'set', file, '--field', 'tags', '--value', '["a","b"]']);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(file, 'utf-8');
-    const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+    const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
     const fm = extractFrontmatter(content);
     assert.ok(Array.isArray(fm.tags), 'tags should be an array');
     assert.deepStrictEqual(fm.tags, ['a', 'b']);
   });
 
   test('returns error for missing file', () => {
-    const result = runGsdTools('frontmatter set /nonexistent/file.md --field phase --value "01"');
+    const result = runGtdTools('frontmatter set /nonexistent/file.md --field phase --value "01"');
     assert.ok(result.success, 'Command should exit 0 with error JSON');
     const parsed = JSON.parse(result.output);
     assert.ok(parsed.error, 'Should have error field');
@@ -132,7 +132,7 @@ describe('frontmatter set', () => {
   test('preserves body content after set', () => {
     const bodyText = '\n\n# My Heading\n\nSome paragraph with special chars: $, %, &.';
     const file = writeTempFile('---\nphase: 01\n---' + bodyText);
-    runGsdTools(['frontmatter', 'set', file, '--field', 'phase', '--value', '02']);
+    runGtdTools(['frontmatter', 'set', file, '--field', 'phase', '--value', '02']);
 
     const content = fs.readFileSync(file, 'utf-8');
     assert.ok(content.includes('# My Heading'), 'heading should be preserved');
@@ -145,11 +145,11 @@ describe('frontmatter set', () => {
 describe('frontmatter merge', () => {
   test('merges multiple fields into frontmatter', () => {
     const file = writeTempFile('---\nphase: 01\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'merge', file, '--data', '{"plan":"02","type":"tdd"}']);
+    const result = runGtdTools(['frontmatter', 'merge', file, '--data', '{"plan":"02","type":"tdd"}']);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(file, 'utf-8');
-    const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+    const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
     const fm = extractFrontmatter(content);
     assert.strictEqual(fm.phase, '01', 'original field should be preserved');
     assert.strictEqual(fm.plan, '02', 'merged field should be present');
@@ -158,18 +158,18 @@ describe('frontmatter merge', () => {
 
   test('overwrites existing fields on conflict', () => {
     const file = writeTempFile('---\nphase: 01\ntype: execute\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'merge', file, '--data', '{"phase":"02"}']);
+    const result = runGtdTools(['frontmatter', 'merge', file, '--data', '{"phase":"02"}']);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(file, 'utf-8');
-    const { extractFrontmatter } = require('../get-shit-done/bin/lib/frontmatter.cjs');
+    const { extractFrontmatter } = require('../get-tasks-done/bin/lib/frontmatter.cjs');
     const fm = extractFrontmatter(content);
     assert.strictEqual(fm.phase, '02', 'conflicting field should be overwritten');
     assert.strictEqual(fm.type, 'execute', 'non-conflicting field should be preserved');
   });
 
   test('returns error for missing file', () => {
-    const result = runGsdTools(`frontmatter merge /nonexistent/file.md --data '{"phase":"01"}'`);
+    const result = runGtdTools(`frontmatter merge /nonexistent/file.md --data '{"phase":"01"}'`);
     assert.ok(result.success, 'Command should exit 0 with error JSON');
     const parsed = JSON.parse(result.output);
     assert.ok(parsed.error, 'Should have error field');
@@ -177,7 +177,7 @@ describe('frontmatter merge', () => {
 
   test('returns error for invalid JSON data', () => {
     const file = writeTempFile('---\nphase: 01\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'merge', file, '--data', 'not json']);
+    const result = runGtdTools(['frontmatter', 'merge', file, '--data', 'not json']);
     // cmdFrontmatterMerge calls error() which exits with code 1
     assert.ok(!result.success, 'Command should fail with non-zero exit code');
     assert.ok(result.error.includes('Invalid JSON'), 'Error should mention invalid JSON');
@@ -202,7 +202,7 @@ must_haves:
 ---
 body`;
     const file = writeTempFile(content);
-    const result = runGsdTools(['frontmatter', 'validate', file, '--schema', 'plan']);
+    const result = runGtdTools(['frontmatter', 'validate', file, '--schema', 'plan']);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.valid, true, 'Should be valid');
@@ -212,7 +212,7 @@ body`;
 
   test('reports invalid with missing fields', () => {
     const file = writeTempFile('---\nphase: 01\n---\nbody');
-    const result = runGsdTools(['frontmatter', 'validate', file, '--schema', 'plan']);
+    const result = runGtdTools(['frontmatter', 'validate', file, '--schema', 'plan']);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.valid, false, 'Should be invalid');
@@ -236,7 +236,7 @@ completed: 2026-02-25
 ---
 body`;
     const file = writeTempFile(content);
-    const result = runGsdTools(['frontmatter', 'validate', file, '--schema', 'summary']);
+    const result = runGtdTools(['frontmatter', 'validate', file, '--schema', 'summary']);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.valid, true, 'Should be valid for summary schema');
@@ -252,7 +252,7 @@ score: 5/5
 ---
 body`;
     const file = writeTempFile(content);
-    const result = runGsdTools(['frontmatter', 'validate', file, '--schema', 'verification']);
+    const result = runGtdTools(['frontmatter', 'validate', file, '--schema', 'verification']);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.strictEqual(parsed.valid, true, 'Should be valid for verification schema');
@@ -261,14 +261,14 @@ body`;
 
   test('returns error for unknown schema', () => {
     const file = writeTempFile('---\nphase: 01\n---\n');
-    const result = runGsdTools(['frontmatter', 'validate', file, '--schema', 'unknown']);
+    const result = runGtdTools(['frontmatter', 'validate', file, '--schema', 'unknown']);
     // cmdFrontmatterValidate calls error() which exits with code 1
     assert.ok(!result.success, 'Command should fail with non-zero exit code');
     assert.ok(result.error.includes('Unknown schema'), 'Error should mention unknown schema');
   });
 
   test('returns error for missing file', () => {
-    const result = runGsdTools('frontmatter validate /nonexistent/file.md --schema plan');
+    const result = runGtdTools('frontmatter validate /nonexistent/file.md --schema plan');
     assert.ok(result.success, 'Command should exit 0 with error JSON');
     const parsed = JSON.parse(result.output);
     assert.ok(parsed.error, 'Should have error field');

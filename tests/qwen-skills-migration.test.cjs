@@ -3,15 +3,15 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD Tools Tests - Qwen Code Skills Migration
+ * GTD Tools Tests - Qwen Code Skills Migration
  *
- * Tests for installing GSD for Qwen Code using the standard
- * skills/gsd-xxx/SKILL.md format (same open standard as Claude Code 2.1.88+).
+ * Tests for installing GTD for Qwen Code using the standard
+ * skills/gtd-xxx/SKILL.md format (same open standard as Claude Code 2.1.88+).
  *
  * Uses node:test and node:assert (NOT Jest).
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -30,7 +30,7 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
   test('preserves allowed-tools multiline YAML list', () => {
     const input = [
       '---',
-      'name: gsd:next',
+      'name: gtd:next',
       'description: Advance to the next step',
       'allowed-tools:',
       '  - Read',
@@ -41,7 +41,7 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
       'Body content here.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-next');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-next');
     assert.ok(result.includes('allowed-tools:'), 'allowed-tools field is present');
     assert.ok(result.includes('Read'), 'Read tool preserved');
     assert.ok(result.includes('Bash'), 'Bash tool preserved');
@@ -51,7 +51,7 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
   test('preserves argument-hint', () => {
     const input = [
       '---',
-      'name: gsd:debug',
+      'name: gtd:debug',
       'description: Debug issues',
       'argument-hint: "[issue description]"',
       'allowed-tools:',
@@ -62,7 +62,7 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
       'Debug body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-debug');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-debug');
     assert.ok(result.includes('argument-hint:'), 'argument-hint field is present');
     assert.ok(
       result.includes('[issue description]'),
@@ -70,33 +70,33 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
     );
   });
 
-  test('emits hyphen-form name (gsd-<cmd>) from hyphen-form dir (#2808)', () => {
+  test('emits hyphen-form name (gtd-<cmd>) from hyphen-form dir (#2808)', () => {
     const input = [
       '---',
-      'name: gsd:next',
+      'name: gtd:next',
       'description: Advance workflow',
       '---',
       '',
       'Body.',
     ].join('\n');
 
-    // Directory name is gsd-next (hyphen, Windows-safe), frontmatter name is
-    // gsd-next (hyphen, #2808 — canonical invocation form for Claude Code autocomplete).
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-next');
-    assert.ok(result.includes('name: gsd-next'), 'frontmatter name uses hyphen form (#2808)');
+    // Directory name is gtd-next (hyphen, Windows-safe), frontmatter name is
+    // gtd-next (hyphen, #2808 — canonical invocation form for Claude Code autocomplete).
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-next');
+    assert.ok(result.includes('name: gtd-next'), 'frontmatter name uses hyphen form (#2808)');
   });
 
   test('preserves body content unchanged', () => {
     const body = '\n<objective>\nDo the thing.\n</objective>\n\n<process>\nStep 1.\nStep 2.\n</process>\n';
     const input = [
       '---',
-      'name: gsd:test',
+      'name: gtd:test',
       'description: Test command',
       '---',
       body,
     ].join('');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-test');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-test');
     assert.ok(result.includes('<objective>'), 'objective tag preserved');
     assert.ok(result.includes('Do the thing.'), 'body text preserved');
     assert.ok(result.includes('<process>'), 'process tag preserved');
@@ -105,14 +105,14 @@ describe('Qwen Code: convertClaudeCommandToClaudeSkill', () => {
   test('produces valid SKILL.md frontmatter starting with ---', () => {
     const input = [
       '---',
-      'name: gsd:plan',
+      'name: gtd:plan',
       'description: Plan a phase',
       '---',
       '',
       'Plan body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-plan');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-plan');
     assert.ok(result.startsWith('---\n'), 'frontmatter starts with ---');
     assert.ok(result.includes('\n---\n'), 'frontmatter closes with ---');
   });
@@ -124,7 +124,7 @@ describe('Qwen Code: copyCommandsAsClaudeSkills', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-qwen-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-qwen-test-'));
   });
 
   afterEach(() => {
@@ -133,13 +133,13 @@ describe('Qwen Code: copyCommandsAsClaudeSkills', () => {
     }
   });
 
-  test('creates skills/gsd-xxx/SKILL.md directory structure', () => {
+  test('creates skills/gtd-xxx/SKILL.md directory structure', () => {
     // Create source command files
-    const srcDir = path.join(tmpDir, 'src', 'commands', 'gsd');
+    const srcDir = path.join(tmpDir, 'src', 'commands', 'gtd');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(path.join(srcDir, 'quick.md'), [
       '---',
-      'name: gsd:quick',
+      'name: gtd:quick',
       'description: Execute a quick task',
       'allowed-tools:',
       '  - Read',
@@ -150,66 +150,66 @@ describe('Qwen Code: copyCommandsAsClaudeSkills', () => {
     ].join('\n'));
 
     const skillsDir = path.join(tmpDir, 'dest', 'skills');
-    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '/test/prefix/', 'qwen', false);
+    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gtd', '/test/prefix/', 'qwen', false);
 
     // Verify SKILL.md was created
-    const skillPath = path.join(skillsDir, 'gsd-quick', 'SKILL.md');
-    assert.ok(fs.existsSync(skillPath), 'gsd-quick/SKILL.md exists');
+    const skillPath = path.join(skillsDir, 'gtd-quick', 'SKILL.md');
+    assert.ok(fs.existsSync(skillPath), 'gtd-quick/SKILL.md exists');
 
     // Verify content
     const content = fs.readFileSync(skillPath, 'utf8');
-    assert.ok(content.includes('name: gsd-quick'), 'frontmatter name uses hyphen form (#2808)');
+    assert.ok(content.includes('name: gtd-quick'), 'frontmatter name uses hyphen form (#2808)');
     assert.ok(content.includes('description:'), 'description present');
     assert.ok(content.includes('allowed-tools:'), 'allowed-tools preserved');
     assert.ok(content.includes('<objective>'), 'body content preserved');
   });
 
   test('replaces ~/.claude/ paths with pathPrefix', () => {
-    const srcDir = path.join(tmpDir, 'src', 'commands', 'gsd');
+    const srcDir = path.join(tmpDir, 'src', 'commands', 'gtd');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(path.join(srcDir, 'next.md'), [
       '---',
-      'name: gsd:next',
+      'name: gtd:next',
       'description: Next step',
       '---',
       '',
-      'Reference: @~/.claude/get-shit-done/workflows/next.md',
+      'Reference: @~/.claude/get-tasks-done/workflows/next.md',
     ].join('\n'));
 
     const skillsDir = path.join(tmpDir, 'dest', 'skills');
-    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '$HOME/.qwen/', 'qwen', false);
+    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gtd', '$HOME/.qwen/', 'qwen', false);
 
-    const content = fs.readFileSync(path.join(skillsDir, 'gsd-next', 'SKILL.md'), 'utf8');
+    const content = fs.readFileSync(path.join(skillsDir, 'gtd-next', 'SKILL.md'), 'utf8');
     assert.ok(content.includes('$HOME/.qwen/'), 'path replaced to .qwen/');
     assert.ok(!content.includes('~/.claude/'), 'old claude path removed');
   });
 
   test('replaces $HOME/.claude/ paths with pathPrefix', () => {
-    const srcDir = path.join(tmpDir, 'src', 'commands', 'gsd');
+    const srcDir = path.join(tmpDir, 'src', 'commands', 'gtd');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(path.join(srcDir, 'plan.md'), [
       '---',
-      'name: gsd:plan',
+      'name: gtd:plan',
       'description: Plan phase',
       '---',
       '',
-      'Reference: $HOME/.claude/get-shit-done/workflows/plan.md',
+      'Reference: $HOME/.claude/get-tasks-done/workflows/plan.md',
     ].join('\n'));
 
     const skillsDir = path.join(tmpDir, 'dest', 'skills');
-    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '$HOME/.qwen/', 'qwen', false);
+    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gtd', '$HOME/.qwen/', 'qwen', false);
 
-    const content = fs.readFileSync(path.join(skillsDir, 'gsd-plan', 'SKILL.md'), 'utf8');
+    const content = fs.readFileSync(path.join(skillsDir, 'gtd-plan', 'SKILL.md'), 'utf8');
     assert.ok(content.includes('$HOME/.qwen/'), 'path replaced to .qwen/');
     assert.ok(!content.includes('$HOME/.claude/'), 'old claude path removed');
   });
 
-  test('removes stale gsd- skills before installing new ones', () => {
-    const srcDir = path.join(tmpDir, 'src', 'commands', 'gsd');
+  test('removes stale gtd- skills before installing new ones', () => {
+    const srcDir = path.join(tmpDir, 'src', 'commands', 'gtd');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(path.join(srcDir, 'quick.md'), [
       '---',
-      'name: gsd:quick',
+      'name: gtd:quick',
       'description: Quick task',
       '---',
       '',
@@ -218,23 +218,23 @@ describe('Qwen Code: copyCommandsAsClaudeSkills', () => {
 
     const skillsDir = path.join(tmpDir, 'dest', 'skills');
     // Pre-create a stale skill
-    fs.mkdirSync(path.join(skillsDir, 'gsd-old-skill'), { recursive: true });
-    fs.writeFileSync(path.join(skillsDir, 'gsd-old-skill', 'SKILL.md'), 'old');
+    fs.mkdirSync(path.join(skillsDir, 'gtd-old-skill'), { recursive: true });
+    fs.writeFileSync(path.join(skillsDir, 'gtd-old-skill', 'SKILL.md'), 'old');
 
-    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '/test/', 'qwen', false);
+    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gtd', '/test/', 'qwen', false);
 
-    assert.ok(!fs.existsSync(path.join(skillsDir, 'gsd-old-skill')), 'stale skill removed');
-    assert.ok(fs.existsSync(path.join(skillsDir, 'gsd-quick', 'SKILL.md')), 'new skill installed');
+    assert.ok(!fs.existsSync(path.join(skillsDir, 'gtd-old-skill')), 'stale skill removed');
+    assert.ok(fs.existsSync(path.join(skillsDir, 'gtd-quick', 'SKILL.md')), 'new skill installed');
   });
 
   test('preserves agent field in frontmatter', () => {
-    const srcDir = path.join(tmpDir, 'src', 'commands', 'gsd');
+    const srcDir = path.join(tmpDir, 'src', 'commands', 'gtd');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(path.join(srcDir, 'execute.md'), [
       '---',
-      'name: gsd:execute',
+      'name: gtd:execute',
       'description: Execute phase',
-      'agent: gsd-executor',
+      'agent: gtd-task-executor',
       'allowed-tools:',
       '  - Read',
       '  - Bash',
@@ -245,10 +245,10 @@ describe('Qwen Code: copyCommandsAsClaudeSkills', () => {
     ].join('\n'));
 
     const skillsDir = path.join(tmpDir, 'dest', 'skills');
-    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '/test/', 'qwen', false);
+    copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gtd', '/test/', 'qwen', false);
 
-    const content = fs.readFileSync(path.join(skillsDir, 'gsd-execute', 'SKILL.md'), 'utf8');
-    assert.ok(content.includes('agent: gsd-executor'), 'agent field preserved');
+    const content = fs.readFileSync(path.join(skillsDir, 'gtd-execute', 'SKILL.md'), 'utf8');
+    assert.ok(content.includes('agent: gtd-task-executor'), 'agent field preserved');
   });
 });
 
@@ -258,10 +258,10 @@ describe('Qwen Code: SKILL.md format validation', () => {
   test('SKILL.md frontmatter is valid YAML structure', () => {
     const input = [
       '---',
-      'name: gsd:review',
+      'name: gtd:review',
       'description: Code review with quality checks',
       'argument-hint: "[PR number or branch]"',
-      'agent: gsd-code-reviewer',
+      'agent: gtd-code-reviewer',
       'allowed-tools:',
       '  - Read',
       '  - Grep',
@@ -271,14 +271,14 @@ describe('Qwen Code: SKILL.md format validation', () => {
       '<objective>Review code</objective>',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-review');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gtd-review');
 
     // Parse the frontmatter
     const fmMatch = result.match(/^---\n([\s\S]*?)\n---/);
     assert.ok(fmMatch, 'has frontmatter block');
 
     const fmLines = fmMatch[1].split('\n');
-    const hasName = fmLines.some(l => l.startsWith('name: gsd-review'));
+    const hasName = fmLines.some(l => l.startsWith('name: gtd-review'));
     const hasDesc = fmLines.some(l => l.startsWith('description:'));
     const hasAgent = fmLines.some(l => l.startsWith('agent:'));
     const hasTools = fmLines.some(l => l.startsWith('allowed-tools:'));

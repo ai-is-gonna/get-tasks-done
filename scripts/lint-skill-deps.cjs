@@ -5,8 +5,8 @@
  * Two checks:
  *
  * a) Frontmatter to body consistency:
- *    For each commands/gsd/*.md, parse requires: and walk the body for
- *    references to other GSD skills (pattern: /gsd:<stem> or gsd:<stem>).
+ *    For each commands/gtd/*.md, parse requires: and walk the body for
+ *    references to other GTD skills (pattern: /gtd:<stem> or gtd:<stem>).
  *    Fail if a skill body references a skill not listed in requires:.
  *
  * b) Profile closure satisfaction:
@@ -15,7 +15,7 @@
  *    the closure references a skill NOT in the closure, fail.
  *
  * Usage:
- *   node scripts/lint-skill-deps.cjs               # scans commands/gsd/
+ *   node scripts/lint-skill-deps.cjs               # scans commands/gtd/
  *   node scripts/lint-skill-deps.cjs --dir <path>  # scan a custom dir (testing)
  *
  * Exits 0 if all pass; exits 1 if any violation.
@@ -26,14 +26,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROFILES_MODULE = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'install-profiles.cjs');
+const PROFILES_MODULE = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'install-profiles.cjs');
 const { PROFILES, loadSkillsManifest, resolveProfile } = require(PROFILES_MODULE);
 
 // ---------------------------------------------------------------------------
 // Argument parsing
 // ---------------------------------------------------------------------------
 
-let commandsDir = path.join(__dirname, '..', 'commands', 'gsd');
+let commandsDir = path.join(__dirname, '..', 'commands', 'gtd');
 const args = process.argv.slice(2);
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--dir' && args[i + 1]) {
@@ -48,7 +48,7 @@ for (let i = 0; i < args.length; i++) {
 
 function extractBodyReferences(body) {
   const refs = new Set();
-  const re = /(?:\/?)gsd:([a-z0-9_-]+)/g;
+  const re = /(?:\/?)gtd:([a-z0-9_-]+)/g;
   let m;
   while ((m = re.exec(body)) !== null) {
     refs.add(m[1]);
@@ -88,7 +88,7 @@ function checkFrontmatterBodyConsistency(manifest, allStems) {
           stem,
           filePath,
           undeclared: ref,
-          message: 'body references unknown skill gsd:' + ref,
+          message: 'body references unknown skill gtd:' + ref,
         });
         continue;
       }
@@ -97,7 +97,7 @@ function checkFrontmatterBodyConsistency(manifest, allStems) {
           stem,
           filePath,
           undeclared: ref,
-          message: 'body references gsd:' + ref + ' but requires: does not list it',
+          message: 'body references gtd:' + ref + ' but requires: does not list it',
         });
       }
     }

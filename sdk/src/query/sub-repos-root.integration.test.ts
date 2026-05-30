@@ -1,5 +1,5 @@
 /**
- * Regression: issue #2623 — `gsd-sdk query` must resolve the parent
+ * Regression: issue #2623 — `gtd-sdk query` must resolve the parent
  * `.planning/` root when invoked from a `sub_repos`-listed child repo.
  *
  * Exercises the end-to-end path: findProjectRoot(startDir) -> registry dispatch
@@ -19,7 +19,7 @@ describe('issue #2623 — sub_repos project-root resolution through query dispat
   let appDir: string;
 
   beforeEach(async () => {
-    workspace = await mkdtemp(join(tmpdir(), 'gsd-2623-'));
+    workspace = await mkdtemp(join(tmpdir(), 'gtd-2623-'));
     await mkdir(join(workspace, '.planning'), { recursive: true });
     await mkdir(join(workspace, '.planning', 'phases'), { recursive: true });
     await writeFile(

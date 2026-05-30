@@ -19,12 +19,12 @@ const { spawnSync } = require('node:child_process');
 const REPO_ROOT = path.join(__dirname, '..');
 const COMMAND_ALIASES_FILE = path.join(
   REPO_ROOT,
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'command-aliases.generated.cjs',
 );
-const GSD_TOOLS = path.join(REPO_ROOT, 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const GTD_TOOLS = path.join(REPO_ROOT, 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 
 const MISSING_14 = [
   'check.decision-coverage-plan',
@@ -133,13 +133,13 @@ describe('feat-3251: command-aliases.generated.cjs manifest coverage', () => {
 });
 
 function createProject() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3251-dispatch-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3251-dispatch-'));
   fs.mkdirSync(path.join(dir, '.planning', 'phases'), { recursive: true });
   return dir;
 }
 
-function runGsdTools(args, projectDir) {
-  return spawnSync(process.execPath, [GSD_TOOLS, ...args], {
+function runGtdTools(args, projectDir) {
+  return spawnSync(process.execPath, [GTD_TOOLS, ...args], {
     cwd: projectDir,
     encoding: 'utf8',
     timeout: 30000,
@@ -167,11 +167,11 @@ function snapshotProjectState(projectDir) {
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-describe('feat-3251: generated aliases dispatch through real gsd-tools behavior', () => {
+describe('feat-3251: generated aliases dispatch through real gtd-tools behavior', () => {
   test('phase.mvp-mode spaced alias resolves CLI flag precedence', () => {
     const projectDir = createProject();
     try {
-      const result = runGsdTools(['phase', 'mvp-mode', '1', '--cli-flag'], projectDir);
+      const result = runGtdTools(['phase', 'mvp-mode', '1', '--cli-flag'], projectDir);
       assert.equal(result.status, 0, result.stderr);
 
       const output = JSON.parse(result.stdout);
@@ -205,7 +205,7 @@ describe('feat-3251: generated aliases dispatch through real gsd-tools behavior'
       );
       const beforeFiles = snapshotProjectState(projectDir);
 
-      const result = runGsdTools(['phase', 'mvp-mode', '1'], projectDir);
+      const result = runGtdTools(['phase', 'mvp-mode', '1'], projectDir);
       assert.equal(result.status, 0, result.stderr);
 
       const output = JSON.parse(result.stdout);
@@ -241,7 +241,7 @@ describe('feat-3251: generated aliases dispatch through real gsd-tools behavior'
       );
       const beforeFiles = snapshotProjectState(projectDir);
 
-      const result = runGsdTools(['phase', 'mvp-mode', '1'], projectDir);
+      const result = runGtdTools(['phase', 'mvp-mode', '1'], projectDir);
       assert.equal(result.status, 0, result.stderr);
 
       const output = JSON.parse(result.stdout);
@@ -258,7 +258,7 @@ describe('feat-3251: generated aliases dispatch through real gsd-tools behavior'
     const projectDir = createProject();
     try {
       const beforeFiles = snapshotProjectState(projectDir);
-      const result = runGsdTools(['--json-errors', 'phase', 'mvp-mode'], projectDir);
+      const result = runGtdTools(['--json-errors', 'phase', 'mvp-mode'], projectDir);
       assert.notEqual(result.status, 0);
       assert.equal(result.stdout, '');
 

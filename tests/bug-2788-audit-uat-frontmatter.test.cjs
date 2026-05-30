@@ -1,9 +1,9 @@
 /**
  * Regression test for bug #2788
  *
- * `gsd-sdk query audit-uat` returned total_items: 0 for VERIFICATION.md
+ * `gtd-sdk query audit-uat` returned total_items: 0 for VERIFICATION.md
  * files where human-needed items were encoded in the frontmatter
- * `human_verification:` YAML array (the format written by gsd-verifier),
+ * `human_verification:` YAML array (the format written by gtd-verifier),
  * or where the body section heading used `## human_verification` (underscore)
  * instead of `## Human Verification` (space).
  *
@@ -37,7 +37,7 @@ function runAuditUat(projectDir) {
     stdout = execFileSync(process.execPath, [SDK_CLI, ...argv], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, GSD_SESSION_KEY: '' },
+      env: { ...process.env, GTD_SESSION_KEY: '' },
     });
   } catch (err) {
     exitCode = err.status ?? 1;
@@ -87,7 +87,7 @@ describe('bug-2788: audit-uat reads frontmatter human_verification array', () =>
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempProject('gsd-test-2788-');
+    tmpDir = createTempProject('gtd-test-2788-');
   });
 
   afterEach(() => {
@@ -95,7 +95,7 @@ describe('bug-2788: audit-uat reads frontmatter human_verification array', () =>
   });
 
   test('frontmatter human_verification: array items are reported', () => {
-    // This is the format gsd-verifier writes; before fix total_items was 0
+    // This is the format gtd-verifier writes; before fix total_items was 0
     const content = [
       '---',
       'phase: 03-invoicing',

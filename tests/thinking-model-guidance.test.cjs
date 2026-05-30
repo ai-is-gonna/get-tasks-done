@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const REFERENCES_DIR = path.join(__dirname, '..', 'get-shit-done', 'references');
+const REFERENCES_DIR = path.join(__dirname, '..', 'get-tasks-done', 'references');
 const AGENTS_DIR = path.join(__dirname, '..', 'agents');
 
 const THINKING_CONTEXTS = ['debug', 'execution', 'planning', 'research', 'verification'];
@@ -49,32 +49,32 @@ const GAP_CLOSURE_CONTEXT = 'planning';
 // wiredInsideBlock is a string that should appear BEFORE the @-reference in the agent file,
 // confirming the reference is inside a specific step/section (not at top-of-agent)
 const AGENT_WIRING = {
-  'gsd-debugger': {
+  'gtd-debugger': {
     refFile: 'thinking-models-debug.md',
     wiredInsideBlock: 'step name="investigation_loop"',
     wiredInsideText: 'At investigation decision points, apply structured reasoning',
   },
-  'gsd-executor': {
+  'gtd-task-executor': {
     refFile: 'thinking-models-execution.md',
     wiredInsideBlock: 'step name="execute_tasks"',
     wiredInsideText: 'At execution decision points, apply structured reasoning',
   },
-  'gsd-planner': {
+  'gtd-planner': {
     refFile: 'thinking-models-planning.md',
     wiredInsideBlock: 'step name="break_into_tasks"',
     wiredInsideText: 'At decision points during plan creation, apply structured reasoning',
   },
-  'gsd-phase-researcher': {
+  'gtd-phase-researcher': {
     refFile: 'thinking-models-research.md',
     wiredInsideBlock: 'execution_flow',
     wiredInsideText: 'At research decision points, apply structured reasoning',
   },
-  'gsd-plan-checker': {
+  'gtd-plan-checker': {
     refFile: 'thinking-models-planning.md',
     wiredInsideBlock: 'verification_dimensions',
     wiredInsideText: 'At decision points during plan verification, apply structured reasoning',
   },
-  'gsd-verifier': {
+  'gtd-verifier': {
     refFile: 'thinking-models-verification.md',
     wiredInsideBlock: 'verification_process',
     wiredInsideText: 'At verification decision points, apply structured reasoning',

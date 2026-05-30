@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 import { verifyPlanStructure, verifyPhaseCompleteness, verifyArtifacts } from './verify.js';
 
 // ─── verifyPlanStructure ───────────────────────────────────────────────────
@@ -15,7 +15,7 @@ describe('verifyPlanStructure', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-verify-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-verify-'));
   });
 
   afterEach(async () => {
@@ -40,6 +40,7 @@ must_haves:
 <task type="auto">
   <name>Task 1: Do something</name>
   <files>src/foo.ts</files>
+  <boundaries>Allowed: write only src/foo.ts. Forbidden: src/bar.ts</boundaries>
   <action>Implement foo</action>
   <verify>Run tests</verify>
   <done>Foo works</done>
@@ -51,6 +52,7 @@ must_haves:
     expect(data.valid).toBe(true);
     expect(data.errors).toEqual([]);
     expect(data.task_count).toBe(1);
+    expect((data.tasks as Array<{ hasBoundaries: boolean }>)[0].hasBoundaries).toBe(true);
     expect(data.frontmatter_fields).toContain('phase');
   });
 
@@ -209,15 +211,15 @@ No tasks here.
     expect(data.error).toBe('File not found');
   });
 
-  it('throws GSDError with Validation classification when no args', async () => {
+  it('throws GTDError with Validation classification when no args', async () => {
     let caught: unknown;
     try {
       await verifyPlanStructure([], tmpDir);
     } catch (err) {
       caught = err;
     }
-    expect(caught).toBeInstanceOf(GSDError);
-    expect((caught as GSDError).classification).toBe('validation');
+    expect(caught).toBeInstanceOf(GTDError);
+    expect((caught as GTDError).classification).toBe('validation');
   });
 });
 
@@ -227,7 +229,7 @@ describe('verifyPhaseCompleteness', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-verify-phase-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-verify-phase-'));
     await mkdir(join(tmpDir, '.planning', 'phases', '09-foundation'), { recursive: true });
   });
 
@@ -279,8 +281,8 @@ describe('verifyPhaseCompleteness', () => {
     expect(data.error).toBe('Phase not found');
   });
 
-  it('throws GSDError with Validation classification when no args', async () => {
-    await expect(verifyPhaseCompleteness([], tmpDir)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification when no args', async () => {
+    await expect(verifyPhaseCompleteness([], tmpDir)).rejects.toThrow(GTDError);
   });
 });
 
@@ -290,7 +292,7 @@ describe('verifyArtifacts', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-verify-art-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-verify-art-'));
   });
 
   afterEach(async () => {
@@ -408,7 +410,7 @@ body`;
     expect(data.error).toBe('No must_haves.artifacts found in frontmatter');
   });
 
-  it('throws GSDError with Validation classification when no args', async () => {
-    await expect(verifyArtifacts([], tmpDir)).rejects.toThrow(GSDError);
+  it('throws GTDError with Validation classification when no args', async () => {
+    await expect(verifyArtifacts([], tmpDir)).rejects.toThrow(GTDError);
   });
 });

@@ -2,7 +2,7 @@
  * Skill manifest — multi-root skill discovery scan.
  *
  * Full port of `buildSkillManifest` / `cmdSkillManifest` from
- * `get-shit-done/bin/lib/init.cjs` (lines 1640–1847).
+ * `get-tasks-done/bin/lib/init.cjs` (lines 1640–1847).
  * Uses {@link extractFrontmatterLeading} — same as CJS `frontmatter.cjs` `extractFrontmatter`
  * (first `---` block only; skills with later `---` rules must not use TS `extractFrontmatter`'s last-block rule).
  */
@@ -42,14 +42,14 @@ export interface SkillManifestJson {
   skills: SkillManifestSkill[];
   roots: SkillManifestRoot[];
   installation: {
-    gsd_skills_installed: boolean;
+    gtd_skills_installed: boolean;
     legacy_claude_commands_installed: boolean;
   };
   counts: { skills: number; roots: number };
 }
 
 /**
- * Scan canonical skill roots and build manifest JSON (same shape as gsd-tools.cjs).
+ * Scan canonical skill roots and build manifest JSON (same shape as gtd-tools.cjs).
  */
 export function buildSkillManifest(cwd: string, skillsDir: string | null = null): SkillManifestJson {
   const canonicalRoots = skillsDir
@@ -69,15 +69,15 @@ export function buildSkillManifest(cwd: string, skillsDir: string | null = null)
       { root: renderGlobalSkillsBaseDisplayPath('claude'), path: resolveGlobalSkillsBase('claude')!, scope: 'global', kind: 'skills' as const },
       { root: renderGlobalSkillsBaseDisplayPath('codex'), path: resolveGlobalSkillsBase('codex')!, scope: 'global', kind: 'skills' as const },
       {
-        root: '.claude/get-shit-done/skills',
+        root: '.claude/get-tasks-done/skills',
         path: resolveLegacySkillsDir(),
         scope: 'import-only',
         kind: 'skills' as const,
         deprecated: true,
       },
       {
-        root: '.claude/commands/gsd',
-        path: join(homedir(), '.claude', 'commands', 'gsd'),
+        root: '.claude/commands/gtd',
+        path: join(homedir(), '.claude', 'commands', 'gtd'),
         scope: 'legacy-commands',
         kind: 'commands' as const,
         deprecated: true,
@@ -180,13 +180,13 @@ export function buildSkillManifest(cwd: string, skillsDir: string | null = null)
     return rootCmp !== 0 ? rootCmp : a.name.localeCompare(b.name);
   });
 
-  const gsdSkillsInstalled = skills.some(skill => skill.name.startsWith('gsd-'));
+  const gtdSkillsInstalled = skills.some(skill => skill.name.startsWith('gtd-'));
 
   return {
     skills,
     roots,
     installation: {
-      gsd_skills_installed: gsdSkillsInstalled,
+      gtd_skills_installed: gtdSkillsInstalled,
       legacy_claude_commands_installed: legacyClaudeCommandsInstalled,
     },
     counts: {
@@ -197,7 +197,7 @@ export function buildSkillManifest(cwd: string, skillsDir: string | null = null)
 }
 
 /**
- * `skill-manifest` — same flags as gsd-tools: `--skills-dir`, `--write`.
+ * `skill-manifest` — same flags as gtd-tools: `--skills-dir`, `--write`.
  */
 export const skillManifest: QueryHandler = async (args, projectDir) => {
   const skillsDirIdx = args.indexOf('--skills-dir');

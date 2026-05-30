@@ -29,7 +29,7 @@ import { websearch } from './websearch.js';
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-stubs-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-stubs-'));
   await mkdir(join(tmpDir, '.planning', 'phases', '09-foundation'), { recursive: true });
   await mkdir(join(tmpDir, '.planning', 'phases', '10-queries'), { recursive: true });
 
@@ -69,7 +69,7 @@ afterEach(async () => {
 
 describe('agentSkills', () => {
   it('returns empty string when agent_skills config is missing', async () => {
-    const result = await agentSkills(['gsd-executor'], tmpDir);
+    const result = await agentSkills(['gtd-task-executor'], tmpDir);
     expect(result.data).toBe('');
   });
 });
@@ -174,7 +174,7 @@ describe('progressBar', () => {
  *
  * Original defect (first introduced in 6f79b1d): the handler called
  * `phasesArchive([], projectDir)` instead of forwarding the version positional
- * arg. phasesArchive read args[0] and threw GSDError('version required for
+ * arg. phasesArchive read args[0] and threw GTDError('version required for
  * phases archive'); the surrounding try/catch swallowed the throw into
  * { completed: false, reason: String(err) }, masking it as a legitimate
  * negative answer.
@@ -205,13 +205,13 @@ describe('milestoneComplete', () => {
   });
 
   it('does not call phasesArchive with empty args (regression: bug #2644)', async () => {
-    // If the old bug were present, this would return { completed: false, reason: 'GSDError: version required for phases archive' }
+    // If the old bug were present, this would return { completed: false, reason: 'GTDError: version required for phases archive' }
     // The fix ensures version is extracted from args[0] before any archive operation
     const result = await milestoneComplete(['v1.0'], tmpDir);
     assertMilestoneSuccess(result, 'v1.0');
   });
 
-  it('throws GSDError when version arg is missing (not masked as completed: false)', async () => {
+  it('throws GTDError when version arg is missing (not masked as completed: false)', async () => {
     // The old bug swallowed ALL errors into { completed: false, reason: String(err) }
     // The fix explicitly throws so callers can distinguish validation failure from "not complete"
     await expect(milestoneComplete([], tmpDir)).rejects.toThrow('version required for milestone complete');
@@ -317,7 +317,7 @@ describe('workstream handlers', () => {
 // ─── init.ts ─────────────────────────────────────────────────────────────
 
 describe('docsInit', () => {
-  it('returns docs context matching gsd-tools docs-init', async () => {
+  it('returns docs context matching gtd-tools docs-init', async () => {
     const result = await docsInit([], tmpDir);
     const data = result.data as Record<string, unknown>;
     expect(typeof data.planning_exists).toBe('boolean');

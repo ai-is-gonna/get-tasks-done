@@ -1,7 +1,7 @@
 /**
  * Workstream query handlers — list, get, create, set, status, complete, progress.
  *
- * Ported from get-shit-done/bin/lib/workstream.cjs.
+ * Ported from get-tasks-done/bin/lib/workstream.cjs.
  * Manages .planning/workstreams/ directory for multi-workstream projects.
  *
  * @example
@@ -23,7 +23,7 @@ import {
 import { join, relative } from 'node:path';
 
 import { toPosixPath } from './helpers.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { validateWorkstreamName, toWorkstreamSlug } from '../workstream-name-policy.js';
 import { readActiveWorkstream, writeActiveWorkstream } from './active-workstream-store.js';
 import {
@@ -89,7 +89,7 @@ export const workstreamCreate: QueryHandler = async (args, projectDir) => {
 
   const baseDir = planningRoot(projectDir);
   if (!existsSync(baseDir)) {
-    return { data: { created: false, reason: '.planning/ directory not found — run /gsd-new-project first' } };
+    return { data: { created: false, reason: '.planning/ directory not found — run /gtd-new-project first' } };
   }
 
   const wsRoot = workstreamsRoot(projectDir);
@@ -195,10 +195,10 @@ export const workstreamSet: QueryHandler = async (args, projectDir) => {
 export const workstreamStatus: QueryHandler = async (args, projectDir) => {
   const name = args[0];
   if (!name) {
-    throw new GSDError('workstream name required. Usage: workstream status <name>', ErrorClassification.Validation);
+    throw new GTDError('workstream name required. Usage: workstream status <name>', ErrorClassification.Validation);
   }
   if (/[/\\]/.test(name) || name === '.' || name === '..') {
-    throw new GSDError('Invalid workstream name', ErrorClassification.Validation);
+    throw new GTDError('Invalid workstream name', ErrorClassification.Validation);
   }
 
   const wsDir = join(workstreamsRoot(projectDir), name);

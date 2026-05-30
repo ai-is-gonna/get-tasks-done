@@ -1,7 +1,7 @@
 /**
  * Regression test for #2043 — autonomous.md must include Agent in allowed-tools.
  *
- * The gsd-autonomous skill spawns background agents via Agent(..., run_in_background=true).
+ * The gtd-autonomous skill spawns background agents via Agent(..., run_in_background=true).
  * Without Agent in allowed-tools the runtime rejects those calls silently.
  */
 
@@ -13,11 +13,11 @@ const fs = require('fs');
 const path = require('path');
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/autonomous.md is the installed command — its frontmatter is what Claude Code
+// commands/gtd/autonomous.md is the installed command — its frontmatter is what Claude Code
 // reads at runtime to enforce allowed-tools. Checking text content IS checking the contract.
-describe('commands/gsd/autonomous.md allowed-tools', () => {
+describe('commands/gtd/autonomous.md allowed-tools', () => {
   test('includes Agent in allowed-tools list', () => {
-    const filePath = path.join(__dirname, '..', 'commands', 'gsd', 'autonomous.md');
+    const filePath = path.join(__dirname, '..', 'commands', 'gtd', 'autonomous.md');
     const content = fs.readFileSync(filePath, 'utf-8');
 
     // Extract the YAML frontmatter block between the first pair of --- delimiters

@@ -12,7 +12,7 @@ function read(relPath) {
 
 describe('bug #3384: adjacent worktree data-loss guards', () => {
   test('worktree cleanup CLI preserves caller cwd instead of resolving project root', () => {
-    const source = read('get-shit-done/bin/gsd-tools.cjs');
+    const source = read('get-tasks-done/bin/gtd-tools.cjs');
     const skipSet = source.slice(
       source.indexOf('const SKIP_ROOT_RESOLUTION = new Set(['),
       source.indexOf('if (!SKIP_ROOT_RESOLUTION.has(command))'),
@@ -22,7 +22,7 @@ describe('bug #3384: adjacent worktree data-loss guards', () => {
   });
 
   test('diagnose-issues agents assert disposable worktree branch before reset --hard', () => {
-    const source = read('get-shit-done/workflows/diagnose-issues.md');
+    const source = read('get-tasks-done/workflows/diagnose-issues.md');
     const branchCheck = source.indexOf('HEAD_REF=$(git symbolic-ref --quiet HEAD || echo');
     const namespaceCheck = source.indexOf('worktree-agent-* namespace');
     const reset = source.indexOf('git reset --hard {EXPECTED_BASE}');
@@ -33,7 +33,7 @@ describe('bug #3384: adjacent worktree data-loss guards', () => {
   });
 
   test('remove-workspace fails closed when git worktree remove fails', () => {
-    const source = read('get-shit-done/workflows/remove-workspace.md');
+    const source = read('get-tasks-done/workflows/remove-workspace.md');
     const init = source.indexOf('REMOVE_FAILED=false');
     const loop = source.indexOf('For each repo in the workspace');
     const remove = source.indexOf('git worktree remove "$WORKSPACE_PATH/$REPO_NAME"');
@@ -49,7 +49,7 @@ describe('bug #3384: adjacent worktree data-loss guards', () => {
   });
 
   test('validate health warns when worktree inventory cannot be listed', () => {
-    const source = read('get-shit-done/bin/lib/verify.cjs');
+    const source = read('get-tasks-done/bin/lib/verify.cjs');
     const failureBranch = source.indexOf("worktreeHealth.reason === 'git_list_failed'");
     const warning = source.indexOf("addIssue('warning', 'W020'", failureBranch);
 

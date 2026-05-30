@@ -1,11 +1,11 @@
 /**
- * E2E lifecycle integration test — proves GSD.runPhase() drives
+ * E2E lifecycle integration test — proves GTD.runPhase() drives
  * the full phase lifecycle: discuss → research → plan → execute → verify → advance
  * after bootstrapping a real project via InitRunner.
  *
- * This is the capstone proof that `gsd-sdk auto` works end-to-end
+ * This is the capstone proof that `gtd-sdk auto` works end-to-end
  * without human intervention. InitRunner bootstraps the project,
- * then GSD.runPhase() drives Phase 1 through the complete lifecycle.
+ * then GTD.runPhase() drives Phase 1 through the complete lifecycle.
  *
  * Requires Claude Code CLI (`claude`) installed and authenticated.
  * Skips gracefully if CLI is unavailable.
@@ -19,12 +19,12 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-import { GSD } from './index.js';
+import { GTD } from './index.js';
 import { InitRunner } from './init-runner.js';
-import { GSDTools, resolveGsdToolsPath } from './gsd-tools.js';
-import { GSDEventStream } from './event-stream.js';
-import { GSDEventType, PhaseStepType } from './types.js';
-import type { GSDEvent, PhaseRunnerResult, RoadmapAnalysis } from './types.js';
+import { GTDTools, resolveGtdToolsPath } from './gtd-tools.js';
+import { GTDEventStream } from './event-stream.js';
+import { GTDEventType, PhaseStepType } from './types.js';
+import type { GTDEvent, PhaseRunnerResult, RoadmapAnalysis } from './types.js';
 
 // ─── CLI availability check ─────────────────────────────────────────────────
 
@@ -38,8 +38,8 @@ try {
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const sdkPromptsDir = join(__dirname, '..', 'prompts');
-const GSD_TOOLS_PATH = resolveGsdToolsPath(process.cwd());
-const gsdToolsAvailable = existsSync(GSD_TOOLS_PATH);
+const GTD_TOOLS_PATH = resolveGtdToolsPath(process.cwd());
+const gtdToolsAvailable = existsSync(GTD_TOOLS_PATH);
 
 // ─── Lifecycle step ordering for monotonicity check ──────────────────────────
 
@@ -55,29 +55,29 @@ const STEP_ORDER: Record<string, number> = {
 
 // ─── Test suite ──────────────────────────────────────────────────────────────
 
-describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() full lifecycle', () => {
+describe.skipIf(!cliAvailable || !gtdToolsAvailable)('E2E Lifecycle: InitRunner → GTD.runPhase() full lifecycle', () => {
   let tmpDir: string;
   let initSuccess: boolean = false;
   let phase1Number: string | null = null;
-  let tools: GSDTools;
+  let tools: GTDTools;
 
   // ── Bootstrap: create temp dir, git init, run InitRunner ──────────────
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-lifecycle-e2e-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-lifecycle-e2e-'));
 
     // Git init (required by InitRunner and phase lifecycle)
     execSync('git init', { cwd: tmpDir, stdio: 'ignore' });
     execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'ignore' });
     execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'ignore' });
 
-    tools = new GSDTools({
+    tools = new GTDTools({
       projectDir: tmpDir,
-      gsdToolsPath: GSD_TOOLS_PATH,
+      gtdToolsPath: GTD_TOOLS_PATH,
       timeoutMs: 30_000,
     });
 
     // Run InitRunner to bootstrap the project
-    const initEventStream = new GSDEventStream();
+    const initEventStream = new GTDEventStream();
     const initRunner = new InitRunner({
       projectDir: tmpDir,
       tools,
@@ -136,7 +136,7 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner 
 
   // ── Main lifecycle test ───────────────────────────────────────────────
 
-  it('GSD.runPhase() drives Phase 1 through the full lifecycle without human intervention', async () => {
+  it('GTD.runPhase() drives Phase 1 through the full lifecycle without human intervention', async () => {
     // If init failed, skip — can't test lifecycle without a bootstrapped project
     if (!initSuccess) {
       console.warn('Skipping lifecycle test: InitRunner did not bootstrap successfully');
@@ -159,17 +159,17 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner 
     expect(phaseOp.phase_found).toBe(true);
 
     // Collect all events during the phase lifecycle
-    const events: GSDEvent[] = [];
+    const events: GTDEvent[] = [];
 
-    // Construct GSD with autoMode: true
-    const gsd = new GSD({
+    // Construct GTD with autoMode: true
+    const gtd = new GTD({
       projectDir: tmpDir,
       autoMode: true,
     });
-    gsd.onEvent((e: GSDEvent) => events.push(e));
+    gtd.onEvent((e: GTDEvent) => events.push(e));
 
     // Run the discovered first phase with tight budget to minimize cost
-    const result: PhaseRunnerResult = await gsd.runPhase(phase1Number!, {
+    const result: PhaseRunnerResult = await gtd.runPhase(phase1Number!, {
       maxTurnsPerStep: 10,
       maxBudgetPerStep: 0.50,
     });
@@ -185,19 +185,19 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner 
     expect(result.steps.length).toBeGreaterThanOrEqual(1);
 
     // ── Assert: events include PhaseStart ──
-    const phaseStartEvents = events.filter(e => e.type === GSDEventType.PhaseStart);
+    const phaseStartEvents = events.filter(e => e.type === GTDEventType.PhaseStart);
     expect(phaseStartEvents.length).toBe(1);
     const phaseStart = phaseStartEvents[0]!;
-    if (phaseStart.type === GSDEventType.PhaseStart) {
+    if (phaseStart.type === GTDEventType.PhaseStart) {
       expect(phaseStart.phaseNumber).toBe(phase1Number);
       expect(phaseStart.phaseName).toBeTruthy();
     }
 
     // ── Assert: events include PhaseComplete ──
-    const phaseCompleteEvents = events.filter(e => e.type === GSDEventType.PhaseComplete);
+    const phaseCompleteEvents = events.filter(e => e.type === GTDEventType.PhaseComplete);
     expect(phaseCompleteEvents.length).toBe(1);
     const phaseComplete = phaseCompleteEvents[0]!;
-    if (phaseComplete.type === GSDEventType.PhaseComplete) {
+    if (phaseComplete.type === GTDEventType.PhaseComplete) {
       expect(phaseComplete.phaseNumber).toBe(phase1Number);
       expect(typeof phaseComplete.totalCostUsd).toBe('number');
       expect(typeof phaseComplete.totalDurationMs).toBe('number');
@@ -205,8 +205,8 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner 
 
     // ── Assert: PhaseStepStart events show step progression ──
     const stepStartEvents = events.filter(
-      (e): e is Extract<GSDEvent, { type: GSDEventType.PhaseStepStart }> =>
-        e.type === GSDEventType.PhaseStepStart,
+      (e): e is Extract<GTDEvent, { type: GTDEventType.PhaseStepStart }> =>
+        e.type === GTDEventType.PhaseStepStart,
     );
     expect(stepStartEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -249,8 +249,8 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable)('E2E Lifecycle: InitRunner 
 
     // ── Assert: PhaseStepComplete events match step results ──
     const stepCompleteEvents = events.filter(
-      (e): e is Extract<GSDEvent, { type: GSDEventType.PhaseStepComplete }> =>
-        e.type === GSDEventType.PhaseStepComplete,
+      (e): e is Extract<GTDEvent, { type: GTDEventType.PhaseStepComplete }> =>
+        e.type === GTDEventType.PhaseStepComplete,
     );
     // At least as many complete events as step results
     expect(stepCompleteEvents.length).toBeGreaterThanOrEqual(result.steps.length);

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { QueryRuntimeBridge } from './query-runtime-bridge.js';
-import { GSDToolsError } from './gsd-tools-error.js';
+import { GTDToolsError } from './gtd-tools-error.js';
 
 describe('QueryRuntimeBridge observability', () => {
   it('emits query_dispatch success event with transport decision', async () => {
@@ -45,7 +45,7 @@ describe('QueryRuntimeBridge observability', () => {
     const onDispatchEvent = vi.fn();
     const executionPolicy = {
       execute: vi.fn(async () => {
-        throw GSDToolsError.timeout('timeout', 'state', ['load'], '', 500);
+        throw GTDToolsError.timeout('timeout', 'state', ['load'], '', 500);
       }),
     };
 

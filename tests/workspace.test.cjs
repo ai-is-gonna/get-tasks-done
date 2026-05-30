@@ -1,8 +1,8 @@
 /**
- * GSD Workspace Tests
+ * GTD Workspace Tests
  *
- * Tests for /gsd-new-workspace, /gsd-list-workspaces, /gsd-remove-workspace
- * init functions and integration with gsd-tools routing.
+ * Tests for /gtd-new-workspace, /gtd-list-workspaces, /gtd-remove-workspace
+ * init functions and integration with gtd-tools routing.
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
@@ -11,8 +11,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
-const { runGsdTools, createTempProject, createTempDir, cleanup } = require('./helpers.cjs');
-const { detectChildRepos } = require('../get-shit-done/bin/lib/init.cjs');
+const { runGtdTools, createTempProject, createTempDir, cleanup } = require('./helpers.cjs');
+const { detectChildRepos } = require('../get-tasks-done/bin/lib/init.cjs');
 
 // ─── detectChildRepos ────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ describe('detectChildRepos', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-ws-test-');
+    tmpDir = createTempDir('gtd-ws-test-');
   });
 
   afterEach(() => {
@@ -75,13 +75,13 @@ describe('detectChildRepos', () => {
   });
 });
 
-// ─── cmdInitNewWorkspace via gsd-tools ──────────────────────────────────────
+// ─── cmdInitNewWorkspace via gtd-tools ──────────────────────────────────────
 
 describe('init new-workspace', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-ws-test-');
+    tmpDir = createTempDir('gtd-ws-test-');
   });
 
   afterEach(() => {
@@ -89,7 +89,7 @@ describe('init new-workspace', () => {
   });
 
   test('returns expected JSON fields', () => {
-    const result = runGsdTools('init new-workspace', tmpDir);
+    const result = runGtdTools('init new-workspace', tmpDir);
     assert.ok(result.success, `init failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.ok('default_workspace_base' in data);
@@ -106,26 +106,26 @@ describe('init new-workspace', () => {
     fs.mkdirSync(repo);
     execSync('git init', { cwd: repo, stdio: 'pipe' });
 
-    const result = runGsdTools('init new-workspace', tmpDir);
+    const result = runGtdTools('init new-workspace', tmpDir);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.child_repo_count, 1);
     assert.strictEqual(data.child_repos[0].name, 'my-repo');
   });
 
   test('reports no git repo when cwd is not a git repo', () => {
-    const result = runGsdTools('init new-workspace', tmpDir);
+    const result = runGtdTools('init new-workspace', tmpDir);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.is_git_repo, false);
   });
 });
 
-// ─── cmdInitListWorkspaces via gsd-tools ────────────────────────────────────
+// ─── cmdInitListWorkspaces via gtd-tools ────────────────────────────────────
 
 describe('init list-workspaces', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-ws-test-');
+    tmpDir = createTempDir('gtd-ws-test-');
   });
 
   afterEach(() => {
@@ -133,7 +133,7 @@ describe('init list-workspaces', () => {
   });
 
   test('returns empty list when no workspaces exist', () => {
-    const result = runGsdTools('init list-workspaces', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init list-workspaces', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.workspace_count, 0);
@@ -141,7 +141,7 @@ describe('init list-workspaces', () => {
   });
 
   test('finds workspaces with WORKSPACE.md', () => {
-    const wsBase = path.join(tmpDir, 'gsd-workspaces');
+    const wsBase = path.join(tmpDir, 'gtd-workspaces');
     const ws1 = path.join(wsBase, 'feature-a');
     fs.mkdirSync(path.join(ws1, '.planning'), { recursive: true });
     fs.writeFileSync(path.join(ws1, 'WORKSPACE.md'), [
@@ -157,7 +157,7 @@ describe('init list-workspaces', () => {
       '| hr-ui | /tmp/hr-ui | workspace/feature-a | worktree |',
     ].join('\n'));
 
-    const result = runGsdTools('init list-workspaces', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init list-workspaces', tmpDir, { HOME: tmpDir });
     const data = JSON.parse(result.output);
     assert.strictEqual(data.workspace_count, 1);
     assert.strictEqual(data.workspaces[0].name, 'feature-a');
@@ -166,13 +166,13 @@ describe('init list-workspaces', () => {
   });
 });
 
-// ─── cmdInitRemoveWorkspace via gsd-tools ───────────────────────────────────
+// ─── cmdInitRemoveWorkspace via gtd-tools ───────────────────────────────────
 
 describe('init remove-workspace', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-ws-test-');
+    tmpDir = createTempDir('gtd-ws-test-');
   });
 
   afterEach(() => {
@@ -180,19 +180,19 @@ describe('init remove-workspace', () => {
   });
 
   test('errors when no name provided', () => {
-    const result = runGsdTools('init remove-workspace', tmpDir);
+    const result = runGtdTools('init remove-workspace', tmpDir);
     assert.strictEqual(result.success, false);
     assert.ok(result.error.includes('workspace name required'));
   });
 
   test('errors when workspace not found', () => {
-    const result = runGsdTools('init remove-workspace nonexistent', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init remove-workspace nonexistent', tmpDir, { HOME: tmpDir });
     assert.strictEqual(result.success, false);
     assert.ok(result.error.includes('Workspace not found'));
   });
 
   test('returns workspace info for existing workspace', () => {
-    const wsBase = path.join(tmpDir, 'gsd-workspaces');
+    const wsBase = path.join(tmpDir, 'gtd-workspaces');
     const ws = path.join(wsBase, 'test-ws');
     fs.mkdirSync(ws, { recursive: true });
     fs.writeFileSync(path.join(ws, 'WORKSPACE.md'), [
@@ -208,7 +208,7 @@ describe('init remove-workspace', () => {
       '| api | /tmp/api | workspace/test-ws | clone |',
     ].join('\n'));
 
-    const result = runGsdTools('init remove-workspace test-ws', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init remove-workspace test-ws', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.strictEqual(data.workspace_name, 'test-ws');
@@ -224,7 +224,7 @@ describe('workspace worktree integration', () => {
   let sourceRepo;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-ws-integ-');
+    tmpDir = createTempDir('gtd-ws-integ-');
     // Create a source git repo with a commit
     sourceRepo = path.join(tmpDir, 'source-repo');
     fs.mkdirSync(sourceRepo);
@@ -343,7 +343,7 @@ describe('workspace command files', () => {
 
   /**
    * Extract `@`-include targets from any of the <execution_context*> blocks.
-   * Each line of the form `@~/.claude/get-shit-done/workflows/foo.md` becomes
+   * Each line of the form `@~/.claude/get-tasks-done/workflows/foo.md` becomes
    * a relative target like `workflows/foo.md`. Used to assert workflow
    * routing structurally instead of substring-matching prose.
    */
@@ -355,9 +355,9 @@ describe('workspace command files', () => {
       for (const line of blk.split('\n')) {
         const t = line.trim();
         if (!t.startsWith('@')) continue;
-        // Normalize away the home-prefix and the `.claude/get-shit-done/` root
+        // Normalize away the home-prefix and the `.claude/get-tasks-done/` root
         // so the test only cares about the workflow path tail.
-        const rel = t.replace(/^@~?\/?(?:\.claude\/)?(?:get-shit-done\/)?/, '');
+        const rel = t.replace(/^@~?\/?(?:\.claude\/)?(?:get-tasks-done\/)?/, '');
         targets.push(rel);
       }
     }
@@ -367,8 +367,8 @@ describe('workspace command files', () => {
   test('consolidated workspace.md command declares correct frontmatter contract (#2790)', () => {
     // Structural: parse frontmatter, then split argument-hint into the
     // tokenized flag list. Each consolidated flag must appear there.
-    const { fm } = parseCommandFile(path.join(baseDir, 'commands/gsd/workspace.md'));
-    assert.equal(fm.name, 'gsd:workspace', `workspace.md frontmatter name must be "gsd:workspace"; got "${fm.name}"`);
+    const { fm } = parseCommandFile(path.join(baseDir, 'commands/gtd/workspace.md'));
+    assert.equal(fm.name, 'gtd:workspace', `workspace.md frontmatter name must be "gtd:workspace"; got "${fm.name}"`);
     assert.ok(fm['argument-hint'], 'workspace.md frontmatter must declare argument-hint');
     // argument-hint can include multiple bracketed segments and free tokens,
     // e.g. "[--new | --list | --remove] [name]". Pull every `--flag` token
@@ -387,7 +387,7 @@ describe('workspace command files', () => {
   });
 
   test('workspace.md @-includes the new-workspace workflow', () => {
-    const { body } = parseCommandFile(path.join(baseDir, 'commands/gsd/workspace.md'));
+    const { body } = parseCommandFile(path.join(baseDir, 'commands/gtd/workspace.md'));
     const targets = executionContextIncludes(body);
     assert.ok(
       targets.some((t) => /(^|\/)workflows\/new-workspace\.md$/.test(t)),
@@ -396,7 +396,7 @@ describe('workspace command files', () => {
   });
 
   test('workspace.md @-includes the list-workspaces workflow', () => {
-    const { body } = parseCommandFile(path.join(baseDir, 'commands/gsd/workspace.md'));
+    const { body } = parseCommandFile(path.join(baseDir, 'commands/gtd/workspace.md'));
     const targets = executionContextIncludes(body);
     assert.ok(
       targets.some((t) => /(^|\/)workflows\/list-workspaces\.md$/.test(t)),
@@ -405,7 +405,7 @@ describe('workspace command files', () => {
   });
 
   test('workspace.md @-includes the remove-workspace workflow', () => {
-    const { body } = parseCommandFile(path.join(baseDir, 'commands/gsd/workspace.md'));
+    const { body } = parseCommandFile(path.join(baseDir, 'commands/gtd/workspace.md'));
     const targets = executionContextIncludes(body);
     assert.ok(
       targets.some((t) => /(^|\/)workflows\/remove-workspace\.md$/.test(t)),
@@ -414,10 +414,10 @@ describe('workspace command files', () => {
   });
 
   test('new-workspace workflow exists', () => {
-    const content = fs.readFileSync(path.join(baseDir, 'get-shit-done/workflows/new-workspace.md'), 'utf8');
+    const content = fs.readFileSync(path.join(baseDir, 'get-tasks-done/workflows/new-workspace.md'), 'utf8');
     assert.ok(
       content.includes('init new-workspace') || content.includes('init.new-workspace'),
-      'expected init new-workspace (CJS) or gsd-sdk query init.new-workspace'
+      'expected init new-workspace (CJS) or gtd-sdk query init.new-workspace'
     );
     assert.ok(content.includes('WORKSPACE.md'));
     assert.ok(content.includes('git worktree add'));
@@ -425,26 +425,26 @@ describe('workspace command files', () => {
   });
 
   test('list-workspaces workflow exists', () => {
-    const content = fs.readFileSync(path.join(baseDir, 'get-shit-done/workflows/list-workspaces.md'), 'utf8');
+    const content = fs.readFileSync(path.join(baseDir, 'get-tasks-done/workflows/list-workspaces.md'), 'utf8');
     assert.ok(
       content.includes('init list-workspaces') || content.includes('init.list-workspaces'),
-      'expected init list-workspaces or gsd-sdk query init.list-workspaces'
+      'expected init list-workspaces or gtd-sdk query init.list-workspaces'
     );
   });
 
   test('remove-workspace workflow exists', () => {
-    const content = fs.readFileSync(path.join(baseDir, 'get-shit-done/workflows/remove-workspace.md'), 'utf8');
+    const content = fs.readFileSync(path.join(baseDir, 'get-tasks-done/workflows/remove-workspace.md'), 'utf8');
     assert.ok(
       content.includes('init remove-workspace') || content.includes('init.remove-workspace'),
-      'expected init remove-workspace or gsd-sdk query init.remove-workspace'
+      'expected init remove-workspace or gtd-sdk query init.remove-workspace'
     );
     assert.ok(content.includes('git worktree remove'));
   });
 });
 
-// ─── Routing in gsd-tools ───────────────────────────────────────────────────
+// ─── Routing in gtd-tools ───────────────────────────────────────────────────
 
-describe('workspace routing in gsd-tools', () => {
+describe('workspace routing in gtd-tools', () => {
   let tmpDir;
 
   beforeEach(() => { tmpDir = createTempProject(); });
@@ -455,7 +455,7 @@ describe('workspace routing in gsd-tools', () => {
   // covered by the functional tests above; these guard against routing deletions.
 
   test('init new-workspace is routed correctly', () => {
-    const result = runGsdTools('init new-workspace test-ws', tmpDir);
+    const result = runGtdTools('init new-workspace test-ws', tmpDir);
     const stderr = result.error || '';
     assert.ok(
       !stderr.includes('Unknown init workflow'),
@@ -464,14 +464,14 @@ describe('workspace routing in gsd-tools', () => {
   });
 
   test('init list-workspaces is routed correctly', () => {
-    const result = runGsdTools('init list-workspaces', tmpDir);
+    const result = runGtdTools('init list-workspaces', tmpDir);
     assert.ok(result.success, `init list-workspaces should succeed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.ok(Array.isArray(parsed.workspaces), 'list-workspaces must return a workspaces array');
   });
 
   test('init remove-workspace is routed correctly', () => {
-    const result = runGsdTools('init remove-workspace nonexistent-ws', tmpDir);
+    const result = runGtdTools('init remove-workspace nonexistent-ws', tmpDir);
     const stderr = result.error || '';
     assert.ok(
       !stderr.includes('Unknown init workflow'),

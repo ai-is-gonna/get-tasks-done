@@ -17,9 +17,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const PAUSE_WORK = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'pause-work.md');
-const DISCUSS_PHASE = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md');
-const EXECUTE_PHASE = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-phase.md');
+const PAUSE_WORK = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'pause-work.md');
+const DISCUSS_PHASE = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md');
+const EXECUTE_PHASE = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'work-task-issue.md');
 
 describe('pause-work.md — severity column in Critical Anti-Patterns template', () => {
   test('template includes a Severity column header in the anti-patterns table', () => {
@@ -120,7 +120,7 @@ describe('discuss-phase.md — blocking anti-pattern understanding check', () =>
   });
 });
 
-describe('execute-phase.md — blocking anti-pattern understanding check', () => {
+describe('work-task-issue.md — blocking anti-pattern understanding check', () => {
   test('workflow checks for .continue-here.md with blocking anti-patterns', () => {
     const content = fs.readFileSync(EXECUTE_PHASE, 'utf-8');
     const hasCheck =
@@ -128,7 +128,7 @@ describe('execute-phase.md — blocking anti-pattern understanding check', () =>
       (content.includes('blocking') || content.includes('anti-pattern'));
     assert.ok(
       hasCheck,
-      'execute-phase.md must check for .continue-here.md blocking anti-patterns before proceeding'
+      'work-task-issue.md must check for .continue-here.md blocking anti-patterns before proceeding'
     );
   });
 
@@ -140,7 +140,7 @@ describe('execute-phase.md — blocking anti-pattern understanding check', () =>
       content.includes('demonstrate understanding');
     assert.ok(
       hasVerification,
-      'execute-phase.md must include a mandatory understanding verification step for blocking anti-patterns'
+      'work-task-issue.md must include a mandatory understanding verification step for blocking anti-patterns'
     );
   });
 
@@ -160,7 +160,7 @@ describe('execute-phase.md — blocking anti-pattern understanding check', () =>
       content.includes('Prevention');
     assert.ok(
       hasWhatIs && hasHowManifest && hasPreventMechanism,
-      'execute-phase.md must include the three understanding check questions: ' +
+      'work-task-issue.md must include the three understanding check questions: ' +
       '"What is this anti-pattern?", "How did it manifest?", "What structural mechanism prevents it?"'
     );
   });
@@ -175,7 +175,7 @@ describe('execute-phase.md — blocking anti-pattern understanding check', () =>
       content.includes('required before');
     assert.ok(
       hasMandatory,
-      'execute-phase.md must indicate that the blocking anti-pattern understanding check cannot be skipped'
+      'work-task-issue.md must indicate that the blocking anti-pattern understanding check cannot be skipped'
     );
   });
 });

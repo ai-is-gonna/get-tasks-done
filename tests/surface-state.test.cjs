@@ -9,10 +9,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const { readSurface, writeSurface } = require('../get-shit-done/bin/lib/surface.cjs');
+const { readSurface, writeSurface } = require('../get-tasks-done/bin/lib/surface.cjs');
 
 function tmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-surface-state-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-surface-state-'));
 }
 
 describe('readSurface / writeSurface', () => {
@@ -53,7 +53,7 @@ describe('readSurface / writeSurface', () => {
     const dir = tmpDir();
     try {
       const state = {
-        baseProfile: 'core,audit',
+        baseProfile: 'core,issue-tasks',
         disabledClusters: [],
         explicitAdds: [],
         explicitRemoves: ['health'],
@@ -76,7 +76,7 @@ describe('readSurface / writeSurface', () => {
   });
 
   test('non-existent directory returns null', () => {
-    const ghost = path.join(os.tmpdir(), 'gsd-surface-no-exist-' + Date.now());
+    const ghost = path.join(os.tmpdir(), 'gtd-surface-no-exist-' + Date.now());
     const result = readSurface(ghost);
     assert.strictEqual(result, null);
   });
@@ -84,7 +84,7 @@ describe('readSurface / writeSurface', () => {
   test('corrupt JSON returns null', () => {
     const dir = tmpDir();
     try {
-      fs.writeFileSync(path.join(dir, '.gsd-surface.json'), '{not valid json', 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-surface.json'), '{not valid json', 'utf8');
       const result = readSurface(dir);
       assert.strictEqual(result, null);
     } finally {
@@ -96,7 +96,7 @@ describe('readSurface / writeSurface', () => {
     const dir = tmpDir();
     try {
       fs.writeFileSync(
-        path.join(dir, '.gsd-surface.json'),
+        path.join(dir, '.gtd-surface.json'),
         JSON.stringify({ disabledClusters: [], explicitAdds: [], explicitRemoves: [] }),
         'utf8'
       );
@@ -111,7 +111,7 @@ describe('readSurface / writeSurface', () => {
     const dir = tmpDir();
     try {
       fs.writeFileSync(
-        path.join(dir, '.gsd-surface.json'),
+        path.join(dir, '.gtd-surface.json'),
         JSON.stringify({ baseProfile: 'standard', disabledClusters: 'utility', explicitAdds: [], explicitRemoves: [] }),
         'utf8'
       );
@@ -132,7 +132,7 @@ describe('readSurface / writeSurface', () => {
       const tmpFiles = files.filter(f => f.includes('.tmp.'));
       assert.deepStrictEqual(tmpFiles, [], 'no tmp files should remain after write');
       // The canonical file exists
-      assert.ok(files.includes('.gsd-surface.json'));
+      assert.ok(files.includes('.gtd-surface.json'));
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

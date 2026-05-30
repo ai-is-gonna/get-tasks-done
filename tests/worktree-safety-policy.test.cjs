@@ -11,7 +11,7 @@ const {
   listLinkedWorktreePaths,
   inspectWorktreeHealth,
   snapshotWorktreeInventory,
-} = require('../get-shit-done/bin/lib/worktree-safety.cjs');
+} = require('../get-tasks-done/bin/lib/worktree-safety.cjs');
 
 describe('worktree-safety policy module', () => {
   test('resolveWorktreeContext prefers current directory when .planning exists', () => {

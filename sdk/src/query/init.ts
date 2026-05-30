@@ -5,15 +5,12 @@
  * that CJS init.cjs produces, enabling workflow migration. Each handler
  * follows the QueryHandler signature and returns { data: <flat JSON> }.
  *
- * Port of get-shit-done/bin/lib/init.cjs (13 of 16 handlers).
+ * Port of get-tasks-done/bin/lib/init.cjs (13 of 16 handlers).
  * The 3 complex handlers (new-project, progress, manager) are in init-complex.ts.
  *
  * @example
  * ```typescript
- * import { initExecutePhase, withProjectRoot } from './init.js';
- *
- * const result = await initExecutePhase(['9'], '/project');
- * // { data: { executor_model: 'opus', phase_found: true, ... } }
+ * import { initPlanPhase, withProjectRoot } from './init.js';
  * ```
  */
 
@@ -23,13 +20,14 @@ import { join, relative, basename } from 'node:path';
 import { execSync } from 'node:child_process';
 import { homedir } from 'node:os';
 
-import { loadConfig, type GSDConfig } from '../config.js';
+import { loadConfig, type GTDConfig } from '../config.js';
 import { resolveModel, MODEL_PROFILES } from './config-query.js';
 import { maskIfSecret } from './secrets.js';
 import { findPhase } from './phase.js';
 import { roadmapGetPhase, getMilestoneInfo, extractCurrentMilestone, extractPhasesFromSection } from './roadmap.js';
 import { planningPaths, normalizePhaseName, toPosixPath, resolveAgentsDir, detectRuntime } from './helpers.js';
 import { generatePhaseSlug, assertSafeProjectCode } from './phase-lifecycle-policy.js';
+import { resolveBundledAgentsDir } from '../sdk-package-compatibility.js';
 import type { QueryHandler } from './utils.js';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────
@@ -81,7 +79,7 @@ function pathExists(base: string, relPath: string): boolean {
 /**
  * Bug #3491: detect whether `base` is inside any git worktree, and if so,
  * return the absolute worktree root. Mirrors the CJS `gitWorktreeInfoInternal`
- * in get-shit-done/bin/lib/core.cjs — keep these two implementations behaviour-
+ * in get-tasks-done/bin/lib/core.cjs — keep these two implementations behaviour-
  * identical so the SDK and CJS init handlers emit the same has_git semantics.
  *
  * Returns { inside, worktreeRoot } — both fall back to false/null on any error
@@ -119,7 +117,7 @@ function gitWorktreeInfo(base: string): { inside: boolean; worktreeRoot: string 
 /**
  * Compute the canonical phase directory name for a known phase entry from the
  * roadmap when no directory exists yet.  Applies the project_code prefix so
- * the first-touch creation path used by /gsd-discuss-phase and /gsd-plan-phase
+ * the first-touch creation path used by /gtd-discuss-phase and /gtd-plan-phase
  * stays consistent with the prefix produced by `phase.add` / `phase.insert`.
  *
  * Returns null when phaseNumber or phaseName cannot be determined.
@@ -169,17 +167,18 @@ function getLatestCompletedMilestone(projectDir: string): { version: string; nam
 }
 
 /**
- * Check which GSD agents are installed on disk.
+ * Check which GTD agents are installed on disk.
  *
  * Runtime-aware per issue #2402: detects the invoking runtime
- * (`GSD_RUNTIME` → `config.runtime` → 'claude') and probes that runtime's
- * canonical `agents/` directory. `GSD_AGENTS_DIR` still short-circuits.
+ * (`GTD_RUNTIME` → `config.runtime` → 'claude') and probes that runtime's
+ * canonical `agents/` directory. `GTD_AGENTS_DIR` still short-circuits.
  *
  * Port of checkAgentsInstalled from core.cjs lines 1274-1306.
  */
 function checkAgentsInstalled(config?: { runtime?: unknown }): { agents_installed: boolean; missing_agents: string[] } {
   const runtime = detectRuntime(config);
-  const agentsDir = resolveAgentsDir(runtime);
+  const runtimeAgentsDir = resolveAgentsDir(runtime);
+  const agentsDir = existsSync(runtimeAgentsDir) ? runtimeAgentsDir : resolveBundledAgentsDir();
   const expectedAgents = Object.keys(MODEL_PROFILES);
 
   if (!existsSync(agentsDir)) {
@@ -354,89 +353,6 @@ export function withProjectRoot(
   return result;
 }
 
-// ─── initExecutePhase ─────────────────────────────────────────────────────
-
-/**
- * Init handler for execute-phase workflow.
- * Port of cmdInitExecutePhase from init.cjs lines 50-171.
- */
-export const initExecutePhase: QueryHandler = async (args, projectDir, workstream) => {
-  const phase = extractPhaseArg(args);
-  if (!phase) {
-    return { data: { error: 'phase required for init execute-phase' } };
-  }
-
-  const config = await loadConfig(projectDir);
-  const paths = planningPaths(projectDir, workstream);
-  const planningDir = paths.planning;
-
-  const { phaseInfo, roadmapPhase } = await getPhaseInfoWithFallback(phase, projectDir, workstream);
-  const phase_req_ids = extractReqIds(roadmapPhase);
-
-  const configExists = existsSync(join(planningDir, 'config.json'));
-  const [executorModel, verifierModel] = configExists
-    ? await Promise.all([
-        getModelAlias('gsd-executor', projectDir),
-        getModelAlias('gsd-verifier', projectDir),
-      ])
-    : ['', ''];
-
-  const milestone = await getMilestoneInfo(projectDir, workstream);
-
-  const phaseNumber = (phaseInfo?.phase_number as string) || null;
-  const phaseSlug = (phaseInfo?.phase_slug as string) || null;
-  const plans = (phaseInfo?.plans || []) as string[];
-  const summaries = (phaseInfo?.summaries || []) as string[];
-  const incompletePlans = (phaseInfo?.incomplete_plans || []) as string[];
-  const projectCode = (config as Record<string, unknown>).project_code as string || '';
-
-  const result: Record<string, unknown> = {
-    executor_model: executorModel,
-    verifier_model: verifierModel,
-    tdd_mode: config.workflow.tdd_mode ?? false,
-    commit_docs: config.commit_docs,
-    sub_repos: (config as Record<string, unknown>).sub_repos ?? [],
-    parallelization: config.parallelization,
-    context_window: (config as Record<string, unknown>).context_window ?? 200000,
-    branching_strategy: config.git.branching_strategy,
-    phase_branch_template: config.git.phase_branch_template,
-    milestone_branch_template: config.git.milestone_branch_template,
-    verifier_enabled: config.workflow.verifier,
-    phase_found: !!phaseInfo,
-    phase_dir: (phaseInfo?.directory as string) ?? null,
-    phase_number: phaseNumber,
-    phase_name: (phaseInfo?.phase_name as string) ?? null,
-    phase_slug: phaseSlug,
-    phase_req_ids,
-    plans,
-    summaries,
-    incomplete_plans: incompletePlans,
-    plan_count: plans.length,
-    incomplete_count: incompletePlans.length,
-    branch_name: config.git.branching_strategy === 'phase' && phaseInfo
-      ? config.git.phase_branch_template
-          .replace('{project}', projectCode)
-          .replace('{phase}', phaseNumber || '')
-          .replace('{slug}', phaseSlug || 'phase')
-      : config.git.branching_strategy === 'milestone'
-        ? config.git.milestone_branch_template
-            .replace('{milestone}', milestone.version)
-            .replace('{slug}', generateSlugInternal(milestone.name) || 'milestone')
-        : null,
-    milestone_version: milestone.version,
-    milestone_name: milestone.name,
-    milestone_slug: generateSlugInternal(milestone.name),
-    state_exists: existsSync(join(planningDir, 'STATE.md')),
-    roadmap_exists: existsSync(join(planningDir, 'ROADMAP.md')),
-    config_exists: configExists,
-    state_path: toPosixPath(relative(projectDir, join(planningDir, 'STATE.md'))),
-    roadmap_path: toPosixPath(relative(projectDir, join(planningDir, 'ROADMAP.md'))),
-    config_path: toPosixPath(relative(projectDir, join(planningDir, 'config.json'))),
-  };
-
-  return { data: withProjectRoot(projectDir, result, config as Record<string, unknown>) };
-};
-
 // ─── initPlanPhase ────────────────────────────────────────────────────────
 
 /**
@@ -459,9 +375,9 @@ export const initPlanPhase: QueryHandler = async (args, projectDir, workstream) 
   const configExists = existsSync(join(planningDir, 'config.json'));
   const [researcherModel, plannerModel, checkerModel] = configExists
     ? await Promise.all([
-        getModelAlias('gsd-phase-researcher', projectDir),
-        getModelAlias('gsd-planner', projectDir),
-        getModelAlias('gsd-plan-checker', projectDir),
+        getModelAlias('gtd-phase-researcher', projectDir),
+        getModelAlias('gtd-planner', projectDir),
+        getModelAlias('gtd-plan-checker', projectDir),
       ])
     : ['', '', ''];
 
@@ -471,7 +387,7 @@ export const initPlanPhase: QueryHandler = async (args, projectDir, workstream) 
   const plans = (phaseInfo?.plans || []) as string[];
 
   // #3287: compute the canonical directory name with project_code prefix so
-  // the first-touch mkdir in /gsd-plan-phase stays consistent with phase.add.
+  // the first-touch mkdir in /gtd-plan-phase stays consistent with phase.add.
   const rawProjectCode = (config as Record<string, unknown>).project_code as string || '';
   assertSafeProjectCode(rawProjectCode);
   const expectedPhaseDirName = phaseDir
@@ -481,7 +397,7 @@ export const initPlanPhase: QueryHandler = async (args, projectDir, workstream) 
     ? toPosixPath(relative(projectDir, join(paths.phases, expectedPhaseDirName)))
     : null;
 
-  const cfg = config as GSDConfig;
+  const cfg = config as GTDConfig;
   const result: Record<string, unknown> = {
     researcher_model: researcherModel,
     planner_model: plannerModel,
@@ -491,6 +407,7 @@ export const initPlanPhase: QueryHandler = async (args, projectDir, workstream) 
     plan_checker_enabled: config.workflow.plan_check,
     nyquist_validation_enabled: config.workflow.nyquist_validation,
     commit_docs: config.commit_docs,
+    context_window: config.context_window ?? 200000,
     text_mode: config.workflow.text_mode,
     auto_advance: !!config.workflow.auto_advance,
     auto_chain_active: !!config.workflow._auto_chain_active,
@@ -512,6 +429,7 @@ export const initPlanPhase: QueryHandler = async (args, projectDir, workstream) 
     roadmap_exists: existsSync(join(planningDir, 'ROADMAP.md')),
     state_path: toPosixPath(relative(projectDir, join(planningDir, 'STATE.md'))),
     roadmap_path: toPosixPath(relative(projectDir, join(planningDir, 'ROADMAP.md'))),
+    config_path: toPosixPath(relative(projectDir, join(planningDir, 'config.json'))),
     requirements_path: toPosixPath(relative(projectDir, join(planningDir, 'REQUIREMENTS.md'))),
     patterns_path: null,
   };
@@ -562,9 +480,9 @@ export const initNewMilestone: QueryHandler = async (_args, projectDir) => {
   } catch { /* intentionally empty */ }
 
   const [researcherModel, synthesizerModel, roadmapperModel] = await Promise.all([
-    getModelAlias('gsd-project-researcher', projectDir),
-    getModelAlias('gsd-research-synthesizer', projectDir),
-    getModelAlias('gsd-roadmapper', projectDir),
+    getModelAlias('gtd-project-researcher', projectDir),
+    getModelAlias('gtd-research-synthesizer', projectDir),
+    getModelAlias('gtd-roadmapper', projectDir),
   ]);
 
   const result: Record<string, unknown> = {
@@ -625,10 +543,10 @@ export const initQuick: QueryHandler = async (args, projectDir) => {
   const configExists = existsSync(join(planningDir, 'config.json'));
   const [plannerModel, executorModel, checkerModel, verifierModel] = configExists
     ? await Promise.all([
-        getModelAlias('gsd-planner', projectDir),
-        getModelAlias('gsd-executor', projectDir),
-        getModelAlias('gsd-plan-checker', projectDir),
-        getModelAlias('gsd-verifier', projectDir),
+        getModelAlias('gtd-planner', projectDir),
+        getModelAlias('gtd-task-executor', projectDir),
+        getModelAlias('gtd-plan-checker', projectDir),
+        getModelAlias('gtd-verifier', projectDir),
       ])
     : ['', '', '', ''];
 
@@ -702,8 +620,8 @@ export const initVerifyWork: QueryHandler = async (args, projectDir, workstream)
   const configExists = existsSync(join(projectDir, '.planning', 'config.json'));
   const [plannerModel, checkerModel] = configExists
     ? await Promise.all([
-        getModelAlias('gsd-planner', projectDir),
-        getModelAlias('gsd-plan-checker', projectDir),
+        getModelAlias('gtd-planner', projectDir),
+        getModelAlias('gtd-plan-checker', projectDir),
       ])
     : ['', ''];
 
@@ -789,7 +707,7 @@ export const initPhaseOp: QueryHandler = async (args, projectDir, workstream) =>
   const plans = (phaseInfo?.plans || []) as string[];
 
   // #3287: compute the canonical directory name with project_code prefix so
-  // the first-touch mkdir in /gsd-discuss-phase stays consistent with phase.add.
+  // the first-touch mkdir in /gtd-discuss-phase stays consistent with phase.add.
   const rawProjectCode = (config as Record<string, unknown>).project_code as string || '';
   assertSafeProjectCode(rawProjectCode);
   const expectedPhaseDirName = phaseDir
@@ -1032,7 +950,7 @@ export const initMapCodebase: QueryHandler = async (_args, projectDir) => {
     existingMaps = readdirSync(codebaseDir).filter(f => f.endsWith('.md'));
   } catch { /* intentionally empty */ }
 
-  const mapperModel = await getModelAlias('gsd-codebase-mapper', projectDir);
+  const mapperModel = await getModelAlias('gtd-codebase-mapper', projectDir);
 
   const result: Record<string, unknown> = {
     mapper_model: mapperModel,
@@ -1061,7 +979,7 @@ export const initMapCodebase: QueryHandler = async (_args, projectDir) => {
  */
 export const initNewWorkspace: QueryHandler = async (_args, projectDir) => {
   const home = process.env.HOME || homedir();
-  const defaultBase = join(home, 'gsd-workspaces');
+  const defaultBase = join(home, 'gtd-workspaces');
 
   // Detect child git repos (one level deep)
   const childRepos: Array<{ name: string; path: string; has_uncommitted: boolean }> = [];
@@ -1107,7 +1025,7 @@ export const initNewWorkspace: QueryHandler = async (_args, projectDir) => {
  */
 export const initListWorkspaces: QueryHandler = async (_args, _projectDir) => {
   const home = process.env.HOME || homedir();
-  const defaultBase = join(home, 'gsd-workspaces');
+  const defaultBase = join(home, 'gtd-workspaces');
 
   const workspaces: Array<Record<string, unknown>> = [];
   if (existsSync(defaultBase)) {
@@ -1170,7 +1088,7 @@ export const initRemoveWorkspace: QueryHandler = async (args, _projectDir) => {
   }
 
   const home = process.env.HOME || homedir();
-  const defaultBase = join(home, 'gsd-workspaces');
+  const defaultBase = join(home, 'gtd-workspaces');
   const wsPath = join(defaultBase, name);
   const manifestPath = join(wsPath, 'WORKSPACE.md');
 

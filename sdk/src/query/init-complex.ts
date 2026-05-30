@@ -6,7 +6,7 @@
  * that CJS init.cjs produces for the new-project, progress, and manager
  * workflows.
  *
- * Port of get-shit-done/bin/lib/init.cjs cmdInitNewProject (lines 296-399),
+ * Port of get-tasks-done/bin/lib/init.cjs cmdInitNewProject (lines 296-399),
  * cmdInitProgress (lines 1139-1284), cmdInitManager (lines 854-1137).
  *
  * @example
@@ -42,6 +42,7 @@ import {
 } from './roadmap.js';
 import { agentSkills } from './skills.js';
 import { withProjectRoot } from './init.js';
+import { resolveBundledAgentsDir } from '../sdk-package-compatibility.js';
 import type { QueryHandler } from './utils.js';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ function pathExists(base: string, relPath: string): boolean {
 /**
  * Bug #3491: detect whether `base` is inside any git worktree, and if so,
  * return the absolute worktree root. Mirrors the CJS `gitWorktreeInfoInternal`
- * in get-shit-done/bin/lib/core.cjs — keep these two implementations behaviour-
+ * in get-tasks-done/bin/lib/core.cjs — keep these two implementations behaviour-
  * identical so the SDK and CJS init handlers emit the same has_git semantics.
  *
  * Returns { inside, worktreeRoot } — both fall back to false/null on any error
@@ -101,14 +102,19 @@ function gitWorktreeInfo(base: string): { inside: boolean; worktreeRoot: string 
 
 
 const NEW_PROJECT_REQUIRED_AGENTS = [
-  'gsd-project-researcher',
-  'gsd-research-synthesizer',
-  'gsd-roadmapper',
+  'gtd-project-researcher',
+  'gtd-research-synthesizer',
+  'gtd-roadmapper',
 ];
 
 function hasAgentDefinition(agentsDir: string, agent: string): boolean {
   return existsSync(join(agentsDir, `${agent}.md`)) ||
     existsSync(join(agentsDir, `${agent}.agent.md`));
+}
+
+function resolveEffectiveAgentsDir(runtime: ReturnType<typeof detectRuntime>): string {
+  const runtimeAgentsDir = resolveAgentsDir(runtime);
+  return existsSync(runtimeAgentsDir) ? runtimeAgentsDir : resolveBundledAgentsDir();
 }
 
 async function resolveAgentSkillPayloadAgents(
@@ -207,19 +213,19 @@ function listPhasePlanAndSummaryCounts(phasePath: string): { plans: string[]; su
 export const initNewProject: QueryHandler = async (_args, projectDir, workstream) => {
   const config = await loadConfig(projectDir, workstream);
 
-  // Detect search API key availability from env vars and ~/.gsd/ files
-  const gsdHome = join(homedir(), '.gsd');
+  // Detect search API key availability from env vars and ~/.gtd/ files
+  const gtdHome = join(homedir(), '.gtd');
   const hasBraveSearch = !!(
     process.env.BRAVE_API_KEY ||
-    existsSync(join(gsdHome, 'brave_api_key'))
+    existsSync(join(gtdHome, 'brave_api_key'))
   );
   const hasFirecrawl = !!(
     process.env.FIRECRAWL_API_KEY ||
-    existsSync(join(gsdHome, 'firecrawl_api_key'))
+    existsSync(join(gtdHome, 'firecrawl_api_key'))
   );
   const hasExaSearch = !!(
     process.env.EXA_API_KEY ||
-    existsSync(join(gsdHome, 'exa_api_key'))
+    existsSync(join(gtdHome, 'exa_api_key'))
   );
 
   // Detect existing code (depth-limited scan, no external tools)
@@ -277,12 +283,12 @@ export const initNewProject: QueryHandler = async (_args, projectDir, workstream
     pathExists(projectDir, 'project.clj');
 
   const [researcherModel, synthesizerModel, roadmapperModel] = await Promise.all([
-    getModelAlias('gsd-project-researcher', projectDir),
-    getModelAlias('gsd-research-synthesizer', projectDir),
-    getModelAlias('gsd-roadmapper', projectDir),
+    getModelAlias('gtd-project-researcher', projectDir),
+    getModelAlias('gtd-research-synthesizer', projectDir),
+    getModelAlias('gtd-roadmapper', projectDir),
   ]);
   const runtime = detectRuntime(config as { runtime?: unknown });
-  const agentsDir = resolveAgentsDir(runtime);
+  const agentsDir = resolveEffectiveAgentsDir(runtime);
   const missingRequiredAgents = NEW_PROJECT_REQUIRED_AGENTS.filter(
     agent => !hasAgentDefinition(agentsDir, agent),
   );
@@ -470,8 +476,8 @@ export const initProgress: QueryHandler = async (_args, projectDir, workstream) 
   } catch { /* intentionally empty */ }
 
   const result: Record<string, unknown> = {
-    executor_model: await getModelAlias('gsd-executor', projectDir),
-    planner_model: await getModelAlias('gsd-planner', projectDir),
+    executor_model: await getModelAlias('gtd-task-executor', projectDir),
+    planner_model: await getModelAlias('gtd-planner', projectDir),
 
     commit_docs: config.commit_docs,
 
@@ -519,7 +525,7 @@ export const initManager: QueryHandler = async (_args, projectDir, workstream) =
   try {
     rawContent = await readFile(paths.roadmap, 'utf-8');
   } catch {
-    return { data: { error: 'No ROADMAP.md found. Run /gsd-new-milestone first.' } };
+    return { data: { error: 'No ROADMAP.md found. Run /gtd-new-milestone first.' } };
   }
 
   const content = await extractCurrentMilestone(rawContent, projectDir, workstream);
@@ -696,9 +702,9 @@ export const initManager: QueryHandler = async (_args, projectDir, workstream) =
       const action = {
         phase: phase.number,
         phase_name: phase.name,
-        action: 'execute',
+        action: 'task-work',
         reason: `${phase.plan_count} plans ready, dependencies met`,
-        command: `/gsd-execute-phase ${phase.number}`,
+        command: `/gtd-export-phase-issues ${phase.number}`,
       };
       const isAllowed = activeExecuting.length === 0 ||
         activeExecuting.every(a => !reaches(phase.number as string, a.number as string) && !reaches(a.number as string, phase.number as string));
@@ -709,7 +715,7 @@ export const initManager: QueryHandler = async (_args, projectDir, workstream) =
         phase_name: phase.name,
         action: 'plan',
         reason: 'Context gathered, ready for planning',
-        command: `/gsd-plan-phase ${phase.number}`,
+        command: `/gtd-plan-phase ${phase.number}`,
       };
       const isAllowed = activePlanning.length === 0 ||
         activePlanning.every(a => !reaches(phase.number as string, a.number as string) && !reaches(a.number as string, phase.number as string));
@@ -720,7 +726,7 @@ export const initManager: QueryHandler = async (_args, projectDir, workstream) =
         phase_name: phase.name,
         action: 'discuss',
         reason: 'Unblocked, ready to gather context',
-        command: `/gsd-discuss-phase ${phase.number}`,
+        command: `/gtd-discuss-phase ${phase.number}`,
       });
     }
   }
@@ -729,7 +735,7 @@ export const initManager: QueryHandler = async (_args, projectDir, workstream) =
 
   // ── Next-milestone surface (issue #2497) ───────────────────────────────
   // Populate queued_phases + metadata with the milestone immediately after
-  // the active one, so the /gsd-manager dashboard can preview what's coming
+  // the active one, so the /gtd-manager dashboard can preview what's coming
   // next without mixing it into the active phases grid. Empty/null when the
   // active milestone is the last one in ROADMAP.
   let queuedPhases: Record<string, unknown>[] = [];

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Pure classifier for the gsd-health --context guard.
+ * Pure classifier for the gtd-health --context guard.
  *
  * Thresholds:
  *   < 60%   healthy
@@ -16,7 +16,7 @@
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { classifyContextUtilization, STATES } = require('../get-shit-done/bin/lib/context-utilization.cjs');
+const { classifyContextUtilization, STATES } = require('../get-tasks-done/bin/lib/context-utilization.cjs');
 
 describe('STATES constant exposes the three boundary names', () => {
   test('exports HEALTHY, WARNING, CRITICAL', () => {

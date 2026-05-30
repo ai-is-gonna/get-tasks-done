@@ -6,7 +6,7 @@ import { PlanningJournal } from './planning-journal.js';
 
 describe('PlanningJournal', () => {
   it('appends events with monotonic source sequence numbers', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-journal-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-journal-'));
     const journal = new PlanningJournal({ projectDir: dir, sourceId: 'daemon-1', runId: 'run-1' });
 
     const first = await journal.append({
@@ -30,7 +30,7 @@ describe('PlanningJournal', () => {
   });
 
   it('replays an existing event for duplicate idempotency keys', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-journal-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-journal-'));
     const journal = new PlanningJournal({ projectDir: dir, sourceId: 'sdk-1', runId: 'run-1' });
 
     const first = await journal.append({
@@ -52,8 +52,8 @@ describe('PlanningJournal', () => {
     expect(await journal.readAll()).toHaveLength(1);
   });
 
-  it('writes jsonl under .gsd/journal.jsonl', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'gsd-journal-'));
+  it('writes jsonl under .gtd/journal.jsonl', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'gtd-journal-'));
     const journal = new PlanningJournal({ projectDir: dir, sourceId: 'sdk-1', runId: 'run-1' });
     await journal.append({
       projectId: 'project-1',
@@ -63,7 +63,7 @@ describe('PlanningJournal', () => {
       idempotencyKey: 'status-1',
     });
 
-    const raw = await readFile(join(dir, '.gsd', 'journal.jsonl'), 'utf8');
+    const raw = await readFile(join(dir, '.gtd', 'journal.jsonl'), 'utf8');
     expect(raw.trim().split('\n')).toHaveLength(1);
     expect(JSON.parse(raw).schemaVersion).toBe(1);
   });

@@ -10,12 +10,12 @@ import type {
   SessionUsage,
   SessionOptions,
   HumanGateCallbacks,
-  GSDEvent,
+  GTDEvent,
   PhasePlanIndex,
   PlanInfo,
 } from './types.js';
-import { PhaseStepType, PhaseType, GSDEventType } from './types.js';
-import type { GSDConfig } from './config.js';
+import { PhaseStepType, PhaseType, GTDEventType } from './types.js';
+import type { GTDConfig } from './config.js';
 import { CONFIG_DEFAULTS } from './config.js';
 
 // ─── Mock modules ────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ function makePlanIndex(planCount: number, overrides: Partial<PhasePlanIndex> = {
   };
 }
 
-function makeConfig(overrides: Partial<GSDConfig> = {}): GSDConfig {
+function makeConfig(overrides: Partial<GTDConfig> = {}): GTDConfig {
   return {
     ...structuredClone(CONFIG_DEFAULTS),
     ...overrides,
@@ -155,11 +155,11 @@ function makeConfig(overrides: Partial<GSDConfig> = {}): GSDConfig {
       ...CONFIG_DEFAULTS.workflow,
       ...(overrides.workflow ?? {}),
     },
-  } as GSDConfig;
+  } as GTDConfig;
 }
 
 function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
-  const events: GSDEvent[] = [];
+  const events: GTDEvent[] = [];
 
   return {
     projectDir: defaultProjectDir,
@@ -187,7 +187,7 @@ function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
       resolveContextFiles: vi.fn().mockResolvedValue({}),
     } as any,
     eventStream: {
-      emitEvent: vi.fn((event: GSDEvent) => events.push(event)),
+      emitEvent: vi.fn((event: GTDEvent) => events.push(event)),
       on: vi.fn(),
       emit: vi.fn(),
     } as any,
@@ -197,11 +197,11 @@ function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
 }
 
 /** Collect events from a deps object. */
-function getEmittedEvents(deps: PhaseRunnerDeps): GSDEvent[] {
-  const events: GSDEvent[] = [];
+function getEmittedEvents(deps: PhaseRunnerDeps): GTDEvent[] {
+  const events: GTDEvent[] = [];
   const emitFn = deps.eventStream.emitEvent as ReturnType<typeof vi.fn>;
   for (const call of emitFn.mock.calls) {
-    events.push(call[0] as GSDEvent);
+    events.push(call[0] as GTDEvent);
   }
   return events;
 }
@@ -213,7 +213,7 @@ describe('PhaseRunner', () => {
 
   beforeEach(async () => {
     tempProjectDirs = [];
-    defaultProjectDir = await mkdtemp(join(tmpdir(), 'gsd-phase-runner-default-'));
+    defaultProjectDir = await mkdtemp(join(tmpdir(), 'gtd-phase-runner-default-'));
     tempProjectDirs.push(defaultProjectDir);
     await mkdir(join(defaultProjectDir, defaultPhaseDir), { recursive: true });
     await writeFile(join(defaultProjectDir, defaultPhaseDir, '01-PLAN.md'), '---\nfiles_modified: []\n---\n', 'utf-8');
@@ -485,7 +485,7 @@ describe('PhaseRunner', () => {
     let tempPhaseDir: string;
 
     beforeEach(async () => {
-      tempPhaseDir = await mkdtemp(join(tmpdir(), 'gsd-research-gate-'));
+      tempPhaseDir = await mkdtemp(join(tmpdir(), 'gtd-research-gate-'));
     });
 
     afterEach(async () => {
@@ -767,7 +767,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('keeps phase pending when changed phase files contain unresolved TBD/FIXME/XXX markers', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-architectural-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-architectural-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -795,7 +795,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('allows changed-file debt markers when they reference tracked follow-up work', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-tracked-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-tracked-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -819,7 +819,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('allows changed-file entries for files deleted by the phase', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-deleted-file-debt-scan-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-deleted-file-debt-scan-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       await mkdir(phaseDir, { recursive: true });
@@ -840,7 +840,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('allows dotted lowercase xxx placeholder text when scanning debt markers', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-lowercase-placeholder-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-lowercase-placeholder-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -864,7 +864,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('keeps phase pending when changed files contain lowercase debt markers', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-lowercase-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-lowercase-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -889,7 +889,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('keeps phase pending when debt markers are followed by punctuation', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-punctuated-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-punctuated-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -914,7 +914,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('allows bare hash issue references when they read as references', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-bare-hash-ref-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-bare-hash-ref-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -938,7 +938,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('does not treat quoted numeric fragments as debt references', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-hex-fragment-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-hex-fragment-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -963,7 +963,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('does not allow unrelated earlier issue text to satisfy a later debt marker', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-unrelated-debt-ref-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-unrelated-debt-ref-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -988,7 +988,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('reports one unresolved debt finding per line', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-duplicate-debt-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-duplicate-debt-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const sourceDir = join(projectDir, 'scripts', 'upstream');
@@ -1019,8 +1019,8 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('keeps phase pending when a declared file resolves through a symlink outside the project', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-symlink-project-'));
-      const externalDir = await mkdtemp(join(tmpdir(), 'gsd-symlink-external-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-symlink-project-'));
+      const externalDir = await mkdtemp(join(tmpdir(), 'gtd-symlink-external-'));
       tempProjectDirs.push(projectDir, externalDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       await mkdir(phaseDir, { recursive: true });
@@ -1068,7 +1068,7 @@ Use TypeScript.`, 'utf-8');
     });
 
     it('keeps phase pending when plan files cannot be listed for the debt scan', async () => {
-      const projectDir = await mkdtemp(join(tmpdir(), 'gsd-debt-missing-plans-'));
+      const projectDir = await mkdtemp(join(tmpdir(), 'gtd-debt-missing-plans-'));
       tempProjectDirs.push(projectDir);
       const phaseDir = join(projectDir, '.planning', 'phases', '01-auth');
       const logger = { warn: vi.fn(), info: vi.fn(), debug: vi.fn() } as any;
@@ -1454,14 +1454,14 @@ Use TypeScript.`, 'utf-8');
       const eventTypes = events.map(e => e.type);
 
       // First event: phase_start
-      expect(eventTypes[0]).toBe(GSDEventType.PhaseStart);
+      expect(eventTypes[0]).toBe(GTDEventType.PhaseStart);
 
       // Last event: phase_complete
-      expect(eventTypes[eventTypes.length - 1]).toBe(GSDEventType.PhaseComplete);
+      expect(eventTypes[eventTypes.length - 1]).toBe(GTDEventType.PhaseComplete);
 
       // Each step has start + complete pair
-      const stepStarts = events.filter(e => e.type === GSDEventType.PhaseStepStart);
-      const stepCompletes = events.filter(e => e.type === GSDEventType.PhaseStepComplete);
+      const stepStarts = events.filter(e => e.type === GTDEventType.PhaseStepStart);
+      const stepCompletes = events.filter(e => e.type === GTDEventType.PhaseStepComplete);
       expect(stepStarts.length).toBeGreaterThan(0);
       expect(stepStarts.length).toBe(stepCompletes.length);
     });
@@ -1476,7 +1476,7 @@ Use TypeScript.`, 'utf-8');
       await runner.run('5');
 
       const events = getEmittedEvents(deps);
-      const phaseStart = events.find(e => e.type === GSDEventType.PhaseStart) as any;
+      const phaseStart = events.find(e => e.type === GTDEventType.PhaseStart) as any;
       expect(phaseStart.phaseNumber).toBe('5');
       expect(phaseStart.phaseName).toBe('Auth Phase');
     });
@@ -1491,7 +1491,7 @@ Use TypeScript.`, 'utf-8');
       await runner.run('1');
 
       const events = getEmittedEvents(deps);
-      const phaseComplete = events.find(e => e.type === GSDEventType.PhaseComplete) as any;
+      const phaseComplete = events.find(e => e.type === GTDEventType.PhaseComplete) as any;
       expect(phaseComplete.success).toBe(true);
       expect(phaseComplete.stepsCompleted).toBe(3); // plan, execute, advance
     });
@@ -1506,7 +1506,7 @@ Use TypeScript.`, 'utf-8');
 
       const events = getEmittedEvents(deps);
       const stepStarts = events
-        .filter(e => e.type === GSDEventType.PhaseStepStart)
+        .filter(e => e.type === GTDEventType.PhaseStepStart)
         .map(e => (e as any).step);
 
       // With all config defaults: discuss, research, plan, execute, verify, advance
@@ -1535,7 +1535,7 @@ Use TypeScript.`, 'utf-8');
     it('throws PhaseRunnerError when initPhaseOp fails', async () => {
       const deps = makeDeps();
       (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('gsd-tools crashed'),
+        new Error('gtd-tools crashed'),
       );
 
       const runner = new PhaseRunner(deps);
@@ -1643,7 +1643,7 @@ Use TypeScript.`, 'utf-8');
       const deps = makeDeps({ config });
       (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
       (deps.tools.phaseComplete as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('gsd-tools commit failed'),
+        new Error('gtd-tools commit failed'),
       );
 
       const runner = new PhaseRunner(deps);
@@ -2084,8 +2084,8 @@ Use TypeScript.`, 'utf-8');
       await runner.run('1');
 
       const events = getEmittedEvents(deps);
-      const waveStarts = events.filter(e => e.type === GSDEventType.WaveStart) as any[];
-      const waveCompletes = events.filter(e => e.type === GSDEventType.WaveComplete) as any[];
+      const waveStarts = events.filter(e => e.type === GTDEventType.WaveStart) as any[];
+      const waveCompletes = events.filter(e => e.type === GTDEventType.WaveComplete) as any[];
 
       // Two waves → two start + two complete events
       expect(waveStarts).toHaveLength(2);
@@ -2192,7 +2192,7 @@ Use TypeScript.`, 'utf-8');
 
       const events = getEmittedEvents(deps);
       const waveEvents = events.filter(
-        e => e.type === GSDEventType.WaveStart || e.type === GSDEventType.WaveComplete,
+        e => e.type === GTDEventType.WaveStart || e.type === GTDEventType.WaveComplete,
       );
       expect(waveEvents).toHaveLength(0);
     });
@@ -2354,10 +2354,10 @@ Use TypeScript.`, 'utf-8');
 
       const events = getEmittedEvents(deps);
       const planCheckStarts = events.filter(
-        e => e.type === GSDEventType.PhaseStepStart && (e as any).step === PhaseStepType.PlanCheck,
+        e => e.type === GTDEventType.PhaseStepStart && (e as any).step === PhaseStepType.PlanCheck,
       );
       const planCheckCompletes = events.filter(
-        e => e.type === GSDEventType.PhaseStepComplete && (e as any).step === PhaseStepType.PlanCheck,
+        e => e.type === GTDEventType.PhaseStepComplete && (e as any).step === PhaseStepType.PlanCheck,
       );
 
       expect(planCheckStarts.length).toBeGreaterThanOrEqual(1);

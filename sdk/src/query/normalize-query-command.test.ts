@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { normalizeQueryCommand } from './query-command-resolution-strategy.js';
 
 describe('normalizeQueryCommand', () => {
-  it('merges nested gsd-tools-style state + subcommand', () => {
+  it('merges nested gtd-tools-style state + subcommand', () => {
     expect(normalizeQueryCommand('state', ['json'])).toEqual(['state.json', []]);
     expect(normalizeQueryCommand('state', ['validate'])).toEqual(['state.validate', []]);
   });
@@ -21,7 +21,7 @@ describe('normalizeQueryCommand', () => {
   });
 
   it('merges init workflows', () => {
-    expect(normalizeQueryCommand('init', ['execute-phase', '9'])).toEqual(['init.execute-phase', ['9']]);
+    expect(normalizeQueryCommand('init', ['plan-phase', '9'])).toEqual(['init.plan-phase', ['9']]);
     expect(normalizeQueryCommand('init', ['new-project'])).toEqual(['init.new-project', []]);
   });
 

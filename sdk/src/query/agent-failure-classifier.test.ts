@@ -1,5 +1,5 @@
 /**
- * Unit tests for `classifyAgentFailure` (#3095 — execute-phase quota-kill classification).
+ * Unit tests for `classifyAgentFailure` (#3095 — task orchestration quota-kill classification).
  *
  * The orchestrator dispatches executor subagents and receives a free-text return body
  * when an agent finishes or fails. Today the body is parsed only for the

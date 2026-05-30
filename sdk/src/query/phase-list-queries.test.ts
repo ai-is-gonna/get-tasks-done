@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { GSDError } from '../errors.js';
+import { GTDError } from '../errors.js';
 import { phaseListPlans, phaseListArtifacts } from './phase-list-queries.js';
 
 const PLAN_A = `---
@@ -38,7 +38,7 @@ B
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-plans-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-plans-'));
   const phaseDir = join(tmpDir, '.planning', 'phases', '09-foundation');
   await mkdir(phaseDir, { recursive: true });
   await writeFile(join(phaseDir, '09-01-PLAN.md'), PLAN_A);
@@ -65,7 +65,7 @@ describe('phaseListPlans', () => {
   });
 
   it('throws when phase missing', async () => {
-    await expect(phaseListPlans([], tmpDir)).rejects.toThrow(GSDError);
+    await expect(phaseListPlans([], tmpDir)).rejects.toThrow(GTDError);
   });
 });
 
@@ -83,6 +83,6 @@ describe('phaseListArtifacts', () => {
   });
 
   it('throws without --type', async () => {
-    await expect(phaseListArtifacts(['9'], tmpDir)).rejects.toThrow(GSDError);
+    await expect(phaseListArtifacts(['9'], tmpDir)).rejects.toThrow(GTDError);
   });
 });

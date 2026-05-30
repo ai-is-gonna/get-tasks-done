@@ -1,12 +1,12 @@
 /**
  * Regression test for #3571: configuration.generated.cjs used the source
- * checkout sdk/shared path only, which breaks installed gsd-tools.cjs because
- * runtime installs copy get-shit-done/ but not sdk/.
+ * checkout sdk/shared path only, which breaks installed gtd-tools.cjs because
+ * runtime installs copy get-tasks-done/ but not sdk/.
  */
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -15,13 +15,13 @@ const os = require('node:os');
 const path = require('node:path');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const CONFIGURATION_CJS = path.join(REPO_ROOT, 'get-shit-done', 'bin', 'lib', 'configuration.generated.cjs');
+const CONFIGURATION_CJS = path.join(REPO_ROOT, 'get-tasks-done', 'bin', 'lib', 'configuration.generated.cjs');
 const SDK_SHARED_DIR = path.join(REPO_ROOT, 'sdk', 'shared');
 
 const { install } = require('../bin/install.js');
 
 function makeTmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3571-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3571-'));
 }
 
 function silenceConsole(fn) {
@@ -50,36 +50,36 @@ describe('bug #3571: configuration generated manifests resolve in install layout
   beforeEach(() => {
     tmpRoot = makeTmpDir();
     savedHome = process.env.HOME;
-    savedExplicitConfigDir = process.env.GSD_EXPLICIT_CONFIG_DIR;
-    delete process.env.GSD_EXPLICIT_CONFIG_DIR;
+    savedExplicitConfigDir = process.env.GTD_EXPLICIT_CONFIG_DIR;
+    delete process.env.GTD_EXPLICIT_CONFIG_DIR;
   });
 
   afterEach(() => {
     process.env.HOME = savedHome;
     if (savedExplicitConfigDir === undefined) {
-      delete process.env.GSD_EXPLICIT_CONFIG_DIR;
+      delete process.env.GTD_EXPLICIT_CONFIG_DIR;
     } else {
-      process.env.GSD_EXPLICIT_CONFIG_DIR = savedExplicitConfigDir;
+      process.env.GTD_EXPLICIT_CONFIG_DIR = savedExplicitConfigDir;
     }
     fs.rmSync(tmpRoot, { recursive: true, force: true });
   });
 
   test('co-located bin/shared manifests let configuration.generated.cjs load without sdk/shared', () => {
-    const gsdBinDir = path.join(tmpRoot, '.codex', 'get-shit-done', 'bin');
-    const gsdLibDir = path.join(gsdBinDir, 'lib');
-    const gsdSharedDir = path.join(gsdBinDir, 'shared');
-    fs.mkdirSync(gsdLibDir, { recursive: true });
-    fs.mkdirSync(gsdSharedDir, { recursive: true });
+    const gtdBinDir = path.join(tmpRoot, '.codex', 'get-tasks-done', 'bin');
+    const gtdLibDir = path.join(gtdBinDir, 'lib');
+    const gtdSharedDir = path.join(gtdBinDir, 'shared');
+    fs.mkdirSync(gtdLibDir, { recursive: true });
+    fs.mkdirSync(gtdSharedDir, { recursive: true });
 
-    const installedCjs = path.join(gsdLibDir, 'configuration.generated.cjs');
+    const installedCjs = path.join(gtdLibDir, 'configuration.generated.cjs');
     fs.copyFileSync(CONFIGURATION_CJS, installedCjs);
     fs.copyFileSync(
       path.join(SDK_SHARED_DIR, 'config-defaults.manifest.json'),
-      path.join(gsdSharedDir, 'config-defaults.manifest.json')
+      path.join(gtdSharedDir, 'config-defaults.manifest.json')
     );
     fs.copyFileSync(
       path.join(SDK_SHARED_DIR, 'config-schema.manifest.json'),
-      path.join(gsdSharedDir, 'config-schema.manifest.json')
+      path.join(gtdSharedDir, 'config-schema.manifest.json')
     );
 
     delete require.cache[installedCjs];
@@ -98,7 +98,7 @@ describe('bug #3571: configuration generated manifests resolve in install layout
       install(true, 'codex');
     });
 
-    const sharedDir = path.join(tmpRoot, '.codex', 'get-shit-done', 'bin', 'shared');
+    const sharedDir = path.join(tmpRoot, '.codex', 'get-tasks-done', 'bin', 'shared');
     for (const fileName of ['config-defaults.manifest.json', 'config-schema.manifest.json']) {
       const installedManifest = path.join(sharedDir, fileName);
       assert.ok(fs.existsSync(installedManifest), `${fileName} must be copied to ${sharedDir}`);
@@ -110,7 +110,7 @@ describe('bug #3571: configuration generated manifests resolve in install layout
     const installedCjs = path.join(
       tmpRoot,
       '.codex',
-      'get-shit-done',
+      'get-tasks-done',
       'bin',
       'lib',
       'configuration.generated.cjs'

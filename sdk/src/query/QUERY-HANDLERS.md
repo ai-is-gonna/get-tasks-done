@@ -1,11 +1,11 @@
 # Query handler conventions (`sdk/src/query/`)
 
-This document records contracts for the typed query layer consumed by `gsd-sdk query` and programmatic `createRegistry()` callers.
+This document records contracts for the typed query layer consumed by `gtd-sdk query` and programmatic `createRegistry()` callers.
 
-## Registry coverage vs `gsd-tools.cjs`
+## Registry coverage vs `gtd-tools.cjs`
 
-- **In scope:** Native handlers are registered in `createRegistry()` (`index.ts`) so SDK output can match `get-shit-done/bin/gsd-tools.cjs` JSON (see `sdk/src/golden/`).
-- **Explicitly not registered** (product decision): `**graphify**`, `**from-gsd2**` / `**gsd2-import**` — remain CLI-only.
+- **In scope:** Native handlers are registered in `createRegistry()` (`index.ts`) so SDK output can match `get-tasks-done/bin/gtd-tools.cjs` JSON (see `sdk/src/golden/`).
+- **Explicitly not registered** (product decision): `**graphify**` remains CLI-only.
 - **CLI name differences** (same behavior, different dispatch string):
   - CJS `**summary-extract**` → SDK `**summary.extract**` / `**summary extract**` / `**history-digest**` (see `index.ts`).
   - CJS top-level `**scaffold <type> ...**` → SDK `**phase.scaffold**` / `**phase scaffold**` with the scaffold type as the first argument (no separate `scaffold` alias on the registry).
@@ -22,30 +22,30 @@ These families are sourced from `command-manifest.*.ts` files and expanded into 
 - `validate.*` → `command-manifest.validate.ts`
 - `roadmap.*` → `command-manifest.roadmap.ts`
 
-CJS routing seams mirror these families with thin adapters (`state/verify/init/phase/phases/validate/roadmap-command-router.cjs`) so `gsd-tools.cjs` stays orchestration-only.
+CJS routing seams mirror these families with thin adapters (`state/verify/init/phase/phases/validate/roadmap-command-router.cjs`) so `gtd-tools.cjs` stays orchestration-only.
 
-## SDK Runtime Bridge Module (`GSDTools` path)
+## SDK Runtime Bridge Module (`GTDTools` path)
 
-`GSDTools` dispatch routes through `sdk/src/query-runtime-bridge.ts`.
+`GTDTools` dispatch routes through `sdk/src/query-runtime-bridge.ts`.
 
 - Native registry dispatch is preferred at the bridge seam.
 - Subprocess fallback is explicit (`allowFallbackToSubprocess`), not implicit.
 - `strictSdk` can fail fast when a command has no native adapter.
 - `onDispatchEvent` emits structured dispatch observability (`query_dispatch` / `query_hotpath_dispatch`) with dispatch mode, fallback reason, latency, outcome, and error kind.
 
-## `gsd-sdk query` routing
+## `gtd-sdk query` routing
 
-1. **`normalizeQueryCommand()`** (`query-command-resolution-strategy.ts`) — maps the first argv tokens to the same **command + subcommand** patterns as `gsd-tools` `runCommand()` where needed (e.g. `state json` → `state.json`, `init execute-phase 9` → `init.execute-phase` with args `['9']`, `scaffold …` → `phase.scaffold`). Re-exported from **`@gsd-build/sdk`** and **`createRegistry`’s module** (`sdk/src/query/index.ts`) so programmatic callers can mirror CLI tokenization without importing a deep path.
+1. **`normalizeQueryCommand()`** (`query-command-resolution-strategy.ts`) — maps the first argv tokens to the same **command + subcommand** patterns as `gtd-tools` `runCommand()` where needed (e.g. `state json` → `state.json`, `init plan-phase 9` → `init.plan-phase` with args `['9']`, `scaffold …` → `phase.scaffold`). Re-exported from **`@ai-is-gonna/gtd-sdk`** and **`createRegistry`’s module** (`sdk/src/query/index.ts`) so programmatic callers can mirror CLI tokenization without importing a deep path.
 2. **`resolveQueryArgv()`** (`registry.ts`) — **longest-prefix match** on the normalized argv: tries joined keys `a.b.c` then `a b c` for each prefix length, longest first. Example: `state update status X` → handler `state.update` with args `[status, X]`.
 3. **Dotted single token**: one token like `init.new-project` matches the registry; if the first pass finds no handler, a single dotted token is split and matching runs again.
-4. **CJS fallback (CLI)**: if nothing matches a registered handler and `GSD_QUERY_FALLBACK` is not `off`/`never`/`false`/`0`, the CLI shells out to `gsd-tools.cjs` with argv derived from the normalized tokens (dotted commands are split into CJS-style segments). stderr receives a short bridge warning. Set `GSD_QUERY_FALLBACK=off` for strict mode (parity tests). CLI-only commands such as `graphify` rely on this path until native handlers exist.
+4. **CJS fallback (CLI)**: if nothing matches a registered handler and `GTD_QUERY_FALLBACK` is not `off`/`never`/`false`/`0`, the CLI shells out to `gtd-tools.cjs` with argv derived from the normalized tokens (dotted commands are split into CJS-style segments). stderr receives a short bridge warning. Set `GTD_QUERY_FALLBACK=off` for strict mode (parity tests). CLI-only commands such as `graphify` rely on this path until native handlers exist.
 5. **Output**: JSON written to stdout for successful handler results.
 
 **Registered:** `phase.add-batch` / `phase add-batch` — batch append (see `phaseAddBatch` in `phase-lifecycle.ts`).
 
 ## Error handling
 
-- **Validation and programmer errors**: Handlers throw `GSDError` with an `ErrorClassification` (e.g. missing required args, invalid phase). The Dispatch Policy Module maps native failures into structured dispatch errors.
+- **Validation and programmer errors**: Handlers throw `GTDError` with an `ErrorClassification` (e.g. missing required args, invalid phase). The Dispatch Policy Module maps native failures into structured dispatch errors.
 - **Expected domain failures**: Handlers return `{ data: { error: string, ... } }` for cases that are not exceptional in normal use (file not found, intel disabled, todo missing, etc.). Callers must check `data.error` when present.
 - Do not mix both styles for the same failure mode in new code: prefer **throw** for "caller must fix input"; prefer `**data.error`** for "operation could not complete in this project state."
 
@@ -68,18 +68,18 @@ CLI is a thin adapter over this seam and uses `exit_code` directly.
 
 ## Mutation commands and events
 
-- `QUERY_MUTATION_COMMANDS` in `index.ts` lists every command name (including space-delimited aliases) that performs durable writes. It drives optional `GSDEventStream` wrapping so mutations emit structured events.
+- `QUERY_MUTATION_COMMANDS` in `index.ts` lists every command name (including space-delimited aliases) that performs durable writes. It drives optional `GTDEventStream` wrapping so mutations emit structured events.
 - Init composition handlers (`init.*`) are **not** included: they return JSON for workflows; agents perform filesystem work.
 - `**state.validate`** is **read-only** — not listed in `QUERY_MUTATION_COMMANDS`.
 - `**skill-manifest`**: writes to disk only when invoked with `**--write**`. It is **not** in `QUERY_MUTATION_COMMANDS`, so conditional writes do not emit mutation events today. If event consumers need `skill-manifest` writes, add a follow-up that either registers a dedicated command name for the write path or documents the exception.
 
 ## Intel: `intel.update`
 
-- `**intel.update`** / `**intel update**` matches CJS `intel.cjs` `intelUpdate` **JSON** (not an in-process graph refresh): when intel is enabled it returns `{ action: 'spawn_agent', message: '...' }`; when disabled, `{ disabled: true, message: '...' }`. The **gsd-intel-updater** agent performs the actual refresh after spawn. Golden tests use full `toEqual` vs `gsd-tools.cjs` on this repo’s intel config.
+- `**intel.update`** / `**intel update**` matches CJS `intel.cjs` `intelUpdate` **JSON** (not an in-process graph refresh): when intel is enabled it returns `{ action: 'spawn_agent', message: '...' }`; when disabled, `{ disabled: true, message: '...' }`. The **gtd-intel-updater** agent performs the actual refresh after spawn. Golden tests use full `toEqual` vs `gtd-tools.cjs` on this repo’s intel config.
 
 ## Session correlation (`sessionId`)
 
-- `createRegistry(eventStream, sessionId)` threads the optional `sessionId` string into mutation-related events emitted via `eventStream`. `GSDTools` accepts `sessionId` in its constructor and forwards it to `createRegistry`; `GSD` accepts `sessionId` in `GSDOptions` and passes it through `createTools()`. When omitted, `sessionId` is empty.
+- `createRegistry(eventStream, sessionId)` threads the optional `sessionId` string into mutation-related events emitted via `eventStream`. `GTDTools` accepts `sessionId` in its constructor and forwards it to `createRegistry`; `GTD` accepts `sessionId` in `GTDOptions` and passes it through `createTools()`. When omitted, `sessionId` is empty.
 
 ## Lockfiles (`state-mutation.ts`)
 
@@ -91,7 +91,7 @@ CLI is a thin adapter over this seam and uses `exit_code` directly.
 
 ## Phase / plan listing (SDK-only)
 
-No `gsd-tools.cjs` mirror — agents use these instead of shell `ls`/`find`/`grep`:
+No `gtd-tools.cjs` mirror — agents use these instead of shell `ls`/`find`/`grep`:
 
 - `**phase.list-plans**` `<phase>` [`**--with-schema**` `<yamlKey>`] — PLAN files in the phase dir; optional filter when a frontmatter key is present (`phase-list-queries.ts`).
 - `**phase.list-artifacts**` `<phase>` `**--type**` `context|summary|verification|research` — matching `*-CONTEXT.md`, `*-SUMMARY.md`, etc.
@@ -102,18 +102,18 @@ No `gsd-tools.cjs` mirror — agents use these instead of shell `ls`/`find`/`gre
 
 Handlers for `**state.signal-waiting`**, `**state.signal-resume**`, `**state.validate**`, `**state.sync**` (supports `--verify` dry-run), and `**state.prune**` live in `state-mutation.ts`, with dotted and `state …` space aliases in `index.ts`.
 
-**`state.add-roadmap-evolution`** (bug #2662) — appends one entry to the `### Roadmap Evolution` subsection under `## Accumulated Context` in STATE.md, creating the subsection if missing. argv: `--phase`, `--action` (`inserted|removed|moved|edited|added`), optional `--note`, `--after` (for `inserted`), and `--urgent` flag. Returns `{ added: true, entry }` or `{ added: false, reason: 'duplicate', entry }`. Throws `GSDError(Validation)` when `--phase` / `--action` are missing or action is not in the allowed set. Canonical replacement for raw `Edit`/`Write` on STATE.md in `insert-phase.md` / `add-phase.md` workflows — required when projects ship a `protect-files.sh` PreToolUse hook that blocks direct STATE.md writes.
+**`state.add-roadmap-evolution`** (bug #2662) — appends one entry to the `### Roadmap Evolution` subsection under `## Accumulated Context` in STATE.md, creating the subsection if missing. argv: `--phase`, `--action` (`inserted|removed|moved|edited|added`), optional `--note`, `--after` (for `inserted`), and `--urgent` flag. Returns `{ added: true, entry }` or `{ added: false, reason: 'duplicate', entry }`. Throws `GTDError(Validation)` when `--phase` / `--action` are missing or action is not in the allowed set. Canonical replacement for raw `Edit`/`Write` on STATE.md in `insert-phase.md` / `add-phase.md` workflows — required when projects ship a `protect-files.sh` PreToolUse hook that blocks direct STATE.md writes.
 
 **`state.json` vs `state.load` (different CJS commands):**
 
 - **`state.json`** / `state json` — port of **`cmdStateJson`** (`state.ts` `stateJson`): rebuilt STATE.md frontmatter JSON. Read-only golden: `read-only-parity.integration.test.ts` compares to CJS `state json` with **`last_updated`** stripped.
-- **`state.load`** / `state load` — port of **`cmdStateLoad`** (`state-project-load.ts` `stateProjectLoad`): `{ config, state_raw, state_exists, roadmap_exists, config_exists }`; **`config`** comes from **`get-shit-done/bin/lib/core.cjs`** `loadConfig`, but discovery now routes through the **SDK Package Seam Module** (`sdk-package-compatibility.ts`) so install-layout probing stays behind one compatibility Adapter. Read-only golden: full `toEqual` vs `state load`. If `core.cjs` cannot be resolved, dispatch throws **`GSDError`** with the checked probe list (document for minimal `@gsd-build/sdk`-only installs).
+- **`state.load`** / `state load` — port of **`cmdStateLoad`** (`state-project-load.ts` `stateProjectLoad`): `{ config, state_raw, state_exists, roadmap_exists, config_exists }`; **`config`** comes from **`get-tasks-done/bin/lib/core.cjs`** `loadConfig`, but discovery now routes through the **SDK Package Seam Module** (`sdk-package-compatibility.ts`) so install-layout probing stays behind one compatibility Adapter. Read-only golden: full `toEqual` vs `state load`. If `core.cjs` cannot be resolved, dispatch throws **`GTDError`** with the checked probe list (document for minimal `@ai-is-gonna/gtd-sdk`-only installs).
 
-`stateExtractField` in `state-document.ts` (re-exported by `helpers.ts`) uses **horizontal whitespace only** after `Field:` so YAML keys such as lowercase `progress:` in frontmatter are not mistaken for the body `Progress:` line (see `get-shit-done/bin/lib/state-document.cjs` — same rule).
+`stateExtractField` in `state-document.ts` (re-exported by `helpers.ts`) uses **horizontal whitespace only** after `Field:` so YAML keys such as lowercase `progress:` in frontmatter are not mistaken for the body `Progress:` line (see `get-tasks-done/bin/lib/state-document.cjs` — same rule).
 
 ## Golden parity: coverage and exceptions
 
-Subprocess reference: `captureGsdToolsOutput()` / `captureGsdToolsStdout()` → `get-shit-done/bin/gsd-tools.cjs` (`sdk/src/golden/capture.ts`). Plain-text commands (e.g. `config-path`) use stdout string comparison in `read-only-parity.integration.test.ts`.
+Subprocess reference: `captureGtdToolsOutput()` / `captureGtdToolsStdout()` → `get-tasks-done/bin/gtd-tools.cjs` (`sdk/src/golden/capture.ts`). Plain-text commands (e.g. `config-path`) use stdout string comparison in `read-only-parity.integration.test.ts`.
 
 **Authoritative accounting (every canonical handler):** `sdk/src/golden/golden-policy.ts` merges `golden-integration-covered.ts` (canonicals hit by `golden.integration.test.ts`) with `read-only-golden-rows.ts` / special cases (`verify.commits`, `config-path`) into `GOLDEN_PARITY_INTEGRATION_COVERED`, and builds `GOLDEN_PARITY_EXCEPTIONS` for the rest. `getCanonicalRegistryCommands()` (`registry-canonical-commands.ts`) lists one dispatch string per unique handler; each canonical must be either covered or receive a built-in exception string (mutations → shared rationale; read-only without a subprocess row → per-command note). `sdk/src/golden/golden-policy.test.ts` calls `verifyGoldenPolicyComplete()` so the policy cannot drift silently.
 
@@ -147,7 +147,7 @@ These tests expect `sdkResult.data` to match the parsed CJS stdout JSON (possibl
 | `roadmap.analyze` / `progress` | Full object parity (`progress` uses `progress json` CJS path).                                       |
 | `frontmatter.validate`       | Plan schema fixture under `.planning/phases/11-state-mutations/`.                                     |
 | `verify.plan-structure` / `validate.consistency` / `verify.phase-completeness` | Full object parity on representative repo paths.                          |
-| `init.execute-phase` / `init.plan-phase` / `init.resume` / `init.verify-work` | Full `toEqual` vs CJS.                                              |
+| `init.plan-phase` / `init.plan-phase` / `init.resume` / `init.verify-work` | Full `toEqual` vs CJS.                                              |
 | `init.quick`                  | Full parity **after** stripping `quick_id`, `timestamp`, `branch_name`, `task_dir` (`init-golden-normalize.ts`). |
 | `intel.update`                | Full `toEqual` vs CJS for this project (disabled vs spawn-hint payload per `intel.cjs`).               |
 
@@ -155,7 +155,7 @@ From `read-only-parity.integration.test.ts` (full `toEqual` on this repo):
 
 | SDK dispatch (canonical) | Notes |
 | ------------------------ | ----- |
-| `resolve-model` | Args e.g. `gsd-planner`; returns `reasoning_effort` when the selected runtime tier defines one. |
+| `resolve-model` | Args e.g. `gtd-planner`; returns `reasoning_effort` when the selected runtime tier defines one. |
 | `phase-plan-index` | Phase number arg. |
 | `roadmap.get-phase` | Phase number arg. |
 | `list.todos` | No args. |
@@ -176,8 +176,8 @@ From `read-only-parity.integration.test.ts` (full `toEqual` on this repo):
 | `summary.extract` | Fixture `sdk/src/golden/fixtures/summary-extract-sample.md`; uses `extractFrontmatterLeading` (first `---` block) for parity with `frontmatter.cjs`. |
 | `history.digest` | No args; aggregate over `.planning/phases` + archived milestone phase dirs (`commands.cjs` `cmdHistoryDigest`). |
 | `audit-uat` | No args; full JSON parity with `uat.cjs` `cmdAuditUat` (`results`, `summary` with `by_category` / `by_phase`). |
-| `skill-manifest` | No args; full manifest parity with `init.cjs` `buildSkillManifest` / `cmdSkillManifest`. Handler uses `extractFrontmatterLeading` (first `---` block) like CJS `frontmatter.cjs` `extractFrontmatter` — not TS `extractFrontmatter` (last block), so skills with multiple `---` sections match CJS. Runtime-global skill roots now route through the **Runtime-Global Skills Policy Module**; legacy import-only skill root discovery (`~/.claude/get-shit-done/skills`) routes through the **SDK Package Seam Module**. |
-| `validate.agents` | No args; `agents_dir` matches `core.cjs` `getAgentsDir` (`GSD_AGENTS_DIR` or `sdk/dist/query/../../../agents` in this monorepo — same absolute path as CLI). `MODEL_PROFILES` / `expected` list stays aligned with `get-shit-done/bin/lib/model-profiles.cjs`. |
+| `skill-manifest` | No args; full manifest parity with `init.cjs` `buildSkillManifest` / `cmdSkillManifest`. Handler uses `extractFrontmatterLeading` (first `---` block) like CJS `frontmatter.cjs` `extractFrontmatter` — not TS `extractFrontmatter` (last block), so skills with multiple `---` sections match CJS. Runtime-global skill roots now route through the **Runtime-Global Skills Policy Module**; legacy import-only skill root discovery (`~/.claude/get-tasks-done/skills`) routes through the **SDK Package Seam Module**. |
+| `validate.agents` | No args; `agents_dir` matches `core.cjs` `getAgentsDir` (`GTD_AGENTS_DIR` or `sdk/dist/query/../../../agents` in this monorepo — same absolute path as CLI). `MODEL_PROFILES` / `expected` list stays aligned with `get-tasks-done/bin/lib/model-profiles.cjs`. |
 | `agent-skills` | Reads `config.agent_skills[agentType]` and emits raw `<agent_skills>` XML. Project-relative entries stay project-root validated; `global:<name>` resolves through the **Runtime-Global Skills Policy Module** instead of a Claude-only path. |
 | `state.get` | Dedicated tests: no args → full `{ content }` vs `state get`; one field (`milestone`) → `{ milestone: "…" }` vs `state get milestone` (frontmatter line match). |
 | `state.json` | `state json` vs SDK; **`last_updated`** stripped before `toEqual` (volatile). |
@@ -232,7 +232,7 @@ Handlers in `createRegistry()` that are **not** covered by `golden.integration.t
 
 ## Decision routing (SDK-only)
 
-These handlers implement `.planning/research/decision-routing-audit.md` — **no `gsd-tools.cjs` mirror yet** (orchestration JSON only). Invoke via `gsd-sdk query` / `registry.dispatch()` after `normalizeQueryCommand()` where argv uses `check …` / `detect …` / `route …` prefixes.
+These handlers implement `.planning/research/decision-routing-audit.md` — **no `gtd-tools.cjs` mirror yet** (orchestration JSON only). Invoke via `gtd-sdk query` / `registry.dispatch()` after `normalizeQueryCommand()` where argv uses `check …` / `detect …` / `route …` prefixes.
 
 ### Tier 1
 
@@ -240,7 +240,7 @@ These handlers implement `.planning/research/decision-routing-audit.md` — **no
 | -------- | ------- |
 | `check.config-gates` / `check config-gates [workflow]` | Single JSON blob of merged `workflow.*` (+ `context_window`) for batch config gates. |
 | `check.phase-ready` / `check phase-ready <phase>` | Phase directory stats, `dependencies_met`, `next_step` (`discuss` / `plan` / `execute` / `verify` / `complete`). |
-| `route.next-action` / `route next-action` | Suggested next slash command from `next.md`-style rules (`/gsd-discuss-phase`, `/gsd-execute-phase`, `/gsd-resume-work`, gates, etc.). |
+| `route.next-action` / `route next-action` | Suggested next slash command from `next.md`-style rules (`/gtd-discuss-phase`, `/gtd-work-task-issue`, `/gtd-resume-work`, gates, etc.). |
 
 ### Tier 2
 
@@ -254,9 +254,8 @@ These handlers implement `.planning/research/decision-routing-audit.md` — **no
 
 | Dispatch | Purpose |
 | -------- | ------- |
-| `check.gates` / `check gates <workflow> [--phase <N>]` | Safety gate consolidation. Checks `.continue-here.md` presence (blocker), STATE.md error/failed status (blocker), and VERIFICATION.md FAIL rows (warning). Returns `passed`, `blockers`, `warnings`. Replaces per-workflow gate logic in `next.md`, `execute-phase.md`, `discuss-phase.md` (audit §3.2). SDK-only — no CJS mirror. |
-| `check.verification-status` / `check verification-status <phase>` | VERIFICATION.md parser. Returns `status` (`pass`/`fail`/`partial`/`missing`), `score` (e.g. `"3/4"`), `gaps`, `human_items`, `deferred`. Handles prefixed filenames and missing files. Replaces VERIFICATION.md grep/parse in `execute-phase.md`, `autonomous.md`, `progress.md` (audit §3.8). SDK-only — no CJS mirror. |
-| `check.ship-ready` / `check ship-ready <phase>` | Ship preflight: `clean_tree`, `on_feature_branch`, `current_branch`, `base_branch`, `remote_configured`, `gh_available`, `gh_authenticated` (always false — advisory, no network call), `verification_passed`, `blockers`, `ready`. Replaces ship.md preflight checks (audit §3.9). SDK-only — no CJS mirror. |
+| `check.gates` / `check gates <workflow> [--phase <N>]` | Safety gate consolidation. Checks `.continue-here.md` presence (blocker), STATE.md error/failed status (blocker), and VERIFICATION.md FAIL rows (warning). Returns `passed`, `blockers`, `warnings`. Replaces per-workflow gate logic in `next.md`, `work-task-issue.md`, `discuss-phase.md` (audit §3.2). SDK-only — no CJS mirror. |
+| `check.verification-status` / `check verification-status <phase>` | VERIFICATION.md parser. Returns `status` (`pass`/`fail`/`partial`/`missing`), `score` (e.g. `"3/4"`), `gaps`, `human_items`, `deferred`. Handles prefixed filenames and missing files. Replaces VERIFICATION.md grep/parse in `work-task-issue.md`, `autonomous.md`, `progress.md` (audit §3.8). SDK-only — no CJS mirror. |
 
 **Stability:** Shapes are versioned with the audit doc; add integration tests when workflows adopt these queries. Re-run after file writes that change `.planning/` (stale read caveat in audit §6). All Tier 1–3 handlers are implemented and unit-tested.
 
@@ -264,7 +263,7 @@ These handlers implement `.planning/research/decision-routing-audit.md` — **no
 
 ## CJS command surface vs SDK registry
 
-Authoritative CJS entry points: `runCommand` `switch (command)` in `get-shit-done/bin/gsd-tools.cjs`. SDK entry points: `createRegistry()` in `sdk/src/query/index.ts`.
+Authoritative CJS entry points: `runCommand` `switch (command)` in `get-tasks-done/bin/gtd-tools.cjs`. SDK entry points: `createRegistry()` in `sdk/src/query/index.ts`.
 
 **Naming aliases (registered, different string):**
 
@@ -277,18 +276,17 @@ Authoritative CJS entry points: `runCommand` `switch (command)` in `get-shit-don
 | CJS surface           | Justification                                                                                  |
 | --------------------- | ---------------------------------------------------------------------------------------------- |
 | `**graphify`**        | Depends on Graphify CLI / Python stack; not ported to the typed query layer.                   |
-| `**from-gsd2**`       | Legacy GSD2 → GSD migration (`gsd2-import.cjs`); CLI-only helper.                              |
 
 
-**SDK-only (registered dispatch without an equivalent `gsd-tools` top-level subcommand):**
+**SDK-only (registered dispatch without an equivalent `gtd-tools` top-level subcommand):**
 
 
 | SDK dispatch                                | Notes                                                                                                                                            |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `**phases.archive`** / `**phases archive**` | CJS `phases` supports only `**list**` and `**clear**`; archive behavior is available via SDK (and workflows), not as `gsd-tools phases archive`. |
+| `**phases.archive`** / `**phases archive**` | CJS `phases` supports only `**list**` and `**clear**`; archive behavior is available via SDK (and workflows), not as `gtd-tools phases archive`. |
 
 
-### Matrix: top-level `gsd-tools` command → SDK
+### Matrix: top-level `gtd-tools` command → SDK
 
 Disposition: **Registered** = handled in `createRegistry()` under the listed SDK name(s); **CLI-only** = no registry handler; **Alias** = same behavior, different primary dispatch string.
 
@@ -324,7 +322,7 @@ Disposition: **Registered** = handled in `createRegistry()` under the listed SDK
 | `stats`                                                                                                                                 | `stats`, `stats.json`, …                                                  | Registered              |                                                                           |
 | `todo`                                                                                                                                  | `todo.complete`, `todo.match-phase`, …                                    | Registered              |                                                                           |
 | `scaffold`                                                                                                                              | `phase.scaffold`, `phase scaffold`                                        | Alias                   | Top-level `**scaffold**` in CJS; no separate `scaffold` registry key.     |
-| `init`                                                                                                                                  | `init.execute-phase`, `init.new-project`, …                               | Registered              | Dotted and `init …` space aliases.                                        |
+| `init`                                                                                                                                  | `init.plan-phase`, `init.new-project`, …                               | Registered              | Dotted and `init …` space aliases.                                        |
 | `phase-plan-index`                                                                                                                      | `phase-plan-index`                                                        | Registered              |                                                                           |
 | `state-snapshot`                                                                                                                        | `state-snapshot`                                                          | Registered              |                                                                           |
 | `summary-extract`                                                                                                                       | `summary.extract`, `summary extract`, `history-digest`, …                 | Alias                   |                                                                           |
@@ -338,12 +336,11 @@ Disposition: **Registered** = handled in `createRegistry()` under the listed SDK
 | `docs-init`                                                                                                                             | `docs-init`                                                               | Registered              | Golden: normalized compare (see above).                                   |
 | `learnings`                                                                                                                             | `learnings.list`, `learnings.query`, …                                    | Registered              |                                                                           |
 | `detect-custom-files`                                                                                                                   | `detect-custom-files`                                                     | Registered              | Requires `--config-dir`.                                                  |
-| `from-gsd2`                                                                                                                             | —                                                                         | CLI-only                | See **CLI-only** table.                                                   |
 
 
 ---
 
 ## Other registered areas
 
-- `**detect-custom-files`**: requires `--config-dir <path>`; scans installer manifest vs GSD-managed dirs (`detect-custom-files.ts`).
+- `**detect-custom-files`**: requires `--config-dir <path>`; scans installer manifest vs GTD-managed dirs (`detect-custom-files.ts`).
 - `**docs-init**`: docs-update workflow payload (`docs-init.ts`), aligned with `docs.cjs`. Golden tests omit `**agents_installed**` / `**missing_agents**` when comparing SDK vs CLI because the subprocess may resolve `~/.claude/...` differently than in-process checks.

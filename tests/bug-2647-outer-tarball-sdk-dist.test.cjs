@@ -1,19 +1,19 @@
 /**
  * Regression test for bug #2647 (also partial fix for #2649).
  *
- * v1.38.3 of get-shit-done-cc shipped with:
+ * v1.38.3 of get-tasks-done shipped with:
  *   - `files` array missing `sdk/dist`
  *   - `prepublishOnly` only running `build:hooks`, not `build:sdk`
  *
- * Result: the published tarball had no `sdk/dist/cli.js`. The `gsd-sdk`
- * bin shim in `bin/gsd-sdk.js` resolves `<pkg>/sdk/dist/cli.js`, which
+ * Result: the published tarball had no `sdk/dist/cli.js`. The `gtd-sdk`
+ * bin shim in `bin/gtd-sdk.js` resolves `<pkg>/sdk/dist/cli.js`, which
  * didn't exist, so PATH fell through to the separately installed
- * `@gsd-build/sdk@0.1.0` (predates the `query` subcommand).
+ * `@ai-is-gonna/gtd-sdk@0.1.0` (predates the `query` subcommand).
  *
- * Every `gsd-sdk query <noun>` call in workflow docs thus failed on
+ * Every `gtd-sdk query <noun>` call in workflow docs thus failed on
  * fresh installs of 1.38.3.
  *
- * This test guards the OUTER package.json (get-shit-done-cc) so future
+ * This test guards the OUTER package.json (get-tasks-done) so future
  * edits cannot silently drop either safeguard. A sibling test at
  * tests/bug-2519-sdk-tarball-dist.test.cjs guards the inner sdk package.
  *
@@ -33,9 +33,9 @@ const { execFileSync } = require('child_process');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const PKG_PATH = path.join(REPO_ROOT, 'package.json');
-const SHIM_PATH = path.join(REPO_ROOT, 'bin', 'gsd-sdk.js');
+const SHIM_PATH = path.join(REPO_ROOT, 'bin', 'gtd-sdk.js');
 
-describe('bug #2647: outer tarball ships sdk/dist so gsd-sdk query works', () => {
+describe('bug #2647: outer tarball ships sdk/dist so gtd-sdk query works', () => {
   const pkg = JSON.parse(fs.readFileSync(PKG_PATH, 'utf-8'));
   const filesField = Array.isArray(pkg.files) ? pkg.files : [];
   const scripts = pkg.scripts || {};
@@ -75,21 +75,21 @@ describe('bug #2647: outer tarball ships sdk/dist so gsd-sdk query works', () =>
     );
   });
 
-  test('gsd-sdk bin shim resolves sdk/dist/cli.js', () => {
+  test('gtd-sdk bin shim resolves sdk/dist/cli.js', () => {
     assert.ok(
-      pkg.bin && pkg.bin['gsd-sdk'] === 'bin/gsd-sdk.js',
-      `package.json bin["gsd-sdk"] must point at bin/gsd-sdk.js. Got: ${JSON.stringify(pkg.bin)}`,
+      pkg.bin && pkg.bin['gtd-sdk'] === 'bin/gtd-sdk.js',
+      `package.json bin["gtd-sdk"] must point at bin/gtd-sdk.js. Got: ${JSON.stringify(pkg.bin)}`,
     );
     const shim = fs.readFileSync(SHIM_PATH, 'utf-8');
     assert.ok(
       /sdk['"],\s*['"]dist['"],\s*['"]cli\.js/.test(shim) ||
         /sdk\/dist\/cli\.js/.test(shim),
-      'bin/gsd-sdk.js must resolve ../sdk/dist/cli.js — otherwise shipping sdk/dist does not help',
+      'bin/gtd-sdk.js must resolve ../sdk/dist/cli.js — otherwise shipping sdk/dist does not help',
     );
   });
 
   test('npm pack dry-run includes sdk/dist/cli.js after build:sdk', { timeout: 180_000 }, () => {
-    const npmCache = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-npm-cache-'));
+    const npmCache = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-npm-cache-'));
     const npmEnv = { ...process.env, npm_config_cache: npmCache };
     // Ensure the sdk is built so the pack reflects what publish would ship.
     // The outer prepublishOnly chains through build:sdk, which does `npm ci && npm run build`
@@ -118,7 +118,7 @@ describe('bug #2647: outer tarball ships sdk/dist so gsd-sdk query works', () =>
       const cliPresent = files.includes('sdk/dist/cli.js');
       assert.ok(
         cliPresent,
-        `npm pack must include sdk/dist/cli.js in the tarball (so "gsd-sdk query" resolves after install). sdk/dist entries found: ${files.filter((p) => p.startsWith('sdk/dist')).length}`,
+        `npm pack must include sdk/dist/cli.js in the tarball (so "gtd-sdk query" resolves after install). sdk/dist entries found: ${files.filter((p) => p.startsWith('sdk/dist')).length}`,
       );
     } finally {
       fs.rmSync(npmCache, { recursive: true, force: true });

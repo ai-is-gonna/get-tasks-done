@@ -43,7 +43,7 @@ const {
   VALID_CONFIG_KEYS: CJS_KEYS,
   RUNTIME_STATE_KEYS: CJS_RUNTIME_KEYS,
   DYNAMIC_KEY_PATTERNS: CJS_PATTERNS,
-} = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 // ─── CJS side: verify manifest-sourced values ─────────────────────────────
 
@@ -128,7 +128,7 @@ test('#2653 — CJS DYNAMIC_KEY_PATTERNS test functions work correctly', () => {
   // Verify that each pattern's test() function (reconstructed from manifest source)
   // correctly accepts sample keys and rejects non-matching ones.
   const samples = [
-    ['agent_skills.gsd-planner', 0],
+    ['agent_skills.gtd-planner', 0],
     ['review.models.claude', 1],
     ['features.some_feature', 2],
     ['claude_md_assembly.blocks.intro', 3],

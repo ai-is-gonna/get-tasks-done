@@ -21,11 +21,11 @@ function runLint(args = []) {
 }
 
 function createFixtureDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-lint-deps-fixture-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-lint-deps-fixture-'));
 }
 
 function writeSkillFile(dir, stem, { description = 'Test skill', requires = null, body = '' }) {
-  let fm = `name: gsd:${stem}\ndescription: ${description}`;
+  let fm = `name: gtd:${stem}\ndescription: ${description}`;
   if (requires !== null) {
     fm += `\nrequires: [${requires.join(', ')}]`;
   }
@@ -43,7 +43,7 @@ describe('lint-skill-deps: frontmatter ↔ body consistency', () => {
       writeSkillFile(dir, 'discuss-phase', {
         description: 'Discuss skill',
         requires: ['phase'],
-        body: 'Invoke with /gsd:phase to manage phases.',
+        body: 'Invoke with /gtd:phase to manage phases.',
       });
       const result = runLint(['--dir', dir]);
       assert.strictEqual(result.status, 0, `Expected exit 0, got ${result.status}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
@@ -52,15 +52,15 @@ describe('lint-skill-deps: frontmatter ↔ body consistency', () => {
     }
   });
 
-  test('exits non-zero when body references gsd:phase but requires: is absent', () => {
+  test('exits non-zero when body references gtd:phase but requires: is absent', () => {
     const dir = createFixtureDir();
     try {
       writeSkillFile(dir, 'phase', { description: 'Phase skill', body: '' });
       writeSkillFile(dir, 'discuss-phase', {
         description: 'Discuss skill',
-        // requires: absent — but body references /gsd:phase
+        // requires: absent — but body references /gtd:phase
         requires: null,
-        body: 'Use /gsd:phase to manage phases.',
+        body: 'Use /gtd:phase to manage phases.',
       });
       const result = runLint(['--dir', dir]);
       assert.notStrictEqual(result.status, 0, 'Should exit non-zero when requires: is missing but body has reference');
@@ -69,14 +69,14 @@ describe('lint-skill-deps: frontmatter ↔ body consistency', () => {
     }
   });
 
-  test('exits non-zero when body references gsd-phase but requires: does not include it', () => {
+  test('exits non-zero when body references gtd-phase but requires: does not include it', () => {
     const dir = createFixtureDir();
     try {
       writeSkillFile(dir, 'phase', { description: 'Phase skill', body: '' });
       writeSkillFile(dir, 'discuss-phase', {
         description: 'Discuss skill',
         requires: ['config'],  // has requires but missing 'phase'
-        body: 'Use /gsd:phase to manage phases.',
+        body: 'Use /gtd:phase to manage phases.',
       });
       const result = runLint(['--dir', dir]);
       assert.notStrictEqual(result.status, 0, 'Should exit non-zero for undeclared reference');
@@ -102,7 +102,7 @@ describe('lint-skill-deps: frontmatter ↔ body consistency', () => {
       writeSkillFile(dir, 'discuss-phase', {
         description: 'Discuss',
         requires: ['phase'],
-        body: 'Use /gsd:phase.',
+        body: 'Use /gtd:phase.',
       });
       // Unknown skill reference should fail even if declared in requires.
       const result = runLint(['--dir', dir]);
@@ -114,9 +114,9 @@ describe('lint-skill-deps: frontmatter ↔ body consistency', () => {
 });
 
 describe('lint-skill-deps: profile closure satisfaction', () => {
-  test('exits 0 when run against real commands/gsd (all profiles closed or full)', () => {
+  test('exits 0 when run against real commands/gtd (all profiles closed or full)', () => {
     // This is the most important integration test: running lint on the real
-    // commands/gsd/ directory with the real PROFILES must pass.
+    // commands/gtd/ directory with the real PROFILES must pass.
     const result = runLint();
     assert.strictEqual(result.status, 0,
       `lint-skill-deps failed on real codebase:\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);

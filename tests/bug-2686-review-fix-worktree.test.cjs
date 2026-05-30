@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2686
  *
- * The gsd-code-fixer agent (spawned by /gsd-code-review-fix) operated directly
+ * The gtd-code-fixer agent (spawned by /gtd-code-review-fix) operated directly
  * against the main working tree. When it ran concurrently with a foreground
  * session both processes raced for HEAD, the index, and on-disk files. The
  * foreground session's next commit could land on the wrong branch (whichever
@@ -11,14 +11,14 @@
  * FIRST git operation, run ALL subsequent git operations inside that worktree
  * path, and call `git worktree remove` for cleanup when done.
  *
- * This mirrors the pattern already used by every other per-issue GSD agent at
+ * This mirrors the pattern already used by every other per-issue GTD agent at
  * /private/tmp/sv-<n>.
  */
 
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// The gsd-code-fixer agent's working instructions ARE the product — Claude
+// The gtd-code-fixer agent's working instructions ARE the product — Claude
 // executes them literally at runtime. Testing the text content tests the
 // deployed contract: if the instruction is absent, the isolation guarantee
 // is absent.
@@ -32,8 +32,8 @@ describe('bug-2686: review-fix agent worktree isolation', () => {
   let agentContent;
 
   before(() => {
-    const agentPath = path.join(__dirname, '..', 'agents', 'gsd-code-fixer.md');
-    assert.ok(fs.existsSync(agentPath), 'agents/gsd-code-fixer.md must exist');
+    const agentPath = path.join(__dirname, '..', 'agents', 'gtd-code-fixer.md');
+    assert.ok(fs.existsSync(agentPath), 'agents/gtd-code-fixer.md must exist');
     agentContent = fs.readFileSync(agentPath, 'utf-8');
   });
 
@@ -42,7 +42,7 @@ describe('bug-2686: review-fix agent worktree isolation', () => {
 
     assert.ok(
       worktreePos !== -1,
-      'gsd-code-fixer.md must include a "git worktree add" instruction to isolate operations from the main working tree (#2686)'
+      'gtd-code-fixer.md must include a "git worktree add" instruction to isolate operations from the main working tree (#2686)'
     );
 
     // `git checkout -- {file}` is a file-restore within the worktree — safe, not a branch switch.
@@ -58,8 +58,8 @@ describe('bug-2686: review-fix agent worktree isolation', () => {
     }
 
     // commit command must come after worktree setup — the fixer may use
-    // either `git commit` directly or `gsd-sdk query commit`
-    const commitMatch = /(?:git commit|gsd-sdk query commit)/.exec(agentContent);
+    // either `git commit` directly or `gtd-sdk query commit`
+    const commitMatch = /(?:git commit|gtd-sdk query commit)/.exec(agentContent);
     if (commitMatch) {
       const commitPos = commitMatch.index;
       assert.ok(
@@ -72,7 +72,7 @@ describe('bug-2686: review-fix agent worktree isolation', () => {
   test('agent instructions include worktree cleanup after completion', () => {
     assert.ok(
       agentContent.includes('git worktree remove') || agentContent.includes('worktree remove'),
-      'gsd-code-fixer.md must include worktree cleanup (git worktree remove) to avoid leaking tmp directories (#2686)'
+      'gtd-code-fixer.md must include worktree cleanup (git worktree remove) to avoid leaking tmp directories (#2686)'
     );
   });
 
@@ -85,7 +85,7 @@ describe('bug-2686: review-fix agent worktree isolation', () => {
       /\bwt\s*=\s*["']?\/tmp\/sv-/.test(agentContent);
     assert.ok(
       hasTmpWorktreePath,
-      'gsd-code-fixer.md must define a worktree variable at a /tmp/sv-... path, consistent with other GSD agents (#2686)'
+      'gtd-code-fixer.md must define a worktree variable at a /tmp/sv-... path, consistent with other GTD agents (#2686)'
     );
   });
 });

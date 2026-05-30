@@ -61,7 +61,7 @@ const ROADMAP_CONTENT = `# Roadmap
 `;
 
 const STATE_WITH_MILESTONE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 status: executing
 ---
@@ -193,7 +193,7 @@ describe('getMilestoneInfo', () => {
     expect(info.name).toBe('Belgium');
   });
 
-  it('extracts from yellow-circle in-flight marker (GSD ROADMAP template)', async () => {
+  it('extracts from yellow-circle in-flight marker (GTD ROADMAP template)', async () => {
     const roadmap = '- 🟡 **v3.1 Upstream Landing** — Phase 15 (in flight)';
     await writeFile(join(tmpDir, '.planning', 'ROADMAP.md'), roadmap);
     const info = await getMilestoneInfo(tmpDir);
@@ -901,7 +901,7 @@ describe('roadmapGetPhase', () => {
     expect(data.phase_number).toBe('999');
   });
 
-  it('throws GSDError when no phase number provided', async () => {
+  it('throws GTDError when no phase number provided', async () => {
     await expect(roadmapGetPhase([], tmpDir)).rejects.toThrow();
   });
 

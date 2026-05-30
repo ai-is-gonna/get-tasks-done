@@ -3,7 +3,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD Tools Tests - Concurrency Safety
+ * GTD Tools Tests - Concurrency Safety
  *
  * Tests for fix/concurrency-safety-1473a:
  *   - Planning lock integration (withPlanningLock in phase/roadmap operations)
@@ -24,9 +24,9 @@ const os = require('os');
 const { execSync, exec } = require('child_process');
 const { promisify } = require('util');
 const { performance } = require('perf_hooks');
-const { runGsdTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
-const { normalizeContent } = require('../get-shit-done/bin/lib/shell-command-projection.cjs');
+const { normalizeContent } = require('../get-tasks-done/bin/lib/shell-command-projection.cjs');
 // normalizeMd was removed from core.cjs (Phase 4 — issue #3468); the same algorithm now
 // lives in the shell-command-projection seam. Wrap normalizeContent so existing
 // behavioral / snapshot / perf assertions stay point-of-truth.
@@ -131,7 +131,7 @@ describe('planning lock integration', () => {
       `# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n---\n`
     );
 
-    const result = runGsdTools('phase add Testing', tmpDir);
+    const result = runGtdTools('phase add Testing', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const lockPath = path.join(tmpDir, '.planning', '.lock');
@@ -157,7 +157,7 @@ describe('planning lock integration', () => {
     fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Summary');
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api'), { recursive: true });
 
-    const result = runGsdTools('phase complete 1', tmpDir);
+    const result = runGtdTools('phase complete 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const lockPath = path.join(tmpDir, '.planning', '.lock');
@@ -178,7 +178,7 @@ describe('planning lock integration', () => {
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Summary');
 
-    const result = runGsdTools('roadmap update-plan-progress 1', tmpDir);
+    const result = runGtdTools('roadmap update-plan-progress 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const lockPath = path.join(tmpDir, '.planning', '.lock');
@@ -191,8 +191,8 @@ describe('planning lock integration', () => {
       `# Roadmap v1.0\n`
     );
 
-    runGsdTools('phase add First Phase', tmpDir);
-    runGsdTools('phase add Second Phase', tmpDir);
+    runGtdTools('phase add First Phase', tmpDir);
+    runGtdTools('phase add Second Phase', tmpDir);
 
     const lockPath = path.join(tmpDir, '.planning', '.lock');
     assert.ok(!fs.existsSync(lockPath), '.lock file should not persist after multiple operations');
@@ -204,7 +204,7 @@ describe('planning lock integration', () => {
       `# Roadmap v1.0\n\n### Phase 1: Foundation\n**Goal:** Setup\n\n### Phase 2: API\n**Goal:** Build API\n\n---\n`
     );
 
-    const result = runGsdTools('phase add User Dashboard', tmpDir);
+    const result = runGtdTools('phase add User Dashboard', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -242,7 +242,7 @@ describe('readModifyWriteStateMd (via state patch)', () => {
       `# Project State\n\n**Current Phase:** 03\n**Status:** Planning\n**Current Plan:** 03-01\n`
     );
 
-    const result = runGsdTools('state patch --Status "In progress" --"Current Plan" 03-02', tmpDir);
+    const result = runGtdTools('state patch --Status "In progress" --"Current Plan" 03-02', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -259,7 +259,7 @@ describe('readModifyWriteStateMd (via state patch)', () => {
       `# Project State\n\n**Current Phase:** 01\n**Status:** Ready\n`
     );
 
-    runGsdTools('state patch --Status "In progress"', tmpDir);
+    runGtdTools('state patch --Status "In progress"', tmpDir);
 
     const lockPath = path.join(tmpDir, '.planning', 'STATE.md.lock');
     assert.ok(!fs.existsSync(lockPath), 'STATE.md.lock should not persist after operation');
@@ -277,7 +277,7 @@ describe('readModifyWriteStateMd (via state patch)', () => {
 
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state patch --Status Complete --"Current Phase" 04', tmpDir);
+    const result = runGtdTools('state patch --Status Complete --"Current Phase" 04', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -291,10 +291,10 @@ describe('readModifyWriteStateMd (via state patch)', () => {
       `# Project State\n\n**Current Phase:** 01\n**Status:** Planning\n**Current Plan:** 01-01\n**Last Activity:** 2024-01-01\n`
     );
 
-    const resultA = runGsdTools('state patch --Status "In progress"', tmpDir);
+    const resultA = runGtdTools('state patch --Status "In progress"', tmpDir);
     assert.ok(resultA.success, `Patch A failed: ${resultA.error}`);
 
-    const resultB = runGsdTools('state patch --"Current Plan" 01-02', tmpDir);
+    const resultB = runGtdTools('state patch --"Current Plan" 01-02', tmpDir);
     assert.ok(resultB.success, `Patch B failed: ${resultB.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -309,9 +309,9 @@ describe('readModifyWriteStateMd (via state patch)', () => {
       `# Project State\n\n**Current Phase:** 01\n**Status:** Planning\n**Current Plan:** 01-01\n`
     );
 
-    runGsdTools('state patch --Status "In progress"', tmpDir);
-    runGsdTools('state patch --"Current Plan" 01-02', tmpDir);
-    runGsdTools('state patch --Status Complete', tmpDir);
+    runGtdTools('state patch --Status "In progress"', tmpDir);
+    runGtdTools('state patch --"Current Plan" 01-02', tmpDir);
+    runGtdTools('state patch --Status Complete', tmpDir);
 
     const lockPath = path.join(tmpDir, '.planning', 'STATE.md.lock');
     assert.ok(!fs.existsSync(lockPath), 'STATE.md.lock should not persist after rapid sequential patches');
@@ -421,13 +421,13 @@ describe('multi-process concurrent write tests', () => {
       ].join('\n')
     );
 
-    const r1 = runGsdTools('state patch --Status "In progress"', tmpDir);
+    const r1 = runGtdTools('state patch --Status "In progress"', tmpDir);
     assert.ok(r1.success, `Patch 1 failed: ${r1.error}`);
 
-    const r2 = runGsdTools('state patch --"Current Plan" 01-02', tmpDir);
+    const r2 = runGtdTools('state patch --"Current Plan" 01-02', tmpDir);
     assert.ok(r2.success, `Patch 2 failed: ${r2.error}`);
 
-    const r3 = runGsdTools('state patch --"Last Activity" 2025-06-15', tmpDir);
+    const r3 = runGtdTools('state patch --"Last Activity" 2025-06-15', tmpDir);
     assert.ok(r3.success, `Patch 3 failed: ${r3.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
@@ -697,7 +697,7 @@ must_haves:
 `
     );
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['frontmatter', 'get', path.join(planDir, '01-01-PLAN.md'), 'must_haves'],
       tmpDir
     );
@@ -716,7 +716,7 @@ must_haves:
       `# Project State\n\n**Current Phase:** 01\n**Current Plan:** 1\n**Total Plans in Phase:** 3\n`
     );
 
-    const result = runGsdTools('state advance-plan', tmpDir);
+    const result = runGtdTools('state advance-plan', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -745,7 +745,7 @@ describe('malformed input resilience', () => {
       '# Project State\n\n**Current Phase: 01\n**Status:** Planning\n'
     );
 
-    const result = runGsdTools('state patch --Status "In progress"', tmpDir);
+    const result = runGtdTools('state patch --Status "In progress"', tmpDir);
     const didNotCrash = result.success || (result.output !== undefined);
     assert.ok(didNotCrash, `state patch should not crash on malformed bold format: ${result.error}`);
 
@@ -764,7 +764,7 @@ describe('malformed input resilience', () => {
       '---\nphase: "01"\n---\n'
     );
 
-    const result = runGsdTools('state patch --Status "In progress"', tmpDir);
+    const result = runGtdTools('state patch --Status "In progress"', tmpDir);
     const didNotCrash = result.success || (result.output !== undefined);
     assert.ok(didNotCrash, `state patch should not crash on frontmatter-only STATE.md: ${result.error}`);
   });
@@ -789,7 +789,7 @@ describe('stress tests with 50+ phases', () => {
     create50PhaseProject(tmpDir, 25);
 
     const start = performance.now();
-    const result = runGsdTools('roadmap analyze', tmpDir);
+    const result = runGtdTools('roadmap analyze', tmpDir);
     const elapsed = performance.now() - start;
 
     assert.ok(result.success, `roadmap analyze should succeed: ${result.error}`);
@@ -813,7 +813,7 @@ describe('stress tests with 50+ phases', () => {
       '# Phase 26 Plan 1 Summary\n\nFeature 26 completed.\n'
     );
 
-    const result = runGsdTools('phase complete 26', tmpDir);
+    const result = runGtdTools('phase complete 26', tmpDir);
     assert.ok(result.success, `phase complete 26 should succeed: ${result.error}`);
 
     const roadmapContent = fs.readFileSync(

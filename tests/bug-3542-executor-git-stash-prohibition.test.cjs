@@ -36,11 +36,11 @@ const os = require('node:os');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
 
-const EXECUTOR_PATH = path.join(__dirname, '..', 'agents', 'gsd-executor.md');
+const EXECUTOR_PATH = path.join(__dirname, '..', 'agents', 'gtd-task-executor.md');
 
 // ─── Test A — prompt content asserts the prohibition ───────────────────────
 
-test('bug-3542: gsd-executor.md prohibits `git stash` family inside worktrees', () => {
+test('bug-3542: gtd-task-executor.md prohibits `git stash` family inside worktrees', () => {
   const content = fs.readFileSync(EXECUTOR_PATH, 'utf-8');
 
   // The prohibition must call out `git stash` explicitly. Just listing
@@ -50,22 +50,22 @@ test('bug-3542: gsd-executor.md prohibits `git stash` family inside worktrees', 
   assert.match(
     content,
     /`git stash`/,
-    'gsd-executor.md must explicitly forbid `git stash` (bare push) — see #3542',
+    'gtd-task-executor.md must explicitly forbid `git stash` (bare push) — see #3542',
   );
   assert.match(
     content,
     /`git stash pop`/,
-    'gsd-executor.md must explicitly forbid `git stash pop` — the load-bearing footgun (#3542)',
+    'gtd-task-executor.md must explicitly forbid `git stash pop` — the load-bearing footgun (#3542)',
   );
   assert.match(
     content,
     /`git stash apply`/,
-    'gsd-executor.md must explicitly forbid `git stash apply` — same shared-stack hazard as pop (#3542)',
+    'gtd-task-executor.md must explicitly forbid `git stash apply` — same shared-stack hazard as pop (#3542)',
   );
   assert.match(
     content,
     /`git stash drop`/,
-    'gsd-executor.md must explicitly forbid `git stash drop` — mutates the shared stack (#3542)',
+    'gtd-task-executor.md must explicitly forbid `git stash drop` — mutates the shared stack (#3542)',
   );
 
   // The prohibition must explain WHY (shared storage across worktrees) so
@@ -74,7 +74,7 @@ test('bug-3542: gsd-executor.md prohibits `git stash` family inside worktrees', 
   assert.match(
     content,
     /shared|share[d]?\s+(across|between)/i,
-    'gsd-executor.md must document that stash storage is shared across worktrees (#3542)',
+    'gtd-task-executor.md must document that stash storage is shared across worktrees (#3542)',
   );
 
   // The prohibition must document at least one alternative the agent CAN
@@ -88,7 +88,7 @@ test('bug-3542: gsd-executor.md prohibits `git stash` family inside worktrees', 
   const hasGitDiffRef = /`git diff [^`]*\$?\{?ref\}?|`git diff [A-Z]+:/i.test(content);
   assert.ok(
     hasThrowawayBranch || hasGitShow || hasGitDiffRef,
-    'gsd-executor.md must document an alternative to `git stash` ' +
+    'gtd-task-executor.md must document an alternative to `git stash` ' +
       '(commit-to-throwaway-branch, or read-only `git show <ref>:<path>` / ' +
       '`git diff <ref> -- <path>`) so the agent has a sanctioned escape path (#3542)',
   );
@@ -98,7 +98,7 @@ test('bug-3542: gsd-executor.md prohibits `git stash` family inside worktrees', 
   assert.match(
     content,
     /#3542/,
-    'gsd-executor.md must reference issue #3542 next to the stash prohibition for traceability',
+    'gtd-task-executor.md must reference issue #3542 next to the stash prohibition for traceability',
   );
 });
 
@@ -152,7 +152,7 @@ test('bug-3542: stash pushed in main checkout is visible inside a linked worktre
         '`refs/stash` lives in the shared parent .git directory. If this ' +
         'assertion ever stops holding (e.g. git introduces per-worktree ' +
         'stash storage in a future release), the executor agent prohibition ' +
-        'in agents/gsd-executor.md can be relaxed.',
+        'in agents/gtd-task-executor.md can be relaxed.',
     );
 
     // Stronger pin: a `git stash pop` inside the worktree must actually

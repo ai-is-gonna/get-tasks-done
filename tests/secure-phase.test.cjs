@@ -4,10 +4,10 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Secure-Phase Tests
+ * GTD Secure-Phase Tests
  *
  * Validates the security-first enforcement layer:
- * - gsd-security-auditor agent frontmatter and structure
+ * - gtd-security-auditor agent frontmatter and structure
  * - secure-phase command file
  * - secure-phase workflow file
  * - SECURITY.md template
@@ -23,19 +23,19 @@ const path = require('path');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const AGENTS_DIR = path.join(REPO_ROOT, 'agents');
-const COMMANDS_DIR = path.join(REPO_ROOT, 'commands', 'gsd');
-const WORKFLOWS_DIR = path.join(REPO_ROOT, 'get-shit-done', 'workflows');
-const TEMPLATES_DIR = path.join(REPO_ROOT, 'get-shit-done', 'templates');
+const COMMANDS_DIR = path.join(REPO_ROOT, 'commands', 'gtd');
+const WORKFLOWS_DIR = path.join(REPO_ROOT, 'get-tasks-done', 'workflows');
+const TEMPLATES_DIR = path.join(REPO_ROOT, 'get-tasks-done', 'templates');
 
-// ─── 1. Agent frontmatter — gsd-security-auditor.md ─────────────────────────
+// ─── 1. Agent frontmatter — gtd-security-auditor.md ─────────────────────────
 
-describe('SECURE: gsd-security-auditor agent', () => {
-  const agentPath = path.join(AGENTS_DIR, 'gsd-security-auditor.md');
+describe('SECURE: gtd-security-auditor agent', () => {
+  const agentPath = path.join(AGENTS_DIR, 'gtd-security-auditor.md');
 
   test('agent file exists', () => {
     assert.ok(
       fs.existsSync(agentPath),
-      'gsd-security-auditor.md must exist in agents/'
+      'gtd-security-auditor.md must exist in agents/'
     );
   });
 
@@ -48,12 +48,12 @@ describe('SECURE: gsd-security-auditor agent', () => {
     assert.ok(frontmatter.includes('color:'), 'missing color:');
   });
 
-  test('name is gsd-security-auditor', () => {
+  test('name is gtd-security-auditor', () => {
     const content = fs.readFileSync(agentPath, 'utf-8');
     const frontmatter = content.split('---')[1] || '';
     assert.ok(
-      frontmatter.includes('name: gsd-security-auditor'),
-      'name must be gsd-security-auditor'
+      frontmatter.includes('name: gtd-security-auditor'),
+      'name must be gtd-security-auditor'
     );
   });
 
@@ -111,16 +111,16 @@ describe('SECURE: secure-phase command file', () => {
   test('command file exists', () => {
     assert.ok(
       fs.existsSync(cmdPath),
-      'secure-phase.md must exist in commands/gsd/'
+      'secure-phase.md must exist in commands/gtd/'
     );
   });
 
-  test('has valid frontmatter with name gsd:secure-phase', () => {
+  test('has valid frontmatter with name gtd:secure-phase', () => {
     const content = fs.readFileSync(cmdPath, 'utf-8');
     const frontmatter = content.split('---')[1] || '';
     assert.ok(
-      frontmatter.includes('name: gsd:secure-phase'),
-      'name must be gsd:secure-phase'
+      frontmatter.includes('name: gtd:secure-phase'),
+      'name must be gtd:secure-phase'
     );
   });
 
@@ -158,15 +158,15 @@ describe('SECURE: secure-phase workflow file', () => {
   test('workflow file exists', () => {
     assert.ok(
       fs.existsSync(wfPath),
-      'secure-phase.md must exist in get-shit-done/workflows/'
+      'secure-phase.md must exist in get-tasks-done/workflows/'
     );
   });
 
-  test('contains gsd-security-auditor reference', () => {
+  test('contains gtd-security-auditor reference', () => {
     const content = fs.readFileSync(wfPath, 'utf-8');
     assert.ok(
-      content.includes('gsd-security-auditor'),
-      'must reference gsd-security-auditor agent'
+      content.includes('gtd-security-auditor'),
+      'must reference gtd-security-auditor agent'
     );
   });
 
@@ -215,7 +215,7 @@ describe('SECURE: SECURITY.md template', () => {
   test('template exists', () => {
     assert.ok(
       fs.existsSync(tplPath),
-      'SECURITY.md must exist in get-shit-done/templates/'
+      'SECURITY.md must exist in get-tasks-done/templates/'
     );
   });
 
@@ -297,7 +297,7 @@ describe('SECURE: config.json security defaults', () => {
   test('config template exists', () => {
     assert.ok(
       fs.existsSync(configPath),
-      'config.json must exist in get-shit-done/templates/'
+      'config.json must exist in get-tasks-done/templates/'
     );
   });
 
@@ -349,7 +349,7 @@ describe('SECURE: VALIDATION.md security columns', () => {
   test('VALIDATION.md template exists', () => {
     assert.ok(
       fs.existsSync(valPath),
-      'VALIDATION.md must exist in get-shit-done/templates/'
+      'VALIDATION.md must exist in get-tasks-done/templates/'
     );
   });
 
@@ -394,7 +394,7 @@ describe('SECURE: VALIDATION.md security columns', () => {
 // ─── 7. Threat-model-anchored behaviour (structural) ────────────────────────
 
 describe('SECURE: threat-model-anchored behaviour', () => {
-  const agentPath = path.join(AGENTS_DIR, 'gsd-security-auditor.md');
+  const agentPath = path.join(AGENTS_DIR, 'gtd-security-auditor.md');
   const wfPath = path.join(WORKFLOWS_DIR, 'secure-phase.md');
 
   test('agent does NOT contain "scan for vulnerabilities" (verifies, not scans)', () => {

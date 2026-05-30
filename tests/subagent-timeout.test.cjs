@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - subagent timeout configuration
+ * GTD Tools Tests - subagent timeout configuration
  *
  * Validates that workflow.subagent_timeout is properly registered,
  * loaded from config, and emitted in init context.
@@ -16,7 +16,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── config key registration ─────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ describe('workflow.subagent_timeout config key (#1472)', () => {
 
     // Load config via init and check the value propagates
     // Use config-get to verify the field is recognized
-    const result = runGsdTools(['config-set', 'workflow.subagent_timeout', '600000'], tmpDir);
+    const result = runGtdTools(['config-set', 'workflow.subagent_timeout', '600000'], tmpDir);
     assert.ok(result.success, `config-set should accept workflow.subagent_timeout: ${result.error}`);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -50,11 +50,11 @@ describe('workflow.subagent_timeout config key (#1472)', () => {
     fs.writeFileSync(configPath, JSON.stringify({}, null, 2));
 
     // Valid key should succeed
-    const valid = runGsdTools(['config-set', 'workflow.subagent_timeout', '900000'], tmpDir);
+    const valid = runGtdTools(['config-set', 'workflow.subagent_timeout', '900000'], tmpDir);
     assert.ok(valid.success, `workflow.subagent_timeout should be a valid key: ${valid.error}`);
 
     // Invalid key should fail
-    const invalid = runGsdTools(['config-set', 'workflow.nonexistent_key', 'true'], tmpDir);
+    const invalid = runGtdTools(['config-set', 'workflow.nonexistent_key', 'true'], tmpDir);
     assert.ok(!invalid.success, 'nonexistent key should be rejected');
   });
 
@@ -64,7 +64,7 @@ describe('workflow.subagent_timeout config key (#1472)', () => {
       workflow: { subagent_timeout: 600000 }
     }, null, 2));
 
-    const result = runGsdTools('init map-codebase', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init map-codebase', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init map-codebase should succeed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -75,7 +75,7 @@ describe('workflow.subagent_timeout config key (#1472)', () => {
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({}, null, 2));
 
-    const result = runGsdTools('init map-codebase', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init map-codebase', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `init map-codebase should succeed: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -85,7 +85,7 @@ describe('workflow.subagent_timeout config key (#1472)', () => {
 
 describe('map-codebase workflow references configurable timeout (#1472)', () => {
   test('workflow file references subagent_timeout from init context', () => {
-    const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'map-codebase.md');
+    const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'map-codebase.md');
     const content = fs.readFileSync(workflowPath, 'utf8');
 
     assert.ok(
@@ -99,7 +99,7 @@ describe('map-codebase workflow references configurable timeout (#1472)', () => 
   });
 
   test('workflow file no longer has hardcoded 300000 timeout', () => {
-    const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'map-codebase.md');
+    const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'map-codebase.md');
     const content = fs.readFileSync(workflowPath, 'utf8');
 
     // The timeout line should reference the config variable, not a hardcoded value
@@ -115,7 +115,7 @@ describe('map-codebase workflow references configurable timeout (#1472)', () => 
 
 describe('planning-config.md documents subagent_timeout (#1472)', () => {
   test('reference doc includes subagent_timeout entry', () => {
-    const refPath = path.join(__dirname, '..', 'get-shit-done', 'references', 'planning-config.md');
+    const refPath = path.join(__dirname, '..', 'get-tasks-done', 'references', 'planning-config.md');
     const content = fs.readFileSync(refPath, 'utf8');
 
     assert.ok(
@@ -129,9 +129,9 @@ describe('planning-config.md documents subagent_timeout (#1472)', () => {
   });
 });
 
-// ─── init execute-phase includes context_window ─────────────────────────────
+// ─── init plan-phase includes context_window ─────────────────────────────
 
-describe('init execute-phase context_window (#1472)', () => {
+describe('init plan-phase context_window (#1472)', () => {
   let tmpDir;
 
   beforeEach(() => {
@@ -142,26 +142,26 @@ describe('init execute-phase context_window (#1472)', () => {
     cleanup(tmpDir);
   });
 
-  test('init execute-phase output includes context_window from config', () => {
+  test('init plan-phase output includes context_window from config', () => {
     // Write config with a custom context_window value (1M for Opus/Sonnet 4.6)
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({
       context_window: 1000000,
     }, null, 2));
 
-    // Create a phase directory with a plan so init execute-phase succeeds
+    // Create a phase directory with a plan so init plan-phase succeeds
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.mkdirSync(phaseDir, { recursive: true });
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
 
-    const result = runGsdTools('init execute-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.context_window, 1000000, 'context_window should reflect configured value');
   });
 
-  test('init execute-phase uses default context_window when not configured', () => {
+  test('init plan-phase uses default context_window when not configured', () => {
     // Write minimal config without context_window
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({}, null, 2));
@@ -170,7 +170,7 @@ describe('init execute-phase context_window (#1472)', () => {
     fs.mkdirSync(phaseDir, { recursive: true });
     fs.writeFileSync(path.join(phaseDir, '01-01-PLAN.md'), '# Plan');
 
-    const result = runGsdTools('init execute-phase 1', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('init plan-phase 1', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -197,7 +197,7 @@ describe('config-get context_window (#1472)', () => {
       context_window: 1000000,
     }, null, 2));
 
-    const result = runGsdTools('config-get context_window', tmpDir);
+    const result = runGtdTools('config-get context_window', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -210,7 +210,7 @@ describe('config-get context_window (#1472)', () => {
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({}, null, 2));
 
-    const result = runGsdTools('config-get context_window', tmpDir);
+    const result = runGtdTools('config-get context_window', tmpDir);
     assert.ok(result.success, `Expected success but got: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -234,7 +234,7 @@ describe('config-set workflow.subagent_timeout numeric values (#1472)', () => {
   });
 
   test('config-set workflow.subagent_timeout coerces string to number', () => {
-    const result = runGsdTools(['config-set', 'workflow.subagent_timeout', '900000'], tmpDir);
+    const result = runGtdTools(['config-set', 'workflow.subagent_timeout', '900000'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -249,9 +249,9 @@ describe('config-set workflow.subagent_timeout numeric values (#1472)', () => {
   });
 
   test('config-set workflow.subagent_timeout round-trips through config-get', () => {
-    runGsdTools(['config-set', 'workflow.subagent_timeout', '1200000'], tmpDir);
+    runGtdTools(['config-set', 'workflow.subagent_timeout', '1200000'], tmpDir);
 
-    const result = runGsdTools('config-get workflow.subagent_timeout', tmpDir);
+    const result = runGtdTools('config-get workflow.subagent_timeout', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

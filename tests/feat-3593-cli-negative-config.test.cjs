@@ -291,7 +291,7 @@ test('--cwd pointing at a non-existent path fails with a typed usage reason', (t
   const result = runCli(['--cwd', nonExistent, 'config-get', 'model_profile'], { cwd: process.cwd() });
   assert.notEqual(result.status, 0);
   assert.equal(result.hasStackTrace, false);
-  // gsd-tools validates --cwd up-front and emits ERROR_REASON.USAGE.
+  // gtd-tools validates --cwd up-front and emits ERROR_REASON.USAGE.
   assert.equal(result.reason, 'usage', `expected reason=usage for invalid --cwd, got: ${result.reason}`);
 });
 

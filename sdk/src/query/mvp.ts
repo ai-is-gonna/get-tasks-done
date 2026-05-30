@@ -5,29 +5,29 @@
  *
  * 1. **`phase.mvp-mode`** — resolves the precedence chain
  *    `--mvp` CLI flag → ROADMAP `**Mode:** mvp` → `workflow.mvp_mode` config → false.
- *    Replaces near-identical bash blocks in `plan-phase.md`, `execute-phase.md`,
+ *    Replaces near-identical bash blocks in `plan-phase.md`, `work-task-issue.md`,
  *    `verify-work.md`, `progress.md`. Single canonical resolution; workflows just
  *    call the verb and read the boolean.
  *
  * 2. **`task.is-behavior-adding`** — applies the three-check predicate
  *    (tdd=true frontmatter AND `<behavior>` block AND non-test source files in `<files>`)
- *    that was previously prose-only in `references/execute-mvp-tdd.md`. The gsd-executor
+ *    that was previously prose-only in `references/execute-mvp-tdd.md`. The gtd-task-executor
  *    agent now invokes the verb instead of inlining the checks.
  *
  * 3. **`user-story.validate`** — applies the canonical user-story regex
  *    `/^As a .+, I want to .+, so that .+\.$/` previously hardcoded in `verify-work.md`
- *    prose. Consumed by the verifier (phase-goal guard) and by `/gsd-mvp-phase`
+ *    prose. Consumed by the verifier (phase-goal guard) and by `/gtd-mvp-phase`
  *    (interactive-prompt validation).
  *
  * Domain terms: see CONTEXT.md → MVP Mode, User Story, Behavior-Adding Task.
- * Concept index: get-shit-done/references/mvp-concepts.md.
+ * Concept index: get-tasks-done/references/mvp-concepts.md.
  */
 
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { loadConfig } from '../config.js';
 import { roadmapGetPhase } from './roadmap.js';
 import type { QueryHandler } from './utils.js';
@@ -57,13 +57,13 @@ interface MvpModeResult {
  *   4. false
  *
  * @example
- *   gsd-sdk query phase.mvp-mode 1                    # roadmap + config check
- *   gsd-sdk query phase.mvp-mode 1 --cli-flag         # caller saw --mvp on CLI
+ *   gtd-sdk query phase.mvp-mode 1                    # roadmap + config check
+ *   gtd-sdk query phase.mvp-mode 1 --cli-flag         # caller saw --mvp on CLI
  */
 export const phaseMvpMode: QueryHandler<MvpModeResult> = async (args, projectDir, workstream) => {
   const phaseNum = args[0];
   if (!phaseNum) {
-    throw new GSDError(
+    throw new GTDError(
       'Usage: phase.mvp-mode <phase-number> [--cli-flag]',
       ErrorClassification.Validation,
     );
@@ -133,11 +133,11 @@ interface BehaviorAddingResult {
  * Pure doc-only / config-only / test-only tasks return `is_behavior_adding=false`
  * and are exempt from the MVP+TDD Gate.
  *
- * Canonical specification: get-shit-done/references/execute-mvp-tdd.md.
+ * Canonical specification: get-tasks-done/references/execute-mvp-tdd.md.
  *
  * @example
- *   gsd-sdk query task.is-behavior-adding ./plans/01-PLAN-auth.md
- *   gsd-sdk query task.is-behavior-adding --task-content "<task>...</task>"
+ *   gtd-sdk query task.is-behavior-adding ./plans/01-PLAN-auth.md
+ *   gtd-sdk query task.is-behavior-adding --task-content "<task>...</task>"
  */
 export const taskIsBehaviorAdding: QueryHandler<BehaviorAddingResult> = async (args, projectDir) => {
   let content: string | null = null;
@@ -149,13 +149,13 @@ export const taskIsBehaviorAdding: QueryHandler<BehaviorAddingResult> = async (a
     const resolvedTaskPath = resolve(projectRoot, requestedPath);
     const rel = relative(projectRoot, resolvedTaskPath);
     if (rel === '..' || rel.startsWith(`..${sep}`)) {
-      throw new GSDError(
+      throw new GTDError(
         `Task file is outside project scope: ${requestedPath}`,
         ErrorClassification.Validation,
       );
     }
     if (!existsSync(resolvedTaskPath)) {
-      throw new GSDError(
+      throw new GTDError(
         `Task file not found: ${requestedPath}`,
         ErrorClassification.Validation,
       );
@@ -163,7 +163,7 @@ export const taskIsBehaviorAdding: QueryHandler<BehaviorAddingResult> = async (a
     content = await readFile(resolvedTaskPath, 'utf-8');
   }
   if (!content) {
-    throw new GSDError(
+    throw new GTDError(
       'Usage: task.is-behavior-adding <plan-file-path> | --task-content "<xml>"',
       ErrorClassification.Validation,
     );
@@ -243,11 +243,11 @@ export const USER_STORY_REGEX = /^As a (?<role>.+?), I want to (?<capability>.+?
 
 /**
  * Validate that a string matches the User Story format used by MVP-mode phases.
- * Used by `gsd-verifier` (phase-goal guard) and `/gsd-mvp-phase` (interactive prompting).
+ * Used by `gtd-verifier` (phase-goal guard) and `/gtd-mvp-phase` (interactive prompting).
  *
  * @example
- *   gsd-sdk query user-story.validate "As a user, I want to log in, so that I can see my data."
- *   gsd-sdk query user-story.validate --story "<text>"
+ *   gtd-sdk query user-story.validate "As a user, I want to log in, so that I can see my data."
+ *   gtd-sdk query user-story.validate --story "<text>"
  */
 export const userStoryValidate: QueryHandler<UserStoryValidateResult> = async (args, _projectDir) => {
   let input: string | null = null;
@@ -257,7 +257,7 @@ export const userStoryValidate: QueryHandler<UserStoryValidateResult> = async (a
     input = args.join(' ');
   }
   if (input === null || input === '') {
-    throw new GSDError(
+    throw new GTDError(
       'Usage: user-story.validate "<story text>" | --story "<text>"',
       ErrorClassification.Validation,
     );

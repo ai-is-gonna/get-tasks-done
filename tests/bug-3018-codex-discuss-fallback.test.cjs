@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #3018.
  *
- * @jon-hendry: running `$gsd-discuss-phase 81` in Codex Default mode (where
+ * @jon-hendry: running `$gtd-discuss-phase 81` in Codex Default mode (where
  * `request_user_input` is rejected) caused the agent to pick "reasonable
  * defaults" and proceed straight into writing CONTEXT.md / DISCUSSION-LOG.md
  * checkpoints — without ever surfacing the questions to the user. The
@@ -25,7 +25,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -110,7 +110,7 @@ describe('bug #3018: codex skill adapter encodes the discuss-mode fallback contr
   });
 
   test('Execute mode fallback section exists and has content', () => {
-    const header = getCodexSkillAdapterHeader('gsd-discuss-phase');
+    const header = getCodexSkillAdapterHeader('gtd-discuss-phase');
     const section = extractExecuteModeFallback(header);
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.ok, true, `section must parse, got header:\n${header}`);
@@ -118,35 +118,35 @@ describe('bug #3018: codex skill adapter encodes the discuss-mode fallback contr
   });
 
   test('fallback instructs STOP/WAIT (not silent continuation)', () => {
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.instructsStop, true,
       `must instruct stop/halt/wait — section was:\n${section}`);
   });
 
   test('fallback prescribes plain-text question presentation', () => {
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.presentsPlainTextQuestions, true,
       `must mention plain-text / numbered-list presentation — section was:\n${section}`);
   });
 
   test('fallback names a permission path under which defaults ARE allowed (--auto / --all / explicit approval / autonomous)', () => {
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.namesPermissionPath, true,
       `must name at least one permission path — section was:\n${section}`);
   });
 
   test('fallback forbids writing workflow artifacts before user answers', () => {
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.forbidsWritingArtifactsBeforeAnswer, true,
       `must encode write-ban + named artifact class — section was:\n${section}`);
   });
 
   test('fallback does NOT contain the #3018 anti-pattern ("pick a reasonable default")', () => {
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     assert.equal(parsed.silentlyPicksDefaults, false,
       `regression — fallback must NOT instruct the agent to pick defaults autonomously, section was:\n${section}`);
@@ -156,7 +156,7 @@ describe('bug #3018: codex skill adapter encodes the discuss-mode fallback contr
     // Single assertion that the whole semantic record matches the contract.
     // If any flag flips, the test fails with a structured diff naming the
     // exact invariant that broke.
-    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gsd-discuss-phase'));
+    const section = extractExecuteModeFallback(getCodexSkillAdapterHeader('gtd-discuss-phase'));
     const parsed = parseExecuteModeFallback(section);
     const semanticContract = {
       ok: parsed.ok,

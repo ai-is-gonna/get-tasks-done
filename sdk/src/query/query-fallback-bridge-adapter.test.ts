@@ -24,7 +24,7 @@ describe('query-fallback-bridge-adapter', () => {
 
     await expect(runFallbackBridge({
       projectDir: tmpDir,
-      gsdToolsPath: scriptPath,
+      gtdToolsPath: scriptPath,
       normCmd: 'state',
       normArgs: ['load'],
     })).rejects.toThrow(/bridge boom/);

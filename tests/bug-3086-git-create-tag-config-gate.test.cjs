@@ -19,22 +19,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 const WORKFLOW_PATH = path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'workflows',
   'complete-milestone.md',
 );
 
 describe('#3086: git.create_tag config key', () => {
   test('A. fresh project: config-get git.create_tag returns true (default)', (t) => {
-    const tmpDir = createTempProject('gsd-3086-default-');
+    const tmpDir = createTempProject('gtd-3086-default-');
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(['config-get', 'git.create_tag'], tmpDir, { HOME: tmpDir });
+    const result = runGtdTools(['config-get', 'git.create_tag'], tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `config-get git.create_tag failed:\n${result.error}`);
     assert.strictEqual(
       result.output.trim(),
@@ -44,15 +44,15 @@ describe('#3086: git.create_tag config key', () => {
   });
 
   test('B. config-set git.create_tag false → config-get returns false', (t) => {
-    const tmpDir = createTempProject('gsd-3086-set-false-');
+    const tmpDir = createTempProject('gtd-3086-set-false-');
     t.after(() => cleanup(tmpDir));
 
-    const setResult = runGsdTools(['config-set', 'git.create_tag', 'false'], tmpDir, {
+    const setResult = runGtdTools(['config-set', 'git.create_tag', 'false'], tmpDir, {
       HOME: tmpDir,
     });
     assert.ok(setResult.success, `config-set git.create_tag false failed:\n${setResult.error}`);
 
-    const getResult = runGsdTools(['config-get', 'git.create_tag'], tmpDir, { HOME: tmpDir });
+    const getResult = runGtdTools(['config-get', 'git.create_tag'], tmpDir, { HOME: tmpDir });
     assert.ok(getResult.success, `config-get after set failed:\n${getResult.error}`);
     assert.strictEqual(
       getResult.output.trim(),
@@ -62,10 +62,10 @@ describe('#3086: git.create_tag config key', () => {
   });
 
   test('C. config-set git.create_tag with invalid value "maybe" is rejected', (t) => {
-    const tmpDir = createTempProject('gsd-3086-invalid-');
+    const tmpDir = createTempProject('gtd-3086-invalid-');
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(['config-set', 'git.create_tag', 'maybe'], tmpDir, {
+    const result = runGtdTools(['config-set', 'git.create_tag', 'maybe'], tmpDir, {
       HOME: tmpDir,
     });
     assert.ok(

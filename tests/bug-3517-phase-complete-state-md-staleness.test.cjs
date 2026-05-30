@@ -6,7 +6,7 @@
 
 /**
  * Regression tests for bug #3517:
- *   `gsd-sdk query phase.complete N` returns state_updated: true but
+ *   `gtd-sdk query phase.complete N` returns state_updated: true but
  *   leaves STATE.md with stale fields.
  *
  * Root cause 1 (idempotency): completed_phases is blindly incremented
@@ -118,7 +118,7 @@ function setupProject(tmpDir) {
   // frontmatter has total_plans, completed_plans, stopped_at, last_updated
   const state = [
     '---',
-    'gsd_state_version: 1.0',
+    'gtd_state_version: 1.0',
     'milestone: v3.0',
     'milestone_name: Core Platform',
     'status: executing',
@@ -200,7 +200,7 @@ describe('bug #3517: phase.complete leaves STATE.md with stale fields', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3517-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3517-'));
   });
 
   afterEach(() => {

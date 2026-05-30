@@ -5,7 +5,7 @@
  * results to the compiled SDK ESM output for all exported functions.
  *
  * SDK side: require('../sdk/dist/query/state-document.js') via createRequire
- * CJS side: require('../get-shit-done/bin/lib/state-document.generated.cjs')
+ * CJS side: require('../get-tasks-done/bin/lib/state-document.generated.cjs')
  */
 
 const { test, describe } = require('node:test');
@@ -17,7 +17,7 @@ const { createRequire } = require('node:module');
 const requireFromRoot = createRequire(__filename);
 
 // CJS side — direct require works fine
-const cjs = requireFromRoot('../get-shit-done/bin/lib/state-document.generated.cjs');
+const cjs = requireFromRoot('../get-tasks-done/bin/lib/state-document.generated.cjs');
 
 describe('state-document-generator parity: stateReplaceFieldWithFallback', async () => {
   const sdk = await import('../sdk/dist/query/state-document.js');

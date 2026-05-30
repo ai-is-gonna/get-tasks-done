@@ -17,6 +17,7 @@ import { intelStatus, intelDiff, intelSnapshot, intelValidate, intelQuery, intel
 import { writeProfile, generateClaudeProfile, generateDevPreferences, generateClaudeMd } from './profile-output.js';
 import { phaseMvpMode, taskIsBehaviorAdding, userStoryValidate } from './mvp.js';
 import { worktreeCleanupWave } from './worktree.js';
+import { exportPhaseIssues, orchestrateTasks, workTaskIssue } from './task-issues.js';
 
 export const DOMAIN_STATIC_CATALOG: ReadonlyArray<readonly [string, QueryHandler]> = [
   ['agent-skills', agentSkills],
@@ -62,6 +63,9 @@ export const DOMAIN_STATIC_CATALOG: ReadonlyArray<readonly [string, QueryHandler
   ['workstream progress', workstreamProgress],
   ['worktree.cleanup-wave', worktreeCleanupWave],
   ['worktree cleanup-wave', worktreeCleanupWave],
+  ['export-phase-issues', exportPhaseIssues],
+  ['work-task-issue', workTaskIssue],
+  ['orchestrate-tasks', orchestrateTasks],
   ['docs-init', docsInit],
   ['websearch', websearch],
   ['learnings.copy', learningsCopy],

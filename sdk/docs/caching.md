@@ -1,10 +1,10 @@
 # Prompt Caching Best Practices
 
-When building applications on the GSD SDK, system prompts that include workflow instructions (executor prompts, planner context, verification rules) are large and stable across requests. Prompt caching avoids re-processing these on every API call.
+When building applications on the GTD SDK, system prompts that include workflow instructions (executor prompts, planner context, verification rules) are large and stable across requests. Prompt caching avoids re-processing these on every API call.
 
 ## Recommended: 1-Hour Cache TTL
 
-Use `cache_control` with a 1-hour TTL on system prompts that include GSD workflow content:
+Use `cache_control` with a 1-hour TTL on system prompts that include GTD workflow content:
 
 ```typescript
 const response = await client.messages.create({
@@ -12,7 +12,7 @@ const response = await client.messages.create({
   system: [
     {
       type: 'text',
-      text: executorPrompt, // GSD workflow instructions — large, stable across requests
+      text: executorPrompt, // GTD workflow instructions — large, stable across requests
       cache_control: { type: 'ephemeral', ttl: '1h' },
     },
   ],
@@ -22,13 +22,13 @@ const response = await client.messages.create({
 
 ### Why 1 hour instead of the default 5 minutes
 
-GSD workflows involve human review pauses between phases — discussing results, checking verification output, deciding next steps. The default 5-minute TTL expires during these pauses, forcing full re-processing of the system prompt on the next request.
+GTD workflows involve human review pauses between phases — discussing results, checking verification output, deciding next steps. The default 5-minute TTL expires during these pauses, forcing full re-processing of the system prompt on the next request.
 
 With a 1-hour TTL:
 
 - **Cost:** 2x write cost on cache miss (vs. 1.25x for 5-minute TTL)
 - **Break-even:** Pays for itself after 3 cache hits per hour
-- **GSD usage pattern:** Phase execution involves dozens of requests per hour, well above break-even
+- **GTD usage pattern:** Phase execution involves dozens of requests per hour, well above break-even
 - **Cache refresh:** Every cache hit resets the TTL at no cost, so active sessions maintain warm cache throughout
 
 ### Which prompts to cache

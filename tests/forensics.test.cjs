@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Forensics Tests
+ * GTD Forensics Tests
  *
  * Validates the forensics command and workflow files exist,
  * follow expected patterns, and cover all anomaly detection types.
@@ -17,17 +17,17 @@ const path = require('path');
 const os = require('os');
 
 const repoRoot = path.resolve(__dirname, '..');
-const commandPath = path.join(repoRoot, 'commands', 'gsd', 'forensics.md');
-const workflowPath = path.join(repoRoot, 'get-shit-done', 'workflows', 'forensics.md');
+const commandPath = path.join(repoRoot, 'commands', 'gtd', 'forensics.md');
+const workflowPath = path.join(repoRoot, 'get-tasks-done', 'workflows', 'forensics.md');
 
 describe('forensics command', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(commandPath), 'commands/gsd/forensics.md should exist');
+    assert.ok(fs.existsSync(commandPath), 'commands/gtd/forensics.md should exist');
   });
 
   test('command has correct frontmatter', () => {
     const content = fs.readFileSync(commandPath, 'utf-8');
-    assert.ok(content.includes('name: gsd:forensics'), 'should have correct command name');
+    assert.ok(content.includes('name: gtd:forensics'), 'should have correct command name');
     assert.ok(content.includes('type: prompt'), 'should have type: prompt');
     assert.ok(content.includes('argument-hint'), 'should have argument-hint');
   });
@@ -143,25 +143,25 @@ describe('forensics workflow', () => {
     );
   });
 
-  test('workflow submits issues to gsd-build/get-shit-done, not the current repo', () => {
+  test('workflow submits issues to ai-is-gonna/get-tasks-done, not the current repo', () => {
     const content = fs.readFileSync(workflowPath, 'utf-8');
     // Scope check to the gh issue create invocation — a whole-file search would
     // pass even if gh issue create lacked --repo, because gh label list also
     // contains the repo string.
     assert.match(
       content,
-      /gh issue create[\s\S]{0,250}--repo\s+gsd-build\/get-shit-done/,
-      'gh issue create must use --repo gsd-build/get-shit-done to avoid submitting to the user\'s current project repo'
+      /gh issue create[\s\S]{0,250}--repo\s+ai-is-gonna\/get-tasks-done/,
+      'gh issue create must use --repo ai-is-gonna/get-tasks-done to avoid submitting to the user\'s current project repo'
     );
   });
 
-  test('workflow checks bug label in gsd-build/get-shit-done, not the current repo', () => {
+  test('workflow checks bug label in ai-is-gonna/get-tasks-done, not the current repo', () => {
     const content = fs.readFileSync(workflowPath, 'utf-8');
     // Regex is more robust than a fixed-length slice to formatting changes
     assert.match(
       content,
-      /gh label list[\s\S]{0,250}--repo\s+gsd-build\/get-shit-done/,
-      'gh label list must target gsd-build/get-shit-done'
+      /gh label list[\s\S]{0,250}--repo\s+ai-is-gonna\/get-tasks-done/,
+      'gh label list must target ai-is-gonna/get-tasks-done'
     );
   });
 
@@ -169,7 +169,7 @@ describe('forensics workflow', () => {
     const content = fs.readFileSync(workflowPath, 'utf-8');
     assert.ok(
       content.includes('state record-session') || content.includes('state.record-session'),
-      'should update STATE.md via state record-session (CJS or gsd-sdk query)'
+      'should update STATE.md via state record-session (CJS or gtd-sdk query)'
     );
   });
 
@@ -216,7 +216,7 @@ describe('forensics fixture-based tests', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-forensics-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-forensics-test-'));
   });
 
   afterEach(() => {

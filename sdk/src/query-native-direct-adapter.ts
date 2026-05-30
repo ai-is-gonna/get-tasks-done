@@ -1,5 +1,5 @@
 import { formatQueryRawOutput } from './query-raw-output-projection.js';
-import { GSDToolsError } from './gsd-tools-error.js';
+import { GTDToolsError } from './gtd-tools-error.js';
 import { errorMessage, timeoutMessage } from './query-failure-classification.js';
 import type { QueryNativeErrorFactory } from './query-tools-error-factory.js';
 import type { QueryResult } from './query/utils.js';
@@ -42,8 +42,8 @@ export class QueryNativeDirectAdapter {
     return result.data;
   }
 
-  private toNativeDispatchError(legacyCommand: string, legacyArgs: string[], error: unknown): GSDToolsError {
-    if (error instanceof GSDToolsError) return error;
+  private toNativeDispatchError(legacyCommand: string, legacyArgs: string[], error: unknown): GTDToolsError {
+    if (error instanceof GTDToolsError) return error;
     return this.deps.createNativeFailureError(errorMessage(error), legacyCommand, legacyArgs, error);
   }
 

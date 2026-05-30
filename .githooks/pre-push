@@ -2,10 +2,10 @@
 set -euo pipefail
 
 zero_sha='0000000000000000000000000000000000000000'
-blocked_regex="${GSD_BLOCKED_AUTHOR_REGEX:-}"
+blocked_regex="${GTD_BLOCKED_AUTHOR_REGEX:-}"
 
 # Local-only guard: no-op unless the developer opts in via env var, e.g.
-# export GSD_BLOCKED_AUTHOR_REGEX='@example-corp\.com$'
+# export GTD_BLOCKED_AUTHOR_REGEX='@example-corp\.com$'
 if [[ -z "$blocked_regex" ]]; then
   exit 0
 fi

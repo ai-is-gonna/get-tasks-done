@@ -17,7 +17,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('bug #1826: phases clear --confirm guard', () => {
   let tmpDir;
@@ -35,7 +35,7 @@ describe('bug #1826: phases clear --confirm guard', () => {
     fs.mkdirSync(path.join(phasesDir, '01-foundation'), { recursive: true });
     fs.mkdirSync(path.join(phasesDir, '02-api'), { recursive: true });
 
-    const result = runGsdTools(['phases', 'clear'], tmpDir);
+    const result = runGtdTools(['phases', 'clear'], tmpDir);
 
     assert.ok(!result.success, 'should exit non-zero when dirs exist and --confirm absent');
     assert.ok(
@@ -53,7 +53,7 @@ describe('bug #1826: phases clear --confirm guard', () => {
     fs.mkdirSync(path.join(phasesDir, '01-foundation'), { recursive: true });
     fs.mkdirSync(path.join(phasesDir, '02-api'), { recursive: true });
 
-    const result = runGsdTools(['phases', 'clear', '--confirm'], tmpDir);
+    const result = runGtdTools(['phases', 'clear', '--confirm'], tmpDir);
 
     assert.ok(result.success, `should succeed with --confirm: ${result.error}`);
     const out = JSON.parse(result.output);
@@ -63,7 +63,7 @@ describe('bug #1826: phases clear --confirm guard', () => {
 
   test('phases clear without --confirm succeeds when no phase dirs exist', () => {
     // .planning/phases/ exists but is empty — nothing to guard
-    const result = runGsdTools(['phases', 'clear'], tmpDir);
+    const result = runGtdTools(['phases', 'clear'], tmpDir);
 
     assert.ok(result.success, `should succeed with empty phases dir: ${result.error}`);
     const out = JSON.parse(result.output);

@@ -6,12 +6,12 @@ const assert = require('node:assert/strict');
 const {
   assertInstallerMigrationsUnblocked,
   summarizeInstallerMigrationResult,
-} = require('../get-shit-done/bin/lib/installer-migration-report.cjs');
+} = require('../get-tasks-done/bin/lib/installer-migration-report.cjs');
 
 test('summarizes every installer migration report category', () => {
   const blockedAction = {
     type: 'prompt-user',
-    relPath: 'hooks/gsd-retired-hook.js',
+    relPath: 'hooks/gtd-retired-hook.js',
     reason: 'needs a user choice',
   };
   const result = {
@@ -72,7 +72,7 @@ test('summarizes every installer migration report category', () => {
       },
       {
         label: 'blocked',
-        relPath: 'hooks/gsd-retired-hook.js',
+        relPath: 'hooks/gtd-retired-hook.js',
         reason: 'needs a user choice',
       },
     ]
@@ -82,7 +82,7 @@ test('summarizes every installer migration report category', () => {
 test('collapses first-time baseline report rows without hiding destructive actions', () => {
   const blockedAction = {
     type: 'prompt-user',
-    relPath: 'hooks/gsd-ambiguous.js',
+    relPath: 'hooks/gtd-ambiguous.js',
     reason: 'needs a user choice',
   };
   const result = {
@@ -138,7 +138,7 @@ test('collapses first-time baseline report rows without hiding destructive actio
       },
       {
         label: 'blocked',
-        relPath: 'hooks/gsd-ambiguous.js',
+        relPath: 'hooks/gtd-ambiguous.js',
         reason: 'needs a user choice',
       },
     ]
@@ -155,7 +155,7 @@ test('throws when installer migrations require user choice', () => {
     assertInstallerMigrationsUnblocked({
       blocked: [
         {
-          relPath: 'hooks/gsd-retired-hook.js',
+          relPath: 'hooks/gtd-retired-hook.js',
           reason: 'needs a user choice',
           choices: ['keep', 'remove'],
         },
@@ -167,8 +167,8 @@ test('throws when installer migrations require user choice', () => {
   }
   assert.ok(captured instanceof Error);
   assert.match(captured.message, /installer migration blocked pending user choice/);
-  assert.match(captured.message, /hooks\/gsd-retired-hook\.js/);
-  assert.match(captured.message, /GSD_INSTALLER_MIGRATION_RESOLVE/);
+  assert.match(captured.message, /hooks\/gtd-retired-hook\.js/);
+  assert.match(captured.message, /GTD_INSTALLER_MIGRATION_RESOLVE/);
   assert.ok(captured.blockedByReason, 'error exposes grouped-by-reason data');
-  assert.equal(captured.resolutionEnvVar, 'GSD_INSTALLER_MIGRATION_RESOLVE');
+  assert.equal(captured.resolutionEnvVar, 'GTD_INSTALLER_MIGRATION_RESOLVE');
 });

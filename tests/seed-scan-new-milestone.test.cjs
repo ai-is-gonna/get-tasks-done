@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - Seed Scan in New Milestone (#2169)
+ * GTD Tools Tests - Seed Scan in New Milestone (#2169)
  *
  * Structural tests verifying that new-milestone.md includes seed scanning
  * instructions (step 2.5) and that plant-seed.md still promises auto-surfacing.
@@ -16,8 +16,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const NEW_MILESTONE_PATH = path.join(ROOT, 'get-shit-done', 'workflows', 'new-milestone.md');
-const PLANT_SEED_PATH = path.join(ROOT, 'get-shit-done', 'workflows', 'plant-seed.md');
+const NEW_MILESTONE_PATH = path.join(ROOT, 'get-tasks-done', 'workflows', 'new-milestone.md');
+const PLANT_SEED_PATH = path.join(ROOT, 'get-tasks-done', 'workflows', 'plant-seed.md');
 
 const newMilestone = fs.readFileSync(NEW_MILESTONE_PATH, 'utf-8');
 const plantSeed = fs.readFileSync(PLANT_SEED_PATH, 'utf-8');

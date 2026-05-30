@@ -1,5 +1,5 @@
 /**
- * Read-only subprocess golden rows: SDK `registry.dispatch` vs `gsd-tools.cjs` JSON on stdout.
+ * Read-only subprocess golden rows: SDK `registry.dispatch` vs `gtd-tools.cjs` JSON on stdout.
  * Imported by `read-only-parity.integration.test.ts` and `golden-policy.ts` coverage accounting.
  */
 
@@ -10,15 +10,15 @@ export type JsonParityRow = {
   cjsArgs: string[];
 };
 
-/** Repo-relative fixtures (cwd = get-shit-done repo root). */
+/** Repo-relative fixtures (cwd = get-tasks-done repo root). */
 export const GOLDEN_PLAN = '.planning/phases/09-foundation-and-test-infrastructure/09-01-PLAN.md';
 
 /**
  * Strict `toEqual` JSON parity rows verified on this repository.
- * (Expand as more handlers are aligned with `gsd-tools.cjs`.)
+ * (Expand as more handlers are aligned with `gtd-tools.cjs`.)
  */
 export const READ_ONLY_JSON_PARITY_ROWS: JsonParityRow[] = [
-  { canonical: 'resolve-model', sdkArgs: ['gsd-planner'], cjs: 'resolve-model', cjsArgs: ['gsd-planner'] },
+  { canonical: 'resolve-model', sdkArgs: ['gtd-planner'], cjs: 'resolve-model', cjsArgs: ['gtd-planner'] },
   { canonical: 'phase-plan-index', sdkArgs: ['9'], cjs: 'phase-plan-index', cjsArgs: ['9'] },
   { canonical: 'roadmap.get-phase', sdkArgs: ['9'], cjs: 'roadmap', cjsArgs: ['get-phase', '9'] },
   { canonical: 'list.todos', sdkArgs: [], cjs: 'list-todos', cjsArgs: [] },
@@ -35,7 +35,7 @@ export const READ_ONLY_JSON_PARITY_ROWS: JsonParityRow[] = [
   { canonical: 'intel.status', sdkArgs: [], cjs: 'intel', cjsArgs: ['status'] },
   { canonical: 'intel.diff', sdkArgs: [], cjs: 'intel', cjsArgs: ['diff'] },
   { canonical: 'intel.validate', sdkArgs: [], cjs: 'intel', cjsArgs: ['validate'] },
-  { canonical: 'intel.query', sdkArgs: ['gsd'], cjs: 'intel', cjsArgs: ['query', 'gsd'] },
+  { canonical: 'intel.query', sdkArgs: ['gtd'], cjs: 'intel', cjsArgs: ['query', 'gtd'] },
   {
     canonical: 'intel.extract-exports',
     sdkArgs: ['sdk/src/query/utils.ts'],

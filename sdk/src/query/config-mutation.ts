@@ -1,7 +1,7 @@
 /**
  * Config mutation handlers — write operations for .planning/config.json.
  *
- * Ported from get-shit-done/bin/lib/config.cjs.
+ * Ported from get-tasks-done/bin/lib/config.cjs.
  * Provides config-set (with key validation and value coercion),
  * config-set-model-profile, config-new-project, and config-ensure-section.
  *
@@ -21,7 +21,7 @@ import { readFile, writeFile, mkdir, rename, unlink } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { VALID_PROFILES, getAgentToModelMapForProfile } from './config-query.js';
 import { VALID_CONFIG_KEYS, RUNTIME_STATE_KEYS, DYNAMIC_KEY_PATTERNS } from './config-schema.js';
 import { planningPaths } from './helpers.js';
@@ -48,7 +48,7 @@ async function atomicWriteConfig(configPath: string, config: Record<string, unkn
 
 // ─── VALID_CONFIG_KEYS ────────────────────────────────────────────────────
 // Imported from ./config-schema.js — single source of truth, kept in sync
-// with get-shit-done/bin/lib/config-schema.cjs by a CI parity test (#2653).
+// with get-tasks-done/bin/lib/config-schema.cjs by a CI parity test (#2653).
 
 // ─── CONFIG_KEY_SUGGESTIONS (D9 — match CJS config.cjs:57-67) ────────────
 
@@ -63,7 +63,6 @@ const CONFIG_KEY_SUGGESTIONS: Record<string, string> = {
   'hooks.research_questions': 'workflow.research_before_questions',
   'workflow.research_questions': 'workflow.research_before_questions',
   'workflow.codereview': 'workflow.code_review',
-  'workflow.review_command': 'workflow.code_review_command',
   'workflow.review': 'workflow.code_review',
   'workflow.code_review_level': 'workflow.code_review_depth',
   'workflow.review_depth': 'workflow.code_review_depth',
@@ -71,81 +70,6 @@ const CONFIG_KEY_SUGGESTIONS: Record<string, string> = {
   'sub_repos': 'planning.sub_repos',
   'plan_checker': 'workflow.plan_check',
 };
-
-const SHIP_PR_BODY_SECTION_KEYS = new Set(['heading', 'enabled', 'source', 'fallback', 'template']);
-const SHIP_PR_BODY_TEMPLATE_TOKENS = new Set([
-  'phase_number',
-  'phase_name',
-  'phase_dir',
-  'base_branch',
-  'padded_phase',
-]);
-const SHIP_PR_BODY_SOURCE_RE = /^(ROADMAP|PLAN|SUMMARY|VERIFICATION|STATE|REQUIREMENTS|CONTEXT)\.md\s+##\s+[^\r\n#][^\r\n]*$/;
-
-function validateShipPrBodySections(value: unknown): void {
-  if (!Array.isArray(value)) {
-    throw new GSDError(
-      'Invalid ship.pr_body_sections value. Expected a JSON array of section objects.',
-      ErrorClassification.Validation,
-    );
-  }
-
-  value.forEach((section, index) => {
-    const prefix = `Invalid ship.pr_body_sections[${index}]`;
-    if (!section || typeof section !== 'object' || Array.isArray(section)) {
-      throw new GSDError(`${prefix}. Expected an object.`, ErrorClassification.Validation);
-    }
-
-    const record = section as Record<string, unknown>;
-    const unknownKeys = Object.keys(record).filter((key) => !SHIP_PR_BODY_SECTION_KEYS.has(key));
-    if (unknownKeys.length > 0) {
-      throw new GSDError(`${prefix}. Unknown field(s): ${unknownKeys.join(', ')}.`, ErrorClassification.Validation);
-    }
-
-    if (typeof record.heading !== 'string' || record.heading.trim() === '') {
-      throw new GSDError(`${prefix}. heading must be a non-empty string.`, ErrorClassification.Validation);
-    }
-    if (/[\r\n]/.test(record.heading)) {
-      throw new GSDError(`${prefix}. heading must be a single line.`, ErrorClassification.Validation);
-    }
-
-    if ('enabled' in record && typeof record.enabled !== 'boolean') {
-      throw new GSDError(`${prefix}. enabled must be true or false.`, ErrorClassification.Validation);
-    }
-
-    for (const field of ['source', 'fallback', 'template']) {
-      if (field in record && typeof record[field] !== 'string') {
-        throw new GSDError(`${prefix}. ${field} must be a string.`, ErrorClassification.Validation);
-      }
-    }
-
-    const hasContent = ['source', 'fallback', 'template'].some((field) => {
-      return typeof record[field] === 'string' && record[field].trim() !== '';
-    });
-    if (!hasContent) {
-      throw new GSDError(`${prefix}. Provide at least one of source, fallback, or template.`, ErrorClassification.Validation);
-    }
-
-    if (typeof record.source === 'string' && record.source.trim() !== '') {
-      const selectors = record.source.split('||').map((selector) => selector.trim()).filter(Boolean);
-      if (selectors.length === 0 || selectors.some((selector) => !SHIP_PR_BODY_SOURCE_RE.test(selector))) {
-        throw new GSDError(
-          `${prefix}. source must use selectors like "PLAN.md ## Risks", separated with "||".`,
-          ErrorClassification.Validation,
-        );
-      }
-    }
-
-    if (typeof record.template === 'string') {
-      const tokens = record.template.matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g);
-      for (const match of tokens) {
-        if (!SHIP_PR_BODY_TEMPLATE_TOKENS.has(match[1])) {
-          throw new GSDError(`${prefix}. Unsupported template token: {${match[1]}}.`, ErrorClassification.Validation);
-        }
-      }
-    }
-  });
-}
 
 // ─── isValidConfigKey ─────────────────────────────────────────────────────
 
@@ -260,27 +184,27 @@ function setConfigValue(obj: Record<string, unknown>, dotPath: string, value: un
  *
  * @param args - args[0]=key, args[1]=value
  * @param projectDir - Project root directory
- * @returns QueryResult matching gsd-tools `config-set` JSON: `{ updated, key, value, previousValue }`
- * @throws GSDError with Validation if key is invalid or args missing
+ * @returns QueryResult matching gtd-tools `config-set` JSON: `{ updated, key, value, previousValue }`
+ * @throws GTDError with Validation if key is invalid or args missing
  */
 export const configSet: QueryHandler = async (args, projectDir, workstream) => {
   const keyPath = args[0];
   const rawValue = args[1];
   if (!keyPath) {
-    throw new GSDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
+    throw new GTDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
   }
   // #3593: parity with CJS cmdConfigSet — reject `config-set <key>` invocations
   // that omit the value. Without this guard parsedValue stays undefined and the
   // write either silently strips the key (JSON.stringify drops undefined) or
   // persists a corrupt entry.
   if (rawValue === undefined) {
-    throw new GSDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
+    throw new GTDError('Usage: config-set <key.path> <value>', ErrorClassification.Validation);
   }
 
   const validation = isValidConfigKey(keyPath);
   if (!validation.valid) {
     const suggestion = validation.suggestion ? `. Did you mean: ${validation.suggestion}?` : '';
-    throw new GSDError(
+    throw new GTDError(
       `Unknown config key: "${keyPath}"${suggestion}`,
       ErrorClassification.Validation,
     );
@@ -291,14 +215,10 @@ export const configSet: QueryHandler = async (args, projectDir, workstream) => {
   // D8: Context value validation (match CJS config.cjs:357-359)
   const VALID_CONTEXT_VALUES = ['dev', 'research', 'review'];
   if (keyPath === 'context' && !VALID_CONTEXT_VALUES.includes(String(parsedValue))) {
-    throw new GSDError(
+    throw new GTDError(
       `Invalid context value '${rawValue}'. Valid values: ${VALID_CONTEXT_VALUES.join(', ')}`,
       ErrorClassification.Validation,
     );
-  }
-
-  if (keyPath === 'ship.pr_body_sections') {
-    validateShipPrBodySections(parsedValue);
   }
 
   // D6: Lock protection for read-modify-write (match CJS config.cjs:296)
@@ -322,7 +242,7 @@ export const configSet: QueryHandler = async (args, projectDir, workstream) => {
   }
 
   // Mask plaintext for keys in SECRET_CONFIG_KEYS to match CJS behavior at
-  // config.cjs:362-370 — without this, `gsd-sdk query config-set brave_search XXX`
+  // config.cjs:362-370 — without this, `gtd-sdk query config-set brave_search XXX`
   // would echo the plaintext credential into machine-readable output. (#2997)
   // The on-disk value is intentionally NOT masked — only the response.
   const data: Record<string, unknown> = {
@@ -344,12 +264,12 @@ export const configSet: QueryHandler = async (args, projectDir, workstream) => {
  * @param args - args[0]=profileName
  * @param projectDir - Project root directory
  * @returns QueryResult with { set: true, profile, agents }
- * @throws GSDError with Validation if profile is invalid
+ * @throws GTDError with Validation if profile is invalid
  */
 export const configSetModelProfile: QueryHandler = async (args, projectDir, workstream) => {
   const profileName = args[0];
   if (!profileName) {
-    throw new GSDError(
+    throw new GTDError(
       `Usage: config-set-model-profile <${VALID_PROFILES.join('|')}>`,
       ErrorClassification.Validation,
     );
@@ -357,7 +277,7 @@ export const configSetModelProfile: QueryHandler = async (args, projectDir, work
 
   const normalized = profileName.toLowerCase().trim();
   if (!VALID_PROFILES.includes(normalized)) {
-    throw new GSDError(
+    throw new GTDError(
       `Invalid profile '${profileName}'. Valid profiles: ${VALID_PROFILES.join(', ')}`,
       ErrorClassification.Validation,
     );
@@ -423,7 +343,7 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       userChoices = JSON.parse(args[0]) as Record<string, unknown>;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      throw new GSDError(`Invalid JSON for config-new-project: ${msg}`, ErrorClassification.Validation);
+      throw new GTDError(`Invalid JSON for config-new-project: ${msg}`, ErrorClassification.Validation);
     }
   }
 
@@ -433,11 +353,11 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
     await mkdir(planningDir, { recursive: true });
   }
 
-  // D11: Load global defaults from ~/.gsd/defaults.json if present
-  const homeDir = homedir();
+  // D11: Load global defaults from ~/.gtd/defaults.json if present
+  const homeDir = process.env.GTD_HOME || homedir();
   let globalDefaults: Record<string, unknown> = {};
   try {
-    const defaultsPath = join(homeDir, '.gsd', 'defaults.json');
+    const defaultsPath = join(homeDir, '.gtd', 'defaults.json');
     const defaultsRaw = await readFile(defaultsPath, 'utf-8');
     globalDefaults = JSON.parse(defaultsRaw) as Record<string, unknown>;
   } catch {
@@ -445,14 +365,14 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
   }
 
   // Detect API key availability (boolean only, never store keys)
-  const hasBraveSearch = !!(process.env.BRAVE_API_KEY || existsSync(join(homeDir, '.gsd', 'brave_api_key')));
-  const hasFirecrawl = !!(process.env.FIRECRAWL_API_KEY || existsSync(join(homeDir, '.gsd', 'firecrawl_api_key')));
-  const hasExaSearch = !!(process.env.EXA_API_KEY || existsSync(join(homeDir, '.gsd', 'exa_api_key')));
+  const hasBraveSearch = !!(process.env.BRAVE_API_KEY || existsSync(join(homeDir, '.gtd', 'brave_api_key')));
+  const hasFirecrawl = !!(process.env.FIRECRAWL_API_KEY || existsSync(join(homeDir, '.gtd', 'firecrawl_api_key')));
+  const hasExaSearch = !!(process.env.EXA_API_KEY || existsSync(join(homeDir, '.gtd', 'exa_api_key')));
 
   // Build default config
   const defaults: Record<string, unknown> = {
     model_profile: 'balanced',
-    commit_docs: false,
+    commit_docs: true,
     parallelization: 1,
     search_gitignored: false,
     brave_search: hasBraveSearch,
@@ -460,8 +380,8 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
     exa_search: hasExaSearch,
     git: {
       branching_strategy: 'none',
-      phase_branch_template: 'gsd/phase-{phase}-{slug}',
-      milestone_branch_template: 'gsd/{milestone}-{slug}',
+      phase_branch_template: 'gtd/phase-{phase}-{slug}',
+      milestone_branch_template: 'gtd/{milestone}-{slug}',
       quick_branch_template: null,
     },
     workflow: {
@@ -480,9 +400,6 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       skip_discuss: false,
       code_review: true,
       code_review_depth: 'standard',
-    },
-    ship: {
-      pr_body_sections: [],
     },
     hooks: {
       context_warnings: true,
@@ -508,11 +425,6 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       ...((globalDefaults.workflow as Record<string, unknown>) || {}),
       ...((userChoices.workflow as Record<string, unknown>) || {}),
     },
-    ship: {
-      ...(defaults.ship as Record<string, unknown>),
-      ...((globalDefaults.ship as Record<string, unknown>) || {}),
-      ...((userChoices.ship as Record<string, unknown>) || {}),
-    },
     hooks: {
       ...(defaults.hooks as Record<string, unknown>),
       ...((globalDefaults.hooks as Record<string, unknown>) || {}),
@@ -529,9 +441,6 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
       ...((userChoices.features as Record<string, unknown>) || {}),
     },
   };
-
-  const ship = config.ship as Record<string, unknown>;
-  validateShipPrBodySections(ship.pr_body_sections);
 
   await atomicWriteConfig(paths.config, config);
 
@@ -553,7 +462,7 @@ export const configNewProject: QueryHandler = async (args, projectDir, workstrea
 export const configEnsureSection: QueryHandler = async (args, projectDir, workstream) => {
   const sectionName = args[0];
   if (!sectionName) {
-    throw new GSDError('Usage: config-ensure-section <section>', ErrorClassification.Validation);
+    throw new GTDError('Usage: config-ensure-section <section>', ErrorClassification.Validation);
   }
 
   const paths = planningPaths(projectDir, workstream);

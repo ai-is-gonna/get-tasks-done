@@ -12,9 +12,9 @@ const {
   withPlanningLock,
   getActiveWorkstream,
   setActiveWorkstream,
-} = require('../get-shit-done/bin/lib/planning-workspace.cjs');
+} = require('../get-tasks-done/bin/lib/planning-workspace.cjs');
 
-const core = require('../get-shit-done/bin/lib/core.cjs');
+const core = require('../get-tasks-done/bin/lib/core.cjs');
 
 describe('planning-workspace: planningDir/planningPaths parity', () => {
   const cwd = '/fake/repo';
@@ -22,17 +22,17 @@ describe('planning-workspace: planningDir/planningPaths parity', () => {
   let savedWorkstream;
 
   beforeEach(() => {
-    savedProject = process.env.GSD_PROJECT;
-    savedWorkstream = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_PROJECT;
-    delete process.env.GSD_WORKSTREAM;
+    savedProject = process.env.GTD_PROJECT;
+    savedWorkstream = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_PROJECT;
+    delete process.env.GTD_WORKSTREAM;
   });
 
   afterEach(() => {
-    if (savedProject !== undefined) process.env.GSD_PROJECT = savedProject;
-    else delete process.env.GSD_PROJECT;
-    if (savedWorkstream !== undefined) process.env.GSD_WORKSTREAM = savedWorkstream;
-    else delete process.env.GSD_WORKSTREAM;
+    if (savedProject !== undefined) process.env.GTD_PROJECT = savedProject;
+    else delete process.env.GTD_PROJECT;
+    if (savedWorkstream !== undefined) process.env.GTD_WORKSTREAM = savedWorkstream;
+    else delete process.env.GTD_WORKSTREAM;
   });
 
   test('matches expected path resolution', () => {
@@ -57,18 +57,18 @@ describe('planning-workspace: session adapter precedence', () => {
   let savedSession;
 
   beforeEach(() => {
-    savedSession = process.env.GSD_SESSION_KEY;
+    savedSession = process.env.GTD_SESSION_KEY;
   });
 
   afterEach(() => {
-    if (savedSession !== undefined) process.env.GSD_SESSION_KEY = savedSession;
-    else delete process.env.GSD_SESSION_KEY;
+    if (savedSession !== undefined) process.env.GTD_SESSION_KEY = savedSession;
+    else delete process.env.GTD_SESSION_KEY;
   });
 
   test('uses session adapter over shared adapter when session key exists', () => {
-    process.env.GSD_SESSION_KEY = 'session-123';
+    process.env.GTD_SESSION_KEY = 'session-123';
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-planning-precedence-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-planning-precedence-'));
     try {
       fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams', 'session-ws'), { recursive: true });
       fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams', 'shared-ws'), { recursive: true });
@@ -98,7 +98,7 @@ describe('planning-workspace: self-heal behavior', () => {
   });
 
   test('clears stale pointers when workstream directory is gone', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-planning-workspace-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-planning-workspace-'));
     try {
       fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams'), { recursive: true });
       const adapter = createMemoryPointerAdapter('ghost');
@@ -116,7 +116,7 @@ describe('planning-workspace: self-heal behavior', () => {
 
 describe('planning-workspace: lock seam', () => {
   test('exports withPlanningLock and acquires/release lock', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-planning-lock-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-planning-lock-'));
     try {
       const result = withPlanningLock(tmpDir, () => 'ok');
       assert.strictEqual(result, 'ok');
@@ -131,17 +131,17 @@ describe('core compatibility adapter: planning workspace functions', () => {
   let savedSession;
 
   beforeEach(() => {
-    savedSession = process.env.GSD_SESSION_KEY;
-    delete process.env.GSD_SESSION_KEY;
+    savedSession = process.env.GTD_SESSION_KEY;
+    delete process.env.GTD_SESSION_KEY;
   });
 
   afterEach(() => {
-    if (savedSession !== undefined) process.env.GSD_SESSION_KEY = savedSession;
-    else delete process.env.GSD_SESSION_KEY;
+    if (savedSession !== undefined) process.env.GTD_SESSION_KEY = savedSession;
+    else delete process.env.GTD_SESSION_KEY;
   });
 
   test('core and planning-workspace expose matching behavior', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-compat-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-core-compat-'));
     try {
       fs.mkdirSync(path.join(tmpDir, '.planning', 'workstreams', 'alpha'), { recursive: true });
 

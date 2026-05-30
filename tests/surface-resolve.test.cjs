@@ -9,14 +9,14 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const { readSurface, writeSurface, resolveSurface } = require('../get-shit-done/bin/lib/surface.cjs');
-const { resolveProfile, loadSkillsManifest, writeActiveProfile } = require('../get-shit-done/bin/lib/install-profiles.cjs');
-const { CLUSTERS } = require('../get-shit-done/bin/lib/clusters.cjs');
+const { readSurface, writeSurface, resolveSurface } = require('../get-tasks-done/bin/lib/surface.cjs');
+const { resolveProfile, loadSkillsManifest, writeActiveProfile } = require('../get-tasks-done/bin/lib/install-profiles.cjs');
+const { CLUSTERS } = require('../get-tasks-done/bin/lib/clusters.cjs');
 
-const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 function tmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-surface-resolve-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-surface-resolve-'));
 }
 
 function realManifest() {
@@ -136,7 +136,7 @@ describe('resolveSurface', () => {
     }
   });
 
-  test('surface with baseProfile overrides .gsd-profile marker', () => {
+  test('surface with baseProfile overrides .gtd-profile marker', () => {
     const dir = tmpDir();
     try {
       writeActiveProfile(dir, 'core');

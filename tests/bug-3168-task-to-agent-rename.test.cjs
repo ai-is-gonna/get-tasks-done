@@ -1,7 +1,7 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md, get-shit-done/workflows/*.md, and agents/gsd-*.md are
+// commands/gtd/*.md, get-tasks-done/workflows/*.md, and agents/gtd-*.md are
 // deployed product files. Checking their text IS checking the runtime contract.
 
 /**
@@ -9,7 +9,7 @@
  *
  * The Claude Code subagent-dispatcher tool is named `Agent`. The `Task*` namespace
  * (TaskCreate, TaskList, TaskGet, TaskUpdate, TaskOutput, TaskStop) is the task
- * tracker — a distinct tool set. GSD workflows were partially migrated and still
+ * tracker — a distinct tool set. GTD workflows were partially migrated and still
  * reference `Task(` and `- Task` in allowed-tools/tools frontmatter in most files.
  */
 
@@ -19,8 +19,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const COMMANDS_DIR = path.join(ROOT, 'commands', 'gsd');
-const WORKFLOWS_DIR = path.join(ROOT, 'get-shit-done', 'workflows');
+const COMMANDS_DIR = path.join(ROOT, 'commands', 'gtd');
+const WORKFLOWS_DIR = path.join(ROOT, 'get-tasks-done', 'workflows');
 const AGENTS_DIR = path.join(ROOT, 'agents');
 
 // Task tracker names — these must NOT be renamed
@@ -47,7 +47,7 @@ function extractFrontmatterTools(content) {
   return toolsBlock.split(',').map(t => t.trim()).filter(Boolean);
 }
 
-describe('#3168 — commands/gsd: allowed-tools must use Agent not Task', () => {
+describe('#3168 — commands/gtd: allowed-tools must use Agent not Task', () => {
   const commands = readMdFiles(COMMANDS_DIR);
 
   for (const cmd of commands) {
@@ -100,7 +100,7 @@ describe('#3168 — workflows: prose must use Agent( not Task( for dispatcher ca
 });
 
 describe('#3168 — agents: tools frontmatter must use Agent not Task', () => {
-  const agents = readMdFiles(AGENTS_DIR, 'gsd-');
+  const agents = readMdFiles(AGENTS_DIR, 'gtd-');
 
   for (const agent of agents) {
     test(`${agent.name}: tools must not list Task`, () => {

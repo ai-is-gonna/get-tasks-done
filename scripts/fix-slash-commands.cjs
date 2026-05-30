@@ -1,23 +1,23 @@
 'use strict';
 /**
- * One-shot script: replace retired /gsd-<cmd> with /gsd:<cmd> for known command names.
+ * One-shot script: replace retired /gtd-<cmd> with /gtd:<cmd> for known command names.
  * Only replaces when followed by a word boundary (space, newline, quote, backtick, ), end).
  *
  * The transform is exported as a pure function so it can be unit-tested directly
- * (see tests/bug-2543-gsd-slash-namespace.test.cjs) without needing fixture files.
+ * (see tests/bug-2543-gtd-slash-namespace.test.cjs) without needing fixture files.
  */
 
 const fs = require('node:fs');
 const path = require('node:path');
 
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 const SEARCH_DIRS = [
-  path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib'),
-  path.join(__dirname, '..', 'get-shit-done', 'workflows'),
-  path.join(__dirname, '..', 'get-shit-done', 'references'),
-  path.join(__dirname, '..', 'get-shit-done', 'templates'),
-  path.join(__dirname, '..', 'get-shit-done', 'contexts'),
-  path.join(__dirname, '..', 'commands', 'gsd'),
+  path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib'),
+  path.join(__dirname, '..', 'get-tasks-done', 'workflows'),
+  path.join(__dirname, '..', 'get-tasks-done', 'references'),
+  path.join(__dirname, '..', 'get-tasks-done', 'templates'),
+  path.join(__dirname, '..', 'get-tasks-done', 'contexts'),
+  path.join(__dirname, '..', 'commands', 'gtd'),
   path.join(__dirname, '..', 'agents'),
   path.join(__dirname, '..', 'hooks'),
 ];
@@ -36,25 +36,25 @@ function isTestFile(name) {
 }
 
 function buildPattern(cmdNames) {
-  // Empty input would compile `/gsd-()(?=[^a-zA-Z0-9_-]|$)/g`, which the regex
-  // engine still matches at any `/gsd-` token followed by a non-word boundary
-  // (e.g. EOL, whitespace, punctuation) — rewriting it to a stray `/gsd:`.
+  // Empty input would compile `/gtd-()(?=[^a-zA-Z0-9_-]|$)/g`, which the regex
+  // engine still matches at any `/gtd-` token followed by a non-word boundary
+  // (e.g. EOL, whitespace, punctuation) — rewriting it to a stray `/gtd:`.
   // Short-circuit so the caller can no-op on a missing/empty registry rather
   // than perform an unintended broad rewrite.
   if (!Array.isArray(cmdNames) || cmdNames.length === 0) return null;
   const sorted = [...cmdNames].sort((a, b) => b.length - a.length); // longest first to avoid partial matches
-  return new RegExp(`/gsd-(${sorted.join('|')})(?=[^a-zA-Z0-9_-]|$)`, 'g');
+  return new RegExp(`/gtd-(${sorted.join('|')})(?=[^a-zA-Z0-9_-]|$)`, 'g');
 }
 
 /**
- * Pure transform: rewrite retired `/gsd-<cmd>` to `/gsd:<cmd>` for the given command names.
- * Returns the rewritten string. Identifiers not in `cmdNames` (e.g. `/gsd-sdk`,
- * `/gsd-tools`) are left untouched.
+ * Pure transform: rewrite retired `/gtd-<cmd>` to `/gtd:<cmd>` for the given command names.
+ * Returns the rewritten string. Identifiers not in `cmdNames` (e.g. `/gtd-sdk`,
+ * `/gtd-tools`) are left untouched.
  */
 function transformContent(src, cmdNames) {
   const pattern = buildPattern(cmdNames);
   if (!pattern) return src;
-  return src.replace(pattern, (_, cmd) => `/gsd:${cmd}`);
+  return src.replace(pattern, (_, cmd) => `/gtd:${cmd}`);
 }
 
 function readCmdNames() {

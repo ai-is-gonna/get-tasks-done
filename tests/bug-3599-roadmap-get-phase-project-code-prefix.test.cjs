@@ -2,7 +2,7 @@
  * Bug #3599: roadmap.get-phase no longer matches custom phase IDs with
  * project-code prefixes like `PROJ-42`.
  *
- * `phaseMarkdownRegexSource(phaseNum)` in get-shit-done/bin/lib/core.cjs
+ * `phaseMarkdownRegexSource(phaseNum)` in get-tasks-done/bin/lib/core.cjs
  * (and its SDK twin in sdk/src/query/roadmap-update-plan-progress.ts) strips
  * the `PROJ-` prefix before building the padding-tolerant numeric regex.
  * Result: `roadmap get-phase PROJ-42` produces a regex of `0*42`, which
@@ -23,7 +23,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeRoadmap(tmpDir, body) {
   fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), body);
@@ -62,7 +62,7 @@ describe('bug #3599: roadmap get-phase preserves project-code prefix in lookup',
       ].join('\n'),
     );
 
-    const result = runGsdTools('roadmap get-phase PROJ-42 --json', tmpDir);
+    const result = runGtdTools('roadmap get-phase PROJ-42 --json', tmpDir);
     assert.ok(result.success, `command failed: ${result.error || result.output}`);
 
     const payload = JSON.parse(result.output);
@@ -90,7 +90,7 @@ describe('bug #3599: roadmap get-phase preserves project-code prefix in lookup',
       ].join('\n'),
     );
 
-    const result = runGsdTools('roadmap get-phase 42 --json', tmpDir);
+    const result = runGtdTools('roadmap get-phase 42 --json', tmpDir);
     assert.ok(result.success);
     const payload = JSON.parse(result.output);
     assert.strictEqual(
@@ -119,7 +119,7 @@ describe('bug #3599: roadmap get-phase preserves project-code prefix in lookup',
       ].join('\n'),
     );
 
-    const result = runGsdTools('roadmap get-phase CK-01 --json', tmpDir);
+    const result = runGtdTools('roadmap get-phase CK-01 --json', tmpDir);
     assert.ok(result.success);
     const payload = JSON.parse(result.output);
     assert.strictEqual(
@@ -150,8 +150,8 @@ describe('bug #3599: roadmap get-phase preserves project-code prefix in lookup',
       ].join('\n'),
     );
 
-    const r42 = runGsdTools('roadmap get-phase 42 --json', tmpDir);
-    const rProj = runGsdTools('roadmap get-phase PROJ-42 --json', tmpDir);
+    const r42 = runGtdTools('roadmap get-phase 42 --json', tmpDir);
+    const rProj = runGtdTools('roadmap get-phase PROJ-42 --json', tmpDir);
 
     const p42 = JSON.parse(r42.output);
     const pProj = JSON.parse(rProj.output);

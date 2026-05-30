@@ -2,9 +2,9 @@
 /**
  * lint-command-contract.cjs  (ADR-0002)
  *
- * Enforces the commands/gsd/*.md contract across all 65 command files:
+ * Enforces the commands/gtd/*.md contract across all 65 command files:
  *
- *   1. name:        present, non-empty, matches gsd: or gsd- prefix
+ *   1. name:        present, non-empty, matches gtd: or gtd- prefix
  *   2. description: present, non-empty
  *   3. allowed-tools: block present, non-empty, all entries from CANONICAL_TOOLS
  *   4. execution_context @-refs: every @-reference resolves to an existing file on disk
@@ -19,8 +19,8 @@ const fs   = require('fs');
 const path = require('path');
 
 const ROOT          = path.join(__dirname, '..');
-const COMMANDS_DIR  = path.join(ROOT, 'commands', 'gsd');
-const GSD_ROOT      = path.join(ROOT, 'get-shit-done');
+const COMMANDS_DIR  = path.join(ROOT, 'commands', 'gtd');
+const GTD_ROOT      = path.join(ROOT, 'get-tasks-done');
 
 const {
   CANONICAL_TOOLS,
@@ -36,11 +36,11 @@ function check(filePath) {
   const fm       = parseFrontmatter(content);
   const violations = [];
 
-  // 1. name: present + gsd: / gsd- prefix
+  // 1. name: present + gtd: / gtd- prefix
   if (!fm.name || !fm.name.trim()) {
     violations.push('name: field missing or empty');
-  } else if (!/^gsd[:-]/.test(fm.name.trim())) {
-    violations.push(`name: must start with "gsd:" or "gsd-", got "${fm.name.trim()}"`);
+  } else if (!/^gtd[:-]/.test(fm.name.trim())) {
+    violations.push(`name: must start with "gtd:" or "gtd-", got "${fm.name.trim()}"`);
   }
 
   // 2. description: present + non-empty
@@ -64,7 +64,7 @@ function check(filePath) {
   // 4+5. execution_context @-refs resolve + no trailing prose
   const refs = extractExecutionContextRefs(content);
   for (const { token, normalized, trailingProse } of refs) {
-    const absPath = path.join(GSD_ROOT, normalized);
+    const absPath = path.join(GTD_ROOT, normalized);
     if (!fs.existsSync(absPath)) {
       violations.push(`execution_context: @-ref "${normalized}" does not exist on disk`);
     }
@@ -104,5 +104,5 @@ for (const r of results) {
   }
   process.stderr.write('\n');
 }
-process.stderr.write('See docs/adr/0002-command-contract-validation-module.md for the contract spec.\n\n');
+process.stderr.write('See scripts/command-contract-helpers.cjs for the command contract spec.\n\n');
 process.exit(1);

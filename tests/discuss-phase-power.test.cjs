@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * GSD Tools Tests - discuss-phase power user mode
+ * GTD Tools Tests - discuss-phase power user mode
  *
  * Validates that the --power flag workflow documentation is present and
  * correctly describes the bulk question generation/answering flow.
@@ -18,16 +18,16 @@ const fs = require('fs');
 const path = require('path');
 
 describe('discuss-phase power user mode (#1513)', () => {
-  const commandPath = path.join(__dirname, '..', 'commands', 'gsd', 'discuss-phase.md');
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase.md');
-  const powerWorkflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase-power.md');
+  const commandPath = path.join(__dirname, '..', 'commands', 'gtd', 'discuss-phase.md');
+  const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase.md');
+  const powerWorkflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase-power.md');
 
   describe('command file (discuss-phase.md)', () => {
     test('mentions --power flag in argument-hint or description', () => {
       const content = fs.readFileSync(commandPath, 'utf8');
       assert.ok(
         content.includes('--power'),
-        'commands/gsd/discuss-phase.md should document the --power flag'
+        'commands/gtd/discuss-phase.md should document the --power flag'
       );
     });
 
@@ -45,7 +45,7 @@ describe('discuss-phase power user mode (#1513)', () => {
       // After #2551, the power dispatch lives in discuss-phase/modes/power.md and
       // the parent references it via the dispatch table.
       const parentContent = fs.readFileSync(workflowPath, 'utf8');
-      const powerModePath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'discuss-phase', 'modes', 'power.md');
+      const powerModePath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'discuss-phase', 'modes', 'power.md');
       const powerMode = fs.existsSync(powerModePath) ? fs.readFileSync(powerModePath, 'utf8') : '';
       const content = parentContent + '\n' + powerMode;
       const hasPowerSection = content.includes('power_user_mode') || content.includes('power user mode') || content.includes('modes/power.md');
@@ -69,7 +69,7 @@ describe('discuss-phase power user mode (#1513)', () => {
     test('file exists', () => {
       assert.ok(
         fs.existsSync(powerWorkflowPath),
-        'get-shit-done/workflows/discuss-phase-power.md should exist'
+        'get-tasks-done/workflows/discuss-phase-power.md should exist'
       );
     });
 

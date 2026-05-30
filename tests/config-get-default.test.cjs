@@ -16,14 +16,14 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const os = require('os');
 
-const GSD_TOOLS = path.join(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const GTD_TOOLS = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 
 describe('config-get --default flag (#1893)', () => {
   let tmpDir;
   let planningDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-config-default-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-config-default-'));
     planningDir = path.join(tmpDir, '.planning');
     fs.mkdirSync(planningDir, { recursive: true });
   });
@@ -33,7 +33,7 @@ describe('config-get --default flag (#1893)', () => {
   });
 
   function run(...args) {
-    return execFileSync('node', [GSD_TOOLS, ...args, '--cwd', tmpDir], {
+    return execFileSync('node', [GTD_TOOLS, ...args, '--cwd', tmpDir], {
       encoding: 'utf-8',
       timeout: 5000,
     }).trim();
@@ -45,7 +45,7 @@ describe('config-get --default flag (#1893)', () => {
 
   function runExpectError(...args) {
     try {
-      execFileSync('node', [GSD_TOOLS, ...args, '--cwd', tmpDir], {
+      execFileSync('node', [GTD_TOOLS, ...args, '--cwd', tmpDir], {
         encoding: 'utf-8',
         timeout: 5000,
         stdio: ['pipe', 'pipe', 'pipe'],

@@ -2,17 +2,17 @@
  * Bug #2866: Codex Installer (RC.7) fails to strip legacy flat hooks if
  * trailing newline is missing.
  *
- * The cleanup regexes in `bin/install.js` matched stale GSD hook blocks
+ * The cleanup regexes in `bin/install.js` matched stale GTD hook blocks
  * via `\r?\n` at the end. When a stale block sat at end-of-file without
  * a trailing newline (very common — many editors strip them, and the
  * legacy installer never wrote one), no shape stripped, the installer
- * saw `gsd-check-update` already present, skipped writing the new
+ * saw `gtd-check-update` already present, skipped writing the new
  * Nested-AoT block, and Codex 0.125+ refused to load with
  *   "invalid type: map, expected a sequence in `hooks`"
  *
  * Fix: every shape's terminator is now `(?:\r?\n|$)` so end-of-file
  * counts as a valid terminator. The strip logic was lifted into a pure
- * helper, `stripStaleGsdHookBlocks(configContent)`, exported from
+ * helper, `stripStaleGtdHookBlocks(configContent)`, exported from
  * `bin/install.js` for direct test coverage.
  *
  * This test parses `package.json` to require `bin/install.js`
@@ -22,7 +22,7 @@
  */
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -31,8 +31,8 @@ const fs = require('node:fs');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8'));
-const installPath = path.resolve(REPO_ROOT, pkg.bin['get-shit-done-cc']);
-const { stripStaleGsdHookBlocks } = require(installPath);
+const installPath = path.resolve(REPO_ROOT, pkg.bin['get-tasks-done'] || 'bin/install.js');
+const { stripStaleGtdHookBlocks } = require(installPath);
 
 /**
  * Parse the TOML output line-structurally so assertions check shape, not
@@ -64,37 +64,37 @@ function parseTomlShape(text) {
 }
 
 const SHAPES = {
-  'Shape 1 (legacy gsd-update-check)': [
-    '# GSD Hooks',
+  'Shape 1 (legacy gtd-update-check)': [
+    '# GTD Hooks',
     '[[hooks]]',
     'event = "SessionStart"',
-    'command = "node /Users/USER/.codex/hooks/gsd-update-check.js"',
+    'command = "node /Users/USER/.codex/hooks/gtd-update-check.js"',
   ].join('\n'),
-  'Shape 2 (flat [[hooks]] + gsd-check-update)': [
-    '# GSD Hooks',
+  'Shape 2 (flat [[hooks]] + gtd-check-update)': [
+    '# GTD Hooks',
     '[[hooks]]',
     'event = "SessionStart"',
-    'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+    'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
   ].join('\n'),
   'Shape 3 ([[hooks.SessionStart]] without nested .hooks)': [
-    '# GSD Hooks',
+    '# GTD Hooks',
     '[[hooks.SessionStart]]',
-    'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+    'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
   ].join('\n'),
   'Shape 4 (nested [[hooks.SessionStart]] + [[hooks.SessionStart.hooks]])': [
-    '# GSD Hooks',
+    '# GTD Hooks',
     '[[hooks.SessionStart]]',
     '',
     '[[hooks.SessionStart.hooks]]',
     'type = "command"',
-    'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+    'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
   ].join('\n'),
 };
 
-describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing newline', () => {
-  test('stripStaleGsdHookBlocks is exported from bin/install.js', () => {
-    assert.strictEqual(typeof stripStaleGsdHookBlocks, 'function',
-      'bin/install.js must export stripStaleGsdHookBlocks');
+describe('bug-2866: stripStaleGtdHookBlocks handles end-of-file without trailing newline', () => {
+  test('stripStaleGtdHookBlocks is exported from bin/install.js', () => {
+    assert.strictEqual(typeof stripStaleGtdHookBlocks, 'function',
+      'bin/install.js must export stripStaleGtdHookBlocks');
   });
 
   function assertStripped(out, shape, scenario) {
@@ -103,9 +103,9 @@ describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing
     assert.strictEqual(hooksTable, undefined,
       `(${shape}, ${scenario}) no hooks table header may remain after strip, got tables: ${shape_.tableHeaders.join(', ')}`);
     const staleCmd = [...shape_.keys.entries()].find(([_, v]) =>
-      /gsd-(update-check|check-update)/.test(v));
+      /gtd-(update-check|check-update)/.test(v));
     assert.strictEqual(staleCmd, undefined,
-      `(${shape}, ${scenario}) no key may carry a stale gsd-*-update command, got: ${staleCmd && staleCmd.join('=')}`);
+      `(${shape}, ${scenario}) no key may carry a stale gtd-*-update command, got: ${staleCmd && staleCmd.join('=')}`);
     assert.strictEqual(shape_.keys.get('history.persistence'), 'save-all',
       `(${shape}, ${scenario}) history.persistence must be preserved as "save-all"`);
   }
@@ -113,20 +113,20 @@ describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing
   for (const [shape, block] of Object.entries(SHAPES)) {
     test(`${shape}: stripped when terminated by trailing newline`, () => {
       const input = `[history]\npersistence = "save-all"\n${block}\n`;
-      assertStripped(stripStaleGsdHookBlocks(input), shape, 'with trailing newline');
+      assertStripped(stripStaleGtdHookBlocks(input), shape, 'with trailing newline');
     });
 
     test(`${shape}: stripped when at end-of-file without trailing newline`, () => {
       // The reporter's repro: stale block sits at the very end with no \n.
       const input = `[history]\npersistence = "save-all"\n${block}`;
-      assertStripped(stripStaleGsdHookBlocks(input), shape, 'no trailing newline');
+      assertStripped(stripStaleGtdHookBlocks(input), shape, 'no trailing newline');
     });
   }
 
-  test('returns input unchanged when no GSD hook block is present', () => {
+  test('returns input unchanged when no GTD hook block is present', () => {
     const benign = '[history]\npersistence = "save-all"\n';
-    const out = stripStaleGsdHookBlocks(benign);
-    assert.strictEqual(out, benign, 'helper must be a no-op when no GSD reference exists');
+    const out = stripStaleGtdHookBlocks(benign);
+    assert.strictEqual(out, benign, 'helper must be a no-op when no GTD reference exists');
     const benignShape = parseTomlShape(out);
     assert.strictEqual(benignShape.keys.get('history.persistence'), 'save-all',
       'parsed shape must preserve history.persistence');
@@ -141,48 +141,48 @@ describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing
   // outside any table.
   const VARIATIONS = {
     'extra blank line in Shape 4': [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
       '',
       '',
       '[[hooks.SessionStart.hooks]]',
       'type = "command"',
-      'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+      'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
     ].join('\n'),
     'keys reordered (command before event in Shape 2)': [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
-      'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+      'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
       'event = "SessionStart"',
     ].join('\n'),
     'extra key alongside command (Shape 3 + timeout)': [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
-      'command = "node /Users/USER/.codex/hooks/gsd-check-update.js"',
+      'command = "node /Users/USER/.codex/hooks/gtd-check-update.js"',
       'timeout = 5000',
     ].join('\n'),
     'tight whitespace (no spaces around `=`)': [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks]]',
       'event="SessionStart"',
-      'command="node /Users/USER/.codex/hooks/gsd-check-update.js"',
+      'command="node /Users/USER/.codex/hooks/gtd-check-update.js"',
     ].join('\n'),
   };
 
   for (const [variation, block] of Object.entries(VARIATIONS)) {
     test(`variation stripped: ${variation}`, () => {
       const input = `[history]\npersistence = "save-all"\n${block}\n`;
-      assertStripped(stripStaleGsdHookBlocks(input), variation, 'with trailing newline');
+      assertStripped(stripStaleGtdHookBlocks(input), variation, 'with trailing newline');
     });
     test(`variation stripped at EOF without trailing newline: ${variation}`, () => {
       const input = `[history]\npersistence = "save-all"\n${block}`;
-      assertStripped(stripStaleGsdHookBlocks(input), variation, 'no trailing newline');
+      assertStripped(stripStaleGtdHookBlocks(input), variation, 'no trailing newline');
     });
   }
 
   test('user-authored [[hooks.UserPromptSubmit]] is preserved', () => {
     // The structural strip must not touch hook tables that don't carry a
-    // GSD-managed `gsd-(check-update|update-check).js` command.
+    // GTD-managed `gtd-(check-update|update-check).js` command.
     const input = [
       '[history]',
       'persistence = "save-all"',
@@ -190,7 +190,7 @@ describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing
       'command = "node /Users/USER/my-hook.js"',
       '',
     ].join('\n');
-    const out = stripStaleGsdHookBlocks(input);
+    const out = stripStaleGtdHookBlocks(input);
     const shape = parseTomlShape(out);
     assert.ok(
       shape.tableHeaders.includes('[[hooks.UserPromptSubmit]]'),
@@ -206,7 +206,7 @@ describe('bug-2866: stripStaleGsdHookBlocks handles end-of-file without trailing
   test('Shape 4 strip does not leave an orphaned [[hooks.SessionStart]] header', () => {
     // Shape 4 is stripped before Shape 3 specifically to avoid this.
     const block = SHAPES['Shape 4 (nested [[hooks.SessionStart]] + [[hooks.SessionStart.hooks]])'];
-    const out = stripStaleGsdHookBlocks(`[history]\npersistence = "save-all"\n${block}`);
+    const out = stripStaleGtdHookBlocks(`[history]\npersistence = "save-all"\n${block}`);
     const outShape = parseTomlShape(out);
     const orphan = outShape.tableHeaders.find((h) => /hooks\.SessionStart/.test(h));
     assert.strictEqual(orphan, undefined,

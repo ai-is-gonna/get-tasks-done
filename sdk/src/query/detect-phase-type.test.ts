@@ -12,7 +12,7 @@ describe('detectPhaseType', () => {
   let projectDir: string;
 
   beforeEach(async () => {
-    projectDir = join(tmpdir(), `gsd-detect-phase-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    projectDir = join(tmpdir(), `gtd-detect-phase-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(join(projectDir, '.planning', 'phases'), { recursive: true });
   });
 

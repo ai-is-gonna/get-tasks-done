@@ -1,7 +1,7 @@
 /**
  * Intel query handlers — .planning/intel/ file management.
  *
- * Ported from get-shit-done/bin/lib/intel.cjs.
+ * Ported from get-tasks-done/bin/lib/intel.cjs.
  * Provides intel status, diff, snapshot, validate, query, extract-exports,
  * and patch-meta operations for the project intelligence system.
  *
@@ -245,7 +245,7 @@ export const intelQuery: QueryHandler = async (args, projectDir, _workstream) =>
 
 /**
  * Extract exports from a JS/CJS/ESM file — port of `intelExtractExports` in `intel.cjs` (lines 502–614).
- * Returns `{ file, exports, method }` with `file` as a resolved absolute path (matches `gsd-tools.cjs`).
+ * Returns `{ file, exports, method }` with `file` as a resolved absolute path (matches `gtd-tools.cjs`).
  */
 export const intelExtractExports: QueryHandler = async (args, projectDir, _workstream) => {
   const raw = args[0];
@@ -384,9 +384,9 @@ export const intelPatchMeta: QueryHandler = async (args, projectDir, _workstream
 // ─── intelUpdate ───────────────────────────────────────────────────────────
 
 /**
- * `gsd-tools intel update` entry point: returns the same JSON as `intel.cjs` `intelUpdate`.
+ * `gtd-tools intel update` entry point: returns the same JSON as `intel.cjs` `intelUpdate`.
  * Does not run the full graph refresh in-process — that work is done by the
- * **gsd-intel-updater** agent after spawn. When `.planning/intel/` is disabled in config,
+ * **gtd-intel-updater** agent after spawn. When `.planning/intel/` is disabled in config,
  * returns `{ disabled: true, message }` so SDK output matches the CJS CLI.
  *
  * Port of `intelUpdate` from `intel.cjs` lines 314–321.
@@ -398,7 +398,7 @@ export const intelUpdate: QueryHandler = async (_args, projectDir, _workstream) 
   return {
     data: {
       action: 'spawn_agent',
-      message: 'Run gsd-tools intel update or spawn gsd-intel-updater agent for full refresh',
+      message: 'Run gtd-tools intel update or spawn gtd-intel-updater agent for full refresh',
     },
   };
 };

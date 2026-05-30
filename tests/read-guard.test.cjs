@@ -4,7 +4,7 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * Tests for gsd-read-guard.js PreToolUse hook.
+ * Tests for gtd-read-guard.js PreToolUse hook.
  *
  * The read guard intercepts Write/Edit tool calls on existing files and injects
  * advisory guidance telling the model to Read the file first. This prevents
@@ -15,7 +15,7 @@
  * The hook is advisory-only (does not block) so Claude Code behavior is unaffected.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -25,7 +25,7 @@ const { execFileSync } = require('node:child_process');
 
 const { createTempDir, cleanup } = require('./helpers.cjs');
 
-const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gsd-read-guard.js');
+const HOOK_PATH = path.join(__dirname, '..', 'hooks', 'gtd-read-guard.js');
 
 /**
  * Run the read guard hook with a given tool input payload.
@@ -62,11 +62,11 @@ function runHook(payload, envOverrides = {}) {
   }
 }
 
-describe('gsd-read-guard hook', () => {
+describe('gtd-read-guard hook', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempDir('gsd-read-guard-');
+    tmpDir = createTempDir('gtd-read-guard-');
   });
 
   afterEach(() => {
@@ -215,8 +215,8 @@ describe('gsd-read-guard hook', () => {
     const buildHooksPath = path.join(__dirname, '..', 'scripts', 'build-hooks.js');
     const content = fs.readFileSync(buildHooksPath, 'utf8');
     assert.ok(
-      content.includes('gsd-read-guard.js'),
-      'gsd-read-guard.js must be in HOOKS_TO_COPY so it ships in hooks/dist/'
+      content.includes('gtd-read-guard.js'),
+      'gtd-read-guard.js must be in HOOKS_TO_COPY so it ships in hooks/dist/'
     );
   });
 
@@ -224,8 +224,8 @@ describe('gsd-read-guard hook', () => {
     const installPath = path.join(__dirname, '..', 'bin', 'install.js');
     const content = fs.readFileSync(installPath, 'utf8');
     assert.ok(
-      content.includes("'gsd-read-guard.js'"),
-      'gsd-read-guard.js must be in the uninstall gsdHooks list'
+      content.includes("'gtd-read-guard.js'"),
+      'gtd-read-guard.js must be in the uninstall gtdHooks list'
     );
   });
 

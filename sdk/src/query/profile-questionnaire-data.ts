@@ -1,5 +1,5 @@
 /**
- * Synced from get-shit-done/bin/lib/profile-output.cjs (PROFILING_QUESTIONS, CLAUDE_INSTRUCTIONS).
+ * Synced from get-tasks-done/bin/lib/profile-output.cjs (PROFILING_QUESTIONS, CLAUDE_INSTRUCTIONS).
  * Used by profileQuestionnaire for parity with cmdProfileQuestionnaire.
  */
 

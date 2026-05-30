@@ -10,7 +10,7 @@
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .profile', () => {
   // --- code_quality.fallow.scope ---
@@ -19,7 +19,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.scope', 'fullrepo'],
       tmpDir
     );
@@ -38,7 +38,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.scope', 'phase'],
       tmpDir
     );
@@ -56,7 +56,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.scope', 'repo'],
       tmpDir
     );
@@ -74,7 +74,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.scope', 'PHASE'],
       tmpDir
     );
@@ -90,7 +90,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.profile', 'aggressive'],
       tmpDir
     );
@@ -109,7 +109,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.profile', 'minimal'],
       tmpDir
     );
@@ -127,7 +127,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.profile', 'standard'],
       tmpDir
     );
@@ -145,7 +145,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.profile', 'strict'],
       tmpDir
     );
@@ -163,7 +163,7 @@ describe('feat-3210 / H5: enum validation for code_quality.fallow.scope and .pro
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'code_quality.fallow.profile', 'unknown'],
       tmpDir
     );

@@ -5,7 +5,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * Tests for gsd-new-milestone todo-to-phase linking (#2433).
+ * Tests for gtd-new-milestone todo-to-phase linking (#2433).
  * Verifies the workflow text contains the correct linking and auto-close steps.
  */
 
@@ -17,10 +17,10 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 
 const NEW_MILESTONE = fs.readFileSync(
-  path.join(ROOT, 'get-shit-done/workflows/new-milestone.md'), 'utf-8'
+  path.join(ROOT, 'get-tasks-done/workflows/new-milestone.md'), 'utf-8'
 );
 const EXECUTE_PHASE = fs.readFileSync(
-  path.join(ROOT, 'get-shit-done/workflows/execute-phase.md'), 'utf-8'
+  path.join(ROOT, 'get-tasks-done/workflows/work-task-issue.md'), 'utf-8'
 );
 
 test('new-milestone.md: step 10.5 links pending todos to roadmap phases', () => {
@@ -44,7 +44,7 @@ test('new-milestone.md: todo linking is best-effort and leaves unmatched todos u
 });
 
 test('new-milestone.md: step 10.5 commits tagged todos', () => {
-  assert.ok(NEW_MILESTONE.includes('gsd-sdk query commit'), 'should commit tagged todos');
+  assert.ok(NEW_MILESTONE.includes('gtd-sdk query commit'), 'should commit tagged todos');
   assert.ok(NEW_MILESTONE.includes('resolves_phase after milestone'), 'commit message should mention resolves_phase');
 });
 
@@ -52,24 +52,24 @@ test('new-milestone.md: success_criteria includes todo linking', () => {
   assert.ok(NEW_MILESTONE.includes('resolves_phase: N'), 'success_criteria should mention resolves_phase tagging');
 });
 
-test('execute-phase.md: close_phase_todos step exists', () => {
+test('work-task-issue.md: close_phase_todos step exists', () => {
   assert.ok(EXECUTE_PHASE.includes('close_phase_todos'), 'close_phase_todos step should exist');
   assert.ok(EXECUTE_PHASE.includes('resolves_phase'), 'should check resolves_phase in todos');
 });
 
-test('execute-phase.md: auto-close moves todos to completed directory', () => {
+test('work-task-issue.md: auto-close moves todos to completed directory', () => {
   assert.ok(EXECUTE_PHASE.includes('.planning/todos/completed'), 'should move to completed dir');
   assert.ok(EXECUTE_PHASE.includes('.planning/todos/pending'), 'should scan pending dir');
   assert.ok(EXECUTE_PHASE.includes('mv "$TODO_FILE" "$COMPLETED_DIR/"'), 'should use mv to move files');
 });
 
-test('execute-phase.md: close_phase_todos runs after update_roadmap', () => {
+test('work-task-issue.md: close_phase_todos runs after update_roadmap', () => {
   const updateRoadmapIdx = EXECUTE_PHASE.indexOf('name="update_roadmap"');
   const closeTodosIdx = EXECUTE_PHASE.indexOf('name="close_phase_todos"');
   assert.ok(updateRoadmapIdx < closeTodosIdx, 'close_phase_todos should run after update_roadmap');
 });
 
-test('execute-phase.md: auto-close never blocks phase completion', () => {
+test('work-task-issue.md: auto-close never blocks phase completion', () => {
   const closeTodosSection = EXECUTE_PHASE.slice(
     EXECUTE_PHASE.indexOf('name="close_phase_todos"'),
     EXECUTE_PHASE.indexOf('name="update_project_md"')
@@ -80,7 +80,7 @@ test('execute-phase.md: auto-close never blocks phase completion', () => {
   );
 });
 
-test('execute-phase.md: awk extracts resolves_phase from YAML frontmatter', () => {
+test('work-task-issue.md: awk extracts resolves_phase from YAML frontmatter', () => {
   assert.ok(EXECUTE_PHASE.includes('awk'), 'should use awk for frontmatter extraction');
   assert.ok(EXECUTE_PHASE.includes('resolves_phase:'), 'awk pattern should match resolves_phase key');
 });

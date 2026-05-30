@@ -1,11 +1,11 @@
 /**
- * InitRunner — orchestrates the GSD new-project init workflow.
+ * InitRunner — orchestrates the GTD new-project init workflow.
  *
  * Workflow: setup → config → PROJECT.md → parallel research (4 sessions)
  *         → synthesis → requirements → roadmap
  *
  * Each step calls Agent SDK `query()` via `runPhaseStepSession()` with
- * prompts derived from GSD-1 workflow/agent/template files on disk.
+ * prompts derived from GTD-1 workflow/agent/template files on disk.
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -19,16 +19,16 @@ import type {
   InitStepResult,
   InitStepName,
   InitNewProjectInfo,
-  GSDInitStartEvent,
-  GSDInitStepStartEvent,
-  GSDInitStepCompleteEvent,
-  GSDInitCompleteEvent,
-  GSDInitResearchSpawnEvent,
+  GTDInitStartEvent,
+  GTDInitStepStartEvent,
+  GTDInitStepCompleteEvent,
+  GTDInitCompleteEvent,
+  GTDInitResearchSpawnEvent,
   PlanResult,
 } from './types.js';
-import { GSDEventType, PhaseStepType } from './types.js';
-import type { GSDTools } from './gsd-tools.js';
-import type { GSDEventStream } from './event-stream.js';
+import { GTDEventType, PhaseStepType } from './types.js';
+import type { GTDTools } from './gtd-tools.js';
+import type { GTDEventStream } from './event-stream.js';
 import { loadConfig } from './config.js';
 import { runPhaseStepSession } from './session-runner.js';
 import { sanitizePrompt } from './prompt-sanitizer.js';
@@ -37,8 +37,8 @@ import { resolveLegacyTemplatesDir } from './sdk-package-compatibility.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GSD_TEMPLATES_DIR = resolveLegacyTemplatesDir();
-const GSD_AGENTS_DIR = resolveAgentsDir();
+const GTD_TEMPLATES_DIR = resolveLegacyTemplatesDir();
+const GTD_AGENTS_DIR = resolveAgentsDir();
 
 const RESEARCH_TYPES = ['STACK', 'FEATURES', 'ARCHITECTURE', 'PITFALLS'] as const;
 type ResearchType = (typeof RESEARCH_TYPES)[number];
@@ -68,8 +68,8 @@ const AUTO_MODE_CONFIG = {
 
 export interface InitRunnerDeps {
   projectDir: string;
-  tools: GSDTools;
-  eventStream: GSDEventStream;
+  tools: GTDTools;
+  eventStream: GTDEventStream;
   config?: Partial<InitConfig>;
   /** Override for SDK prompts directory. Defaults to package-relative sdk/prompts/. */
   sdkPromptsDir?: string;
@@ -77,8 +77,8 @@ export interface InitRunnerDeps {
 
 export class InitRunner {
   private readonly projectDir: string;
-  private readonly tools: GSDTools;
-  private readonly eventStream: GSDEventStream;
+  private readonly tools: GTDTools;
+  private readonly eventStream: GTDEventStream;
   private readonly config: InitConfig;
   private readonly sessionId: string;
   private readonly sdkPromptsDir: string;
@@ -111,8 +111,8 @@ export class InitRunner {
     const steps: InitStepResult[] = [];
     const artifacts: string[] = [];
 
-    this.emitEvent<GSDInitStartEvent>({
-      type: GSDEventType.InitStart,
+    this.emitEvent<GTDInitStartEvent>({
+      type: GTDEventType.InitStart,
       input: input.slice(0, 200),
       projectDir: this.projectDir,
     });
@@ -148,7 +148,7 @@ export class InitRunner {
         await writeFile(configPath, JSON.stringify(AUTO_MODE_CONFIG, null, 2) + '\n', 'utf-8');
         artifacts.push('.planning/config.json');
 
-        // Persist auto_advance via gsd-tools (validates & updates state)
+        // Persist auto_advance via gtd-tools (validates & updates state)
         await this.tools.configSet('workflow.auto_advance', 'true');
 
         // Commit config
@@ -276,8 +276,8 @@ export class InitRunner {
   ): Promise<{ stepResult: InitStepResult; value?: T }> {
     const stepStart = Date.now();
 
-    this.emitEvent<GSDInitStepStartEvent>({
-      type: GSDEventType.InitStepStart,
+    this.emitEvent<GTDInitStepStartEvent>({
+      type: GTDEventType.InitStepStart,
       step,
     });
 
@@ -293,8 +293,8 @@ export class InitRunner {
         costUsd,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<GTDInitStepCompleteEvent>({
+        type: GTDEventType.InitStepComplete,
         step,
         success: true,
         durationMs,
@@ -314,8 +314,8 @@ export class InitRunner {
         error: errorMsg,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<GTDInitStepCompleteEvent>({
+        type: GTDEventType.InitStepComplete,
         step,
         success: false,
         durationMs,
@@ -333,8 +333,8 @@ export class InitRunner {
     input: string,
     projectInfo: InitNewProjectInfo,
   ): Promise<InitStepResult[]> {
-    this.emitEvent<GSDInitResearchSpawnEvent>({
-      type: GSDEventType.InitResearchSpawn,
+    this.emitEvent<GTDInitResearchSpawnEvent>({
+      type: GTDEventType.InitResearchSpawn,
       sessionCount: RESEARCH_TYPES.length,
       researchTypes: [...RESEARCH_TYPES],
     });
@@ -383,7 +383,7 @@ export class InitRunner {
    * Reads the project template and combines with user input.
    */
   private async buildProjectPrompt(input: string): Promise<string> {
-    const template = await this.readGSDFile('templates/project.md');
+    const template = await this.readGTDFile('templates/project.md');
 
     return sanitizePrompt([
       'You are creating the PROJECT.md for a new software project.',
@@ -410,8 +410,8 @@ export class InitRunner {
     researchType: ResearchType,
     input: string,
   ): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-project-researcher.md');
-    const template = await this.readGSDFile(`templates/research-project/${researchType}.md`);
+    const agentDef = await this.readAgentFile('gtd-project-researcher.md');
+    const template = await this.readGTDFile(`templates/research-project/${researchType}.md`);
 
     // Read PROJECT.md if it exists (it should by now)
     let projectContent = '';
@@ -455,8 +455,8 @@ export class InitRunner {
    * Reads synthesizer agent def and all 4 research outputs.
    */
   private async buildSynthesisPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-research-synthesizer.md');
-    const summaryTemplate = await this.readGSDFile('templates/research-project/SUMMARY.md');
+    const agentDef = await this.readAgentFile('gtd-research-synthesizer.md');
+    const summaryTemplate = await this.readGTDFile('templates/research-project/SUMMARY.md');
     const researchDir = join(this.projectDir, '.planning', 'research');
 
     // Read whatever research files exist
@@ -500,7 +500,7 @@ export class InitRunner {
    * Reads PROJECT.md + FEATURES.md for requirement derivation.
    */
   private async buildRequirementsPrompt(): Promise<string> {
-    const reqTemplate = await this.readGSDFile('templates/requirements.md');
+    const reqTemplate = await this.readGTDFile('templates/requirements.md');
 
     let projectContent = '';
     let featuresContent = '';
@@ -548,9 +548,9 @@ export class InitRunner {
    * Reads PROJECT.md + REQUIREMENTS.md + research/SUMMARY.md + config.json.
    */
   private async buildRoadmapPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-roadmapper.md');
-    const roadmapTemplate = await this.readGSDFile('templates/roadmap.md');
-    const stateTemplate = await this.readGSDFile('templates/state.md');
+    const agentDef = await this.readAgentFile('gtd-roadmapper.md');
+    const roadmapTemplate = await this.readGTDFile('templates/roadmap.md');
+    const stateTemplate = await this.readGTDFile('templates/state.md');
 
     const filesToRead = [
       '.planning/PROJECT.md',
@@ -620,13 +620,13 @@ export class InitRunner {
   // ─── File reading helpers ──────────────────────────────────────────────────
 
   /**
-   * Read a file from the GSD templates directory.
+   * Read a file from the GTD templates directory.
    * Tries sdk/prompts/{relativePath} first (headless versions), then
-   * falls back to GSD-1 originals (~/.claude/get-shit-done/).
+   * falls back to GTD-1 originals (~/.claude/get-tasks-done/).
    */
-  private async readGSDFile(relativePath: string): Promise<string> {
-    // Try installed GSD first (complete, up-to-date versions)
-    const fullPath = join(GSD_TEMPLATES_DIR, '..', relativePath);
+  private async readGTDFile(relativePath: string): Promise<string> {
+    // Try installed GTD first (complete, up-to-date versions)
+    const fullPath = join(GTD_TEMPLATES_DIR, '..', relativePath);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -649,7 +649,7 @@ export class InitRunner {
    */
   private async readAgentFile(filename: string): Promise<string> {
     // Try installed agents first (complete, up-to-date versions)
-    const fullPath = join(GSD_AGENTS_DIR, filename);
+    const fullPath = join(GTD_AGENTS_DIR, filename);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -684,14 +684,14 @@ export class InitRunner {
 
   // ─── Event helpers ─────────────────────────────────────────────────────────
 
-  private emitEvent<T extends { type: GSDEventType }>(
-    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: GSDEventType },
+  private emitEvent<T extends { type: GTDEventType }>(
+    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: GTDEventType },
   ): void {
     this.eventStream.emitEvent({
       timestamp: new Date().toISOString(),
       sessionId: this.sessionId,
       ...partial,
-    } as unknown as import('./types.js').GSDEvent);
+    } as unknown as import('./types.js').GTDEvent);
   }
 
   // ─── Result helpers ────────────────────────────────────────────────────────
@@ -705,8 +705,8 @@ export class InitRunner {
     const totalCostUsd = steps.reduce((sum, s) => sum + s.costUsd, 0);
     const totalDurationMs = Date.now() - startTime;
 
-    this.emitEvent<GSDInitCompleteEvent>({
-      type: GSDEventType.InitComplete,
+    this.emitEvent<GTDInitCompleteEvent>({
+      type: GTDEventType.InitComplete,
       success,
       totalCostUsd,
       totalDurationMs,

@@ -14,7 +14,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── template select ──────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ describe('template select command', () => {
       'File: `src/index.ts`',
     ].join('\n'));
 
-    const result = runGsdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
+    const result = runGtdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.type, 'minimal');
@@ -67,7 +67,7 @@ describe('template select command', () => {
       'Files: `src/auth/login.ts`, `src/auth/register.ts`, `src/routes/index.ts`, `src/middleware/auth.ts`',
     ].join('\n'));
 
-    const result = runGsdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
+    const result = runGtdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.type, 'standard');
@@ -85,14 +85,14 @@ describe('template select command', () => {
     }
     fs.writeFileSync(planPath, lines.join('\n'));
 
-    const result = runGsdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
+    const result = runGtdTools(`template select .planning/phases/01-setup/01-01-PLAN.md`, tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.type, 'complex');
   });
 
   test('returns standard as fallback for nonexistent file', () => {
-    const result = runGsdTools(`template select .planning/phases/01-setup/nonexistent.md`, tmpDir);
+    const result = runGtdTools(`template select .planning/phases/01-setup/nonexistent.md`, tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.type, 'standard');
@@ -120,7 +120,7 @@ describe('template fill command', () => {
   });
 
   test('fills summary template', () => {
-    const result = runGsdTools('template fill summary --phase 1', tmpDir);
+    const result = runGtdTools('template fill summary --phase 1', tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.created, true);
@@ -133,7 +133,7 @@ describe('template fill command', () => {
   });
 
   test('fills plan template', () => {
-    const result = runGsdTools('template fill plan --phase 1', tmpDir);
+    const result = runGtdTools('template fill plan --phase 1', tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.created, true);
@@ -146,7 +146,7 @@ describe('template fill command', () => {
   });
 
   test('fills verification template', () => {
-    const result = runGsdTools('template fill verification --phase 1', tmpDir);
+    const result = runGtdTools('template fill verification --phase 1', tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.created, true);
@@ -162,7 +162,7 @@ describe('template fill command', () => {
     const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-setup');
     fs.writeFileSync(path.join(phaseDir, '01-01-SUMMARY.md'), '# Existing');
 
-    const result = runGsdTools('template fill summary --phase 1', tmpDir);
+    const result = runGtdTools('template fill summary --phase 1', tmpDir);
     assert.ok(result.success); // outputs JSON, doesn't crash
     const out = JSON.parse(result.output);
     assert.ok(out.error, 'should report error for existing file');
@@ -170,20 +170,20 @@ describe('template fill command', () => {
   });
 
   test('errors on unknown template type', () => {
-    const result = runGsdTools('template fill bogus --phase 1', tmpDir);
+    const result = runGtdTools('template fill bogus --phase 1', tmpDir);
     assert.ok(!result.success, 'should fail for unknown type');
     assert.ok(result.error.includes('Unknown template type'));
   });
 
   test('errors when phase not found', () => {
-    const result = runGsdTools('template fill summary --phase 99', tmpDir);
+    const result = runGtdTools('template fill summary --phase 99', tmpDir);
     assert.ok(result.success);
     const out = JSON.parse(result.output);
     assert.ok(out.error, 'should report phase not found');
   });
 
   test('respects --plan option for plan number', () => {
-    const result = runGsdTools('template fill plan --phase 1 --plan 03', tmpDir);
+    const result = runGtdTools('template fill plan --phase 1 --plan 03', tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.ok(out.path.includes('01-03-PLAN.md'), `Expected plan 03 in path, got ${out.path}`);

@@ -1,9 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { resolveGsdToolsPath } from '../sdk-package-compatibility.js';
+import { resolveGtdToolsPath } from '../sdk-package-compatibility.js';
 import type { QueryHandler } from './utils.js';
 
 export const worktreeCleanupWave: QueryHandler = async (args, projectDir) => {
-  const toolsPath = resolveGsdToolsPath(projectDir);
+  const toolsPath = resolveGtdToolsPath(projectDir);
   const result = spawnSync(process.execPath, [toolsPath, 'worktree', 'cleanup-wave', ...args], {
     cwd: projectDir,
     encoding: 'utf-8',
@@ -18,7 +18,7 @@ export const worktreeCleanupWave: QueryHandler = async (args, projectDir) => {
   });
 
   if (result.error) {
-    return { data: { ok: false, reason: result.error.message || 'gsd-tools invocation failed' } };
+    return { data: { ok: false, reason: result.error.message || 'gtd-tools invocation failed' } };
   }
 
   const stdout = (result.stdout || '').trim();
@@ -33,7 +33,7 @@ export const worktreeCleanupWave: QueryHandler = async (args, projectDir) => {
   return {
     data: {
       ok: result.status === 0,
-      reason: result.stderr?.trim() || (result.status === 0 ? 'ok' : 'gsd-tools error'),
+      reason: result.stderr?.trim() || (result.status === 0 ? 'ok' : 'gtd-tools error'),
     },
   };
 };

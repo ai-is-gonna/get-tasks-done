@@ -1,7 +1,7 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// agents/gsd-code-fixer.md is the deployed agent definition the runtime
+// agents/gtd-code-fixer.md is the deployed agent definition the runtime
 // loads. Parsing its bash code blocks into structured invocation records
 // (extractCleanupGitInvocations + the recovery-block parsers below) IS
 // testing the runtime contract — what command sequence the agent
@@ -9,10 +9,10 @@
 // fields from a known-shape product file, then assertions go against
 // those typed fields, not against the raw markdown text.
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
- * Bug #2990: gsd-code-fixer worktree setup fails when current branch
+ * Bug #2990: gtd-code-fixer worktree setup fails when current branch
  * is already checked out in the main repo.
  *
  * The original agent definition called `git worktree add "$wt" "$branch"`,
@@ -20,7 +20,7 @@ process.env.GSD_TEST_MODE = '1';
  * to check out the same branch in two worktrees by default, so the setup
  * failed before the agent could do any work.
  *
- * Fix: create a NEW branch `gsd-reviewfix/${padded_phase}-$$` and attach
+ * Fix: create a NEW branch `gtd-reviewfix/${padded_phase}-$$` and attach
  * the worktree to it via `git worktree add -b "$reviewfix_branch" "$wt"
  * "$branch"`. The cleanup tail then fast-forwards `$branch` to
  * `$reviewfix_branch` so the user's branch captures the agent's commits.
@@ -31,7 +31,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const AGENT_PATH = path.join(__dirname, '..', 'agents', 'gsd-code-fixer.md');
+const AGENT_PATH = path.join(__dirname, '..', 'agents', 'gtd-code-fixer.md');
 
 function parseWorktreeAddInvocations(markdown) {
   // Pull `git worktree add ...` calls and classify each into structured
@@ -61,13 +61,13 @@ function parseWorktreeAddInvocations(markdown) {
   return invocations;
 }
 
-describe('Bug #2990: gsd-code-fixer worktree attaches to a NEW branch, not the user-checked-out one', () => {
+describe('Bug #2990: gtd-code-fixer worktree attaches to a NEW branch, not the user-checked-out one', () => {
   const md = fs.readFileSync(AGENT_PATH, 'utf-8');
   const invocations = parseWorktreeAddInvocations(md);
 
   test('sanity: at least one git-worktree-add invocation exists in the agent definition', () => {
     assert.ok(invocations.length > 0,
-      'expected gsd-code-fixer.md to document at least one git worktree add invocation');
+      'expected gtd-code-fixer.md to document at least one git worktree add invocation');
   });
 
   test('every git-worktree-add invocation uses -b $reviewfix_branch (not bare $branch)', () => {
@@ -138,7 +138,7 @@ describe('Bug #2990: cleanup tail fast-forwards $branch and deletes the temp bra
   const records = extractCleanupGitInvocations(md);
 
   test('cleanup tail bash block exists and is parseable', () => {
-    assert.notEqual(records, null, 'expected to find a "Cleanup tail" bash block in agents/gsd-code-fixer.md');
+    assert.notEqual(records, null, 'expected to find a "Cleanup tail" bash block in agents/gtd-code-fixer.md');
     assert.ok(records.length > 0, 'expected at least one git invocation in the cleanup tail');
   });
 

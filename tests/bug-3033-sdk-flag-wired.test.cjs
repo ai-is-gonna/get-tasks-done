@@ -2,7 +2,7 @@
  * Regression test for #3033: --sdk flag parsed but never used.
  *
  * `hasSdk` was set in bin/install.js but never passed to `installSdkIfNeeded`,
- * so `npx get-shit-done-cc@latest --sdk` produced a misleading "✓ GSD SDK ready"
+ * so `npx get-tasks-done@latest --sdk` produced a misleading "✓ GTD SDK ready"
  * message while still silently skipping SDK deployment for local installs.
  *
  * Fix: `installSdkIfNeeded` now accepts `opts.forceSdk`. When true, the
@@ -17,7 +17,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -63,7 +63,7 @@ describe('bug #3033: --sdk flag (opts.forceSdk) must be wired into installSdkIfN
   let savedEnv;
 
   beforeEach(() => {
-    tmpRoot = createTempDir('gsd-3033-');
+    tmpRoot = createTempDir('gtd-3033-');
     sdkDir = path.join(tmpRoot, 'sdk');
     pathDir = path.join(tmpRoot, 'somebin');
     homeDir = path.join(tmpRoot, 'home');
@@ -82,7 +82,7 @@ describe('bug #3033: --sdk flag (opts.forceSdk) must be wired into installSdkIfN
     cleanup(tmpRoot);
   });
 
-  test('forceSdk=true + isLocal=true + dist present: self-links gsd-sdk into PATH dir', () => {
+  test('forceSdk=true + isLocal=true + dist present: self-links gtd-sdk into PATH dir', () => {
     // Stage a valid dist so the installer can proceed past the missing-dist gate.
     fs.mkdirSync(path.join(sdkDir, 'dist'), { recursive: true });
     fs.writeFileSync(
@@ -102,16 +102,16 @@ describe('bug #3033: --sdk flag (opts.forceSdk) must be wired into installSdkIfN
     const combined = `${stdout}\n${stderr}`;
 
     // Shim must be materialized on PATH.
-    const linkPath = path.join(localBin, 'gsd-sdk');
+    const linkPath = path.join(localBin, 'gtd-sdk');
     assert.ok(
       fs.existsSync(linkPath),
-      `forceSdk=true must materialize gsd-sdk shim at ${linkPath}. Output:\n${combined}`,
+      `forceSdk=true must materialize gtd-sdk shim at ${linkPath}. Output:\n${combined}`,
     );
 
-    // Must report "GSD SDK ready" — not the legacy "Skipping SDK check" message.
+    // Must report "GTD SDK ready" — not the legacy "Skipping SDK check" message.
     assert.ok(
-      /GSD SDK ready/.test(combined),
-      `forceSdk=true must print "GSD SDK ready" once shim is on PATH. Output:\n${combined}`,
+      /GTD SDK ready/.test(combined),
+      `forceSdk=true must print "GTD SDK ready" once shim is on PATH. Output:\n${combined}`,
     );
     assert.ok(
       !/Skipping SDK check for local install/.test(combined),
@@ -158,7 +158,7 @@ describe('bug #3033: --sdk flag (opts.forceSdk) must be wired into installSdkIfN
         installSdkIfNeeded({ sdkDir, isLocal: true, forceSdk: true, throwOnFailure: true });
       }),
       (error) => {
-        assert.equal(error.code, 'GSD_SDK_MISSING_DIST');
+        assert.equal(error.code, 'GTD_SDK_MISSING_DIST');
         assert.equal(error.exitCode, 1);
         return true;
       }

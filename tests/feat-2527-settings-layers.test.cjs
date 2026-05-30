@@ -1,11 +1,11 @@
 'use strict';
 
 /**
- * Feature test for #2527 — /gsd-settings expands to 22 settings grouped into
+ * Feature test for #2527 — /gtd-settings expands to 22 settings grouped into
  * six visual sections. Adds 8 new fields (pattern_mapper, tdd_mode, code_review,
  * code_review_depth, ui_review, commit_docs, intel.enabled, graphify.enabled)
  * and verifies each is present in the AskUserQuestion block, the update_config
- * step, the confirmation table, the ~/.gsd/defaults.json save step, and
+ * step, the confirmation table, the ~/.gtd/defaults.json save step, and
  * VALID_CONFIG_KEYS.
  *
  * Closes: #2527
@@ -15,10 +15,10 @@ const { describe, test, before } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-const SETTINGS_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'settings.md');
-const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
+const SETTINGS_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'settings.md');
+const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 const NEW_FIELDS = [
   'workflow.pattern_mapper',
@@ -104,7 +104,7 @@ describe('#2527: settings.md adds grouped settings layers', () => {
       for (const field of NEW_FIELDS) {
         assert.ok(
           hasPathLike(block, field),
-          `save_as_defaults step must persist "${field}" into ~/.gsd/defaults.json`
+          `save_as_defaults step must persist "${field}" into ~/.gtd/defaults.json`
         );
       }
     });
@@ -177,7 +177,7 @@ describe('#2527: settings.md adds grouped settings layers', () => {
       const tmpDir = createTempProject();
       t.after(() => cleanup(tmpDir));
 
-      const bad = runGsdTools(['config-set', 'workflow.code_review_bogus_key', 'x'], tmpDir);
+      const bad = runGtdTools(['config-set', 'workflow.code_review_bogus_key', 'x'], tmpDir);
       assert.ok(!bad.success, 'config-set on an unknown key must fail');
     });
   });

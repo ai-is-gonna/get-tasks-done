@@ -1,7 +1,7 @@
 /**
  * VERIFICATION.md parser (`check.verification-status`).
  *
- * Replaces VERIFICATION.md grep/parse branches in `execute-phase.md`,
+ * Replaces VERIFICATION.md grep/parse branches in `work-task-issue.md`,
  * `autonomous.md`, `progress.md` with a structured query.
  * See `.planning/research/decision-routing-audit.md` §3.8.
  */
@@ -9,7 +9,7 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { normalizePhaseName } from './helpers.js';
 import { findPhase } from './phase.js';
 import type { QueryHandler } from './utils.js';
@@ -55,7 +55,7 @@ function findColIndex(headerRow: TableRow, predicate: (cell: string) => boolean)
 export const checkVerificationStatus: QueryHandler = async (args, projectDir) => {
   const raw = args[0];
   if (!raw) {
-    throw new GSDError('phase number required for check verification-status', ErrorClassification.Validation);
+    throw new GTDError('phase number required for check verification-status', ErrorClassification.Validation);
   }
 
   normalizePhaseName(raw); // validate format

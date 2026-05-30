@@ -1,21 +1,21 @@
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md files ARE the deployed registry — reading their frontmatter
+// commands/gtd/*.md files ARE the deployed registry — reading their frontmatter
 // validates the structural contract of the command surface, not application source.
 'use strict';
 /**
  * live-command-registry.cjs
  *
  * Derives the canonical set of live slash-command tokens from the source-of-truth
- * registry: commands/gsd/*.md (one file per registered command).
+ * registry: commands/gtd/*.md (one file per registered command).
  *
  * Each command file has YAML frontmatter with a `name:` field:
- *   name: gsd:slug    (colon-style — most commands)
- *   name: gsd-slug    (dash-style — ns-* namespace commands)
+ *   name: gtd:slug    (colon-style — most commands)
+ *   name: gtd-slug    (dash-style — ns-* namespace commands)
  *
  * For each slug, three canonical token forms are emitted:
- *   /gsd-slug   — Claude / non-Gemini runtimes
- *   /gsd:slug   — Gemini runtime
- *   $gsd-slug   — Codex runtime
+ *   /gtd-slug   — Claude / non-Gemini runtimes
+ *   /gtd:slug   — Gemini runtime
+ *   $gtd-slug   — Codex runtime
  *
  * The result is memoized per process — a single fs walk is amortized across
  * all test files that import this helper. The cache is intentionally not
@@ -31,7 +31,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const COMMANDS_DIR = path.join(__dirname, '..', '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', '..', 'commands', 'gtd');
 
 // Module-level memoization — set on first call, reused thereafter.
 let _cache = null;
@@ -46,10 +46,10 @@ let _cache = null;
  * introducing a YAML parser dependency would be disproportionate.
  *
  * Supported name forms:
- *   name: gsd:slug     → slug = "slug"
- *   name: gsd-slug     → slug = "slug"
- *   name: "gsd:slug"   → slug = "slug"  (quoted)
- *   name: "gsd-slug"   → slug = "slug"  (quoted)
+ *   name: gtd:slug     → slug = "slug"
+ *   name: gtd-slug     → slug = "slug"
+ *   name: "gtd:slug"   → slug = "slug"  (quoted)
+ *   name: "gtd-slug"   → slug = "slug"  (quoted)
  */
 function parseSlug(content, filePath) {
   // Frontmatter must start with '---' on the very first line.
@@ -70,22 +70,22 @@ function parseSlug(content, filePath) {
   const frontmatter = content.slice(0, closingIdx);
 
   // Match `name:` line, allowing optional quotes around the value.
-  // The value must be one of: gsd:<slug> or gsd-<slug>
+  // The value must be one of: gtd:<slug> or gtd-<slug>
   // where slug = [a-z0-9][a-z0-9-]*
-  const nameMatch = frontmatter.match(/^name:\s*"?(gsd[:‑-])([a-z0-9][a-z0-9-]*)"?\s*$/m);
+  const nameMatch = frontmatter.match(/^name:\s*"?(gtd[:‑-])([a-z0-9][a-z0-9-]*)"?\s*$/m);
   if (!nameMatch) {
     throw new Error(
       `[live-command-registry] ${filePath}: could not extract slug from frontmatter ` +
-      `(expected "name: gsd:<slug>" or "name: gsd-<slug>")`
+      `(expected "name: gtd:<slug>" or "name: gtd-<slug>")`
     );
   }
 
-  return nameMatch[2]; // the slug after "gsd:" or "gsd-"
+  return nameMatch[2]; // the slug after "gtd:" or "gtd-"
 }
 
 /**
  * Returns the Set<string> of all canonical slash-command tokens derived from
- * commands/gsd/*.md. Memoized — safe to call repeatedly without extra fs I/O.
+ * commands/gtd/*.md. Memoized — safe to call repeatedly without extra fs I/O.
  *
  * Throws on the first malformed file (fail-loud per CONTEXT.md k302) so
  * registry drift is caught immediately rather than silently producing an
@@ -120,9 +120,9 @@ function getLiveCommandTokens() {
     const slug = parseSlug(content, filePath);
 
     // Emit all three canonical token forms per slug.
-    tokens.add(`/gsd-${slug}`);   // Claude / non-Gemini
-    tokens.add(`/gsd:${slug}`);   // Gemini
-    tokens.add(`$gsd-${slug}`);   // Codex
+    tokens.add(`/gtd-${slug}`);   // Claude / non-Gemini
+    tokens.add(`/gtd:${slug}`);   // Gemini
+    tokens.add(`$gtd-${slug}`);   // Codex
   }
 
   _cache = tokens;

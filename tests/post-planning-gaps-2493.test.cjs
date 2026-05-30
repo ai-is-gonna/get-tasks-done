@@ -26,10 +26,10 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const PLAN_PHASE_PATH = path.join(REPO_ROOT, 'get-shit-done', 'workflows', 'plan-phase.md');
+const PLAN_PHASE_PATH = path.join(REPO_ROOT, 'get-tasks-done', 'workflows', 'plan-phase.md');
 
 // ─── Workflow file structure ──────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ describe('plan-phase.md Step 13e insertion (#2493)', () => {
     assert.match(stepBody, /workflow\.post_planning_gaps/);
   });
 
-  test('Step 13e invokes gap-analysis via gsd-tools', () => {
+  test('Step 13e invokes gap-analysis via gtd-tools', () => {
     const content = fs.readFileSync(PLAN_PHASE_PATH, 'utf-8');
     const i13e = content.indexOf('## 13e.');
     const i14 = content.indexOf('## 14.');
@@ -82,7 +82,7 @@ describe('plan-phase.md Step 13e insertion (#2493)', () => {
 // ─── Decisions parser ────────────────────────────────────────────────────────
 
 describe('decisions.cjs parser (shared with #2492)', () => {
-  const { parseDecisions } = require('../get-shit-done/bin/lib/decisions.cjs');
+  const { parseDecisions } = require('../get-tasks-done/bin/lib/decisions.cjs');
 
   test('extracts D-NN entries from a <decisions> block', () => {
     const md = `
@@ -148,7 +148,7 @@ describe('gap-analysis CLI (#2493)', () => {
   }
 
   function ensureConfig() {
-    const r = runGsdTools('config-ensure-section', tmpDir);
+    const r = runGtdTools('config-ensure-section', tmpDir);
     assert.ok(r.success, `config-ensure-section failed: ${r.error}`);
   }
 
@@ -166,7 +166,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('marks REQ-01 as covered when a plan body mentions REQ-01', () => {
     writeRequirements(['REQ-01']);
     writePlan('01', '# Plan 1\n\nImplements REQ-01.\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, `gap-analysis failed: ${r.error}`);
     const out = JSON.parse(r.output);
     const row = out.rows.find(x => x.item === 'REQ-01');
@@ -177,7 +177,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('marks REQ-99 as not covered when no plan mentions it', () => {
     writeRequirements(['REQ-99']);
     writePlan('01', '# Plan 1\n\nImplements something unrelated.\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     const row = out.rows.find(x => x.item === 'REQ-99');
@@ -187,7 +187,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('marks D-01 covered when plan mentions D-01', () => {
     writeContext([{ id: 'D-01', text: 'Use OAuth 2.0' }]);
     writePlan('01', '# Plan\n\nImplements D-01 (OAuth).\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     const row = out.rows.find(x => x.item === 'D-01');
@@ -199,7 +199,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('marks D-99 not covered when no plan mentions it', () => {
     writeContext([{ id: 'D-99', text: 'Bit offsets in +OFFSET:BIT format' }]);
     writePlan('01', '# Plan\n\nUnrelated work.\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     const row = out.rows.find(x => x.item === 'D-99');
@@ -209,7 +209,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('REQ-1 in plan does not falsely mark REQ-10 as covered (word-boundary)', () => {
     writeRequirements(['REQ-1', 'REQ-10']);
     writePlan('01', '# Plan\n\nMentions REQ-1 only.\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     const row1 = out.rows.find(x => x.item === 'REQ-1');
@@ -222,7 +222,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('table output contains documented columns', () => {
     writeRequirements(['REQ-01']);
     writePlan('01', '# Plan\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     assert.match(out.table, /\| Source \| Item \| Status \|/);
@@ -233,7 +233,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('rows sort REQ-02 before REQ-10 (natural sort, deterministic)', () => {
     writeRequirements(['REQ-10', 'REQ-02', 'REQ-01']);
     writePlan('01', '# Plan\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     const reqRows = out.rows.filter(x => x.source === 'REQUIREMENTS.md').map(x => x.item);
@@ -255,7 +255,7 @@ describe('gap-analysis CLI (#2493)', () => {
 
     writePlan('01', '# Plan\n\nCovers TST-01, BACK-07, and INSP-04.\n');
 
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
 
@@ -280,7 +280,7 @@ describe('gap-analysis CLI (#2493)', () => {
 
     writePlan('01', '# Plan\n\nCovers TST-01 and BACK-07 only.\n');
 
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
 
@@ -296,7 +296,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('REQUIREMENTS.md missing → CONTEXT-only run still works', () => {
     writeContext([{ id: 'D-01', text: 'foo' }]);
     writePlan('01', '# Plan mentioning D-01\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
     assert.strictEqual(out.rows.length, 1);
@@ -306,7 +306,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('CONTEXT.md missing → REQ-only run still works', () => {
     writeRequirements(['REQ-01']);
     writePlan('01', '# Plan REQ-01\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
     assert.strictEqual(out.rows.length, 1);
@@ -315,7 +315,7 @@ describe('gap-analysis CLI (#2493)', () => {
 
   test('both REQUIREMENTS.md and CONTEXT.md missing → no error, empty rows', () => {
     writePlan('01', '# Plan\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
     assert.deepStrictEqual(out.rows, []);
@@ -326,7 +326,7 @@ describe('gap-analysis CLI (#2493)', () => {
     fs.writeFileSync(path.join(phaseDir, 'CONTEXT.md'), '# Just plain prose, no decisions block.\n');
     writeRequirements(['REQ-01']);
     writePlan('01', '# Plan REQ-01\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success, r.error);
     const out = JSON.parse(r.output);
     assert.strictEqual(out.rows.length, 1);
@@ -334,9 +334,9 @@ describe('gap-analysis CLI (#2493)', () => {
   });
 
   test('gate flag false → enabled:false, no scanning', () => {
-    runGsdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
+    runGtdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
     writeRequirements(['REQ-01']);
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     assert.strictEqual(out.enabled, false);
@@ -346,7 +346,7 @@ describe('gap-analysis CLI (#2493)', () => {
   test('gate flag true (default) → enabled:true, rows present', () => {
     writeRequirements(['REQ-01']);
     writePlan('01', '# Plan REQ-01\n');
-    const r = runGsdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
+    const r = runGtdTools(['gap-analysis', '--phase-dir', phaseDir], tmpDir);
     assert.ok(r.success);
     const out = JSON.parse(r.output);
     assert.strictEqual(out.enabled, true);
@@ -363,41 +363,41 @@ describe('workflow.post_planning_gaps config (#2493)', () => {
   afterEach(() => { cleanup(tmpDir); });
 
   test('VALID_CONFIG_KEYS contains workflow.post_planning_gaps', () => {
-    const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
+    const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
     assert.ok(VALID_CONFIG_KEYS.has('workflow.post_planning_gaps'));
   });
 
   test('CONFIG_DEFAULTS contains post_planning_gaps default true', () => {
     // CONFIG_DEFAULTS is exported from core.cjs
-    const { CONFIG_DEFAULTS } = require('../get-shit-done/bin/lib/core.cjs');
+    const { CONFIG_DEFAULTS } = require('../get-tasks-done/bin/lib/core.cjs');
     assert.strictEqual(CONFIG_DEFAULTS.post_planning_gaps, true);
   });
 
   test('config-ensure-section materializes workflow.post_planning_gaps:true', () => {
-    runGsdTools('config-ensure-section', tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
     const config = JSON.parse(fs.readFileSync(path.join(tmpDir, '.planning', 'config.json'), 'utf-8'));
     assert.strictEqual(config.workflow.post_planning_gaps, true);
   });
 
   test('config-set workflow.post_planning_gaps true → persisted as boolean', () => {
-    runGsdTools('config-ensure-section', tmpDir);
-    const r = runGsdTools(['config-set', 'workflow.post_planning_gaps', 'true'], tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
+    const r = runGtdTools(['config-set', 'workflow.post_planning_gaps', 'true'], tmpDir);
     assert.ok(r.success, r.error);
     const config = JSON.parse(fs.readFileSync(path.join(tmpDir, '.planning', 'config.json'), 'utf-8'));
     assert.strictEqual(config.workflow.post_planning_gaps, true);
   });
 
   test('config-set workflow.post_planning_gaps false → persisted as boolean', () => {
-    runGsdTools('config-ensure-section', tmpDir);
-    const r = runGsdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
+    const r = runGtdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
     assert.ok(r.success, r.error);
     const config = JSON.parse(fs.readFileSync(path.join(tmpDir, '.planning', 'config.json'), 'utf-8'));
     assert.strictEqual(config.workflow.post_planning_gaps, false);
   });
 
   test('config-set workflow.post_planning_gaps yes → rejected', () => {
-    runGsdTools('config-ensure-section', tmpDir);
-    const r = runGsdTools(['config-set', 'workflow.post_planning_gaps', 'yes'], tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
+    const r = runGtdTools(['config-set', 'workflow.post_planning_gaps', 'yes'], tmpDir);
     assert.ok(!r.success, 'non-boolean value must be rejected');
     assert.match(r.error || r.output, /boolean|true|false/i);
   });
@@ -406,8 +406,8 @@ describe('workflow.post_planning_gaps config (#2493)', () => {
   // in its return so callers can read config.post_planning_gaps regardless of whether
   // config.json exists, has the workflow section, or sets the flat key.
   test('loadConfig() returns post_planning_gaps default true when key absent', () => {
-    const { loadConfig } = require('../get-shit-done/bin/lib/core.cjs');
-    runGsdTools('config-ensure-section', tmpDir);
+    const { loadConfig } = require('../get-tasks-done/bin/lib/core.cjs');
+    runGtdTools('config-ensure-section', tmpDir);
     // Remove the key to simulate older configs that pre-date the toggle
     const cfgPath = path.join(tmpDir, '.planning', 'config.json');
     const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
@@ -418,17 +418,17 @@ describe('workflow.post_planning_gaps config (#2493)', () => {
   });
 
   test('loadConfig() returns post_planning_gaps:false when workflow.post_planning_gaps=false', () => {
-    const { loadConfig } = require('../get-shit-done/bin/lib/core.cjs');
-    runGsdTools('config-ensure-section', tmpDir);
-    runGsdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
+    const { loadConfig } = require('../get-tasks-done/bin/lib/core.cjs');
+    runGtdTools('config-ensure-section', tmpDir);
+    runGtdTools(['config-set', 'workflow.post_planning_gaps', 'false'], tmpDir);
     const config = loadConfig(tmpDir);
     assert.strictEqual(config.post_planning_gaps, false);
   });
 
   test('loadConfig() returns post_planning_gaps:true when workflow.post_planning_gaps=true', () => {
-    const { loadConfig } = require('../get-shit-done/bin/lib/core.cjs');
-    runGsdTools('config-ensure-section', tmpDir);
-    runGsdTools(['config-set', 'workflow.post_planning_gaps', 'true'], tmpDir);
+    const { loadConfig } = require('../get-tasks-done/bin/lib/core.cjs');
+    runGtdTools('config-ensure-section', tmpDir);
+    runGtdTools(['config-set', 'workflow.post_planning_gaps', 'true'], tmpDir);
     const config = loadConfig(tmpDir);
     assert.strictEqual(config.post_planning_gaps, true);
   });

@@ -1,5 +1,5 @@
 /**
- * `extract-messages` — parity with `get-shit-done/bin/lib/profile-pipeline.cjs` `cmdExtractMessages`.
+ * `extract-messages` — parity with `get-tasks-done/bin/lib/profile-pipeline.cjs` `cmdExtractMessages`.
  * Writes JSONL to a temp file and returns metadata (same shape as CJS stdout JSON).
  */
 import { appendFileSync, mkdtempSync, readdirSync, statSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { createInterface } from 'node:readline';
 import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { getScanSessionsRoot, scanProjectDir, readSessionIndex, getProjectName } from './profile-scan-sessions.js';
 
 export type ExtractMessagesResult = {
@@ -103,7 +103,7 @@ export async function streamExtractMessages(
 }
 
 /**
- * Port of `cmdExtractMessages` — same JSON result as `gsd-tools extract-messages` (stdout object;
+ * Port of `cmdExtractMessages` — same JSON result as `gtd-tools extract-messages` (stdout object;
  * message lines are in `output_file` JSONL, not inlined).
  */
 export async function runExtractMessages(
@@ -114,7 +114,7 @@ export async function runExtractMessages(
   const sessionsDir = getScanSessionsRoot(overridePath);
   if (!sessionsDir) {
     const searchedPath = overridePath || '~/.claude/projects';
-    throw new GSDError(
+    throw new GTDError(
       `No Claude Code sessions found at ${searchedPath}.${overridePath ? '' : ' Is Claude Code installed?'}`,
       ErrorClassification.Validation,
     );
@@ -132,7 +132,7 @@ export async function runExtractMessages(
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new GSDError(`Cannot read sessions directory: ${msg}`, ErrorClassification.Validation);
+    throw new GTDError(`Cannot read sessions directory: ${msg}`, ErrorClassification.Validation);
   }
 
   let matchedDir: string | null = null;
@@ -167,7 +167,7 @@ export async function runExtractMessages(
           const idx = readSessionIndex(join(sessionsDir, d));
           return `  - ${getProjectName(d, idx)} (${d})`;
         });
-        throw new GSDError(
+        throw new GTDError(
           `Multiple projects match "${projectArg}":\n${names.join('\n')}\nBe more specific.`,
           ErrorClassification.Validation,
         );
@@ -180,7 +180,7 @@ export async function runExtractMessages(
       const idx = readSessionIndex(join(sessionsDir, d));
       return `  - ${getProjectName(d, idx)}`;
     });
-    throw new GSDError(
+    throw new GTDError(
       `No project matching "${projectArg}". Available projects:\n${available.join('\n')}`,
       ErrorClassification.Validation,
     );
@@ -195,7 +195,7 @@ export async function runExtractMessages(
   if (options.sessionId) {
     sessions = sessions.filter((s) => s.sessionId === options.sessionId);
     if (sessions.length === 0) {
-      throw new GSDError(
+      throw new GTDError(
         `Session "${options.sessionId}" not found in project "${projectName}".`,
         ErrorClassification.Validation,
       );
@@ -206,7 +206,7 @@ export async function runExtractMessages(
     sessions = sessions.slice(0, options.limit);
   }
 
-  const tmpDir = mkdtempSync(join(tmpdir(), 'gsd-pipeline-'));
+  const tmpDir = mkdtempSync(join(tmpdir(), 'gtd-pipeline-'));
   const outputPath = join(tmpDir, 'extracted-messages.jsonl');
   appendFileSync(outputPath, '');
 

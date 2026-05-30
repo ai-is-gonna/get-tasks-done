@@ -26,7 +26,7 @@ import {
   phaseScaffold, phaseNextDecimal, phasesList, phasesClear, phasesArchive,
 } from './phase-lifecycle.js';
 import {
-  initExecutePhase, initPlanPhase, initNewMilestone, initQuick,
+  initPlanPhase, initNewMilestone, initQuick,
   initIngestDocs, initResume, initVerifyWork, initPhaseOp, initTodos,
   initMilestoneOp, initMapCodebase, initNewWorkspace,
   initListWorkspaces, initRemoveWorkspace,
@@ -96,7 +96,6 @@ export const FAMILY_HANDLERS: Record<string, Readonly<Record<string, QueryHandle
     'phases.archive': phasesArchive,
   },
   init: {
-    'init.execute-phase': initExecutePhase,
     'init.plan-phase': initPlanPhase,
     'init.new-project': initNewProject,
     'init.new-milestone': initNewMilestone,

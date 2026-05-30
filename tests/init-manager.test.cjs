@@ -1,12 +1,12 @@
 /**
- * GSD Tools Tests - Init Manager
+ * GTD Tools Tests - Init Manager
  */
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // Helper: write a minimal ROADMAP.md with phases
 function writeRoadmap(tmpDir, phases) {
@@ -68,14 +68,14 @@ describe('init manager', () => {
 
   test('fails without ROADMAP.md', () => {
     writeState(tmpDir);
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(!result.success);
     assert.ok(result.error.includes('ROADMAP.md'));
   });
 
   test('fails without STATE.md', () => {
     writeRoadmap(tmpDir, [{ number: '1', name: 'Setup' }]);
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(!result.success);
     assert.ok(result.error.includes('STATE.md'));
   });
@@ -88,7 +88,7 @@ describe('init manager', () => {
       { number: '3', name: 'UI' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -120,7 +120,7 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 4, { slug: 'empty-phase' });
     // Phase 5: no directory at all
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -143,7 +143,7 @@ describe('init manager', () => {
     fs.writeFileSync(path.join(phaseDir, 'plans', 'PLAN-02.md'), '# Plan 2');
     fs.writeFileSync(path.join(phaseDir, 'plans', 'SUMMARY-01.md'), '# Summary 1');
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -160,7 +160,7 @@ describe('init manager', () => {
     ]);
     scaffoldPhase(tmpDir, 1, { slug: 'foundation', plans: 1, summaries: 1 });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].deps_satisfied, true);
@@ -174,7 +174,7 @@ describe('init manager', () => {
       { number: '2', name: 'Depends on 1', depends_on: 'Phase 1' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].deps_satisfied, true); // no deps
@@ -189,7 +189,7 @@ describe('init manager', () => {
       { number: '3', name: 'UI' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // All three phases are undiscussed — all should be discussable
@@ -213,7 +213,7 @@ describe('init manager', () => {
     // Phase 1 discussed
     scaffoldPhase(tmpDir, 1, { slug: 'foundation', context: true });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // Phase 1 is discussed; phases 2 and 3 are both undiscussed and discussable
@@ -230,7 +230,7 @@ describe('init manager', () => {
     assert.strictEqual(phase3Rec.action, 'discuss');
   });
 
-  test('sliding window: full pipeline — execute N, plan N+1, discuss N+2', () => {
+  test('sliding window: full pipeline — work tasks for N, plan N+1, discuss N+2', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [
       { number: '1', name: 'Foundation', complete: true },
@@ -244,15 +244,15 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 2, { slug: 'api-layer', context: true, plans: 2 }); // planned
     scaffoldPhase(tmpDir, 3, { slug: 'auth', context: true }); // discussed
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // Phases 4 and 5 are both undiscussed — both discussable
     assert.strictEqual(output.phases[3].is_next_to_discuss, true);
     assert.strictEqual(output.phases[4].is_next_to_discuss, true);
 
-    // Recommendations: execute 2, plan 3, discuss 4, discuss 5
-    assert.strictEqual(output.recommended_actions[0].action, 'execute');
+    // Recommendations: task-work 2, plan 3, discuss 4, discuss 5
+    assert.strictEqual(output.recommended_actions[0].action, 'task-work');
     assert.strictEqual(output.recommended_actions[0].phase, '2');
     assert.strictEqual(output.recommended_actions[1].action, 'plan');
     assert.strictEqual(output.recommended_actions[1].phase, '3');
@@ -260,7 +260,7 @@ describe('init manager', () => {
     assert.deepStrictEqual(discussRecs, ['4', '5']);
   });
 
-  test('recommendation ordering: execute > plan > discuss', () => {
+  test('recommendation ordering: task work > plan > discuss', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [
       { number: '1', name: 'Complete', complete: true },
@@ -273,11 +273,11 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 2, { slug: 'ready-to-execute', context: true, plans: 2 });
     scaffoldPhase(tmpDir, 3, { slug: 'ready-to-plan', context: true });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.ok(output.recommended_actions.length >= 3);
-    assert.strictEqual(output.recommended_actions[0].action, 'execute');
+    assert.strictEqual(output.recommended_actions[0].action, 'task-work');
     assert.strictEqual(output.recommended_actions[0].phase, '2');
     assert.strictEqual(output.recommended_actions[1].action, 'plan');
     assert.strictEqual(output.recommended_actions[1].phase, '3');
@@ -292,7 +292,7 @@ describe('init manager', () => {
       { number: '2', name: 'Blocked', depends_on: 'Phase 1' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // Phase 2 should not appear in recommendations (blocked by phase 1)
@@ -309,7 +309,7 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 1, { slug: 'done', plans: 1, summaries: 1 });
     scaffoldPhase(tmpDir, 2, { slug: 'also-done', plans: 1, summaries: 1 });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.all_complete, true);
@@ -326,7 +326,7 @@ describe('init manager', () => {
       JSON.stringify(waiting)
     );
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.deepStrictEqual(output.waiting_signal, waiting);
@@ -339,7 +339,7 @@ describe('init manager', () => {
       { number: '2', name: 'API', goal: 'Build endpoints', depends_on: 'Phase 1' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].goal, 'Set up the base');
@@ -356,7 +356,7 @@ describe('init manager', () => {
       { number: '3', name: 'This Name Is Way Too Long For The Table' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].display_name, 'Short');
@@ -374,7 +374,7 @@ describe('init manager', () => {
     // Scaffold with a file — it will have current mtime (within 5 min)
     scaffoldPhase(tmpDir, 1, { slug: 'active-phase', context: true });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].is_active, true);
@@ -394,7 +394,7 @@ describe('init manager', () => {
     // Phase 3: planned and deps would be met if Phase 2 were complete, but it's not
     scaffoldPhase(tmpDir, 3, { slug: 'auth', context: true, plans: 1 });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // Phase 2 is partial — should NOT appear as execute recommendation (already running)
@@ -403,7 +403,7 @@ describe('init manager', () => {
     assert.strictEqual(execRecs.length, 0);
   });
 
-  test('conflict filter: allows independent phase execute in parallel', () => {
+  test('conflict filter: allows independent task work in parallel', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [
       { number: '1', name: 'Foundation', complete: true },
@@ -416,20 +416,20 @@ describe('init manager', () => {
     // Phase 3: planned, no deps — independent of Phase 2
     scaffoldPhase(tmpDir, 3, { slug: 'notifications', context: true, plans: 1 });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
-    // Phase 3 is independent of Phase 2 — should be recommended for execution
-    const execRecs = output.recommended_actions.filter(r => r.action === 'execute');
-    assert.strictEqual(execRecs.length, 1);
-    assert.strictEqual(execRecs[0].phase, '3');
+    // Phase 3 is independent of Phase 2 — should be recommended for task work.
+    const taskRecs = output.recommended_actions.filter(r => r.action === 'task-work');
+    assert.strictEqual(taskRecs.length, 1);
+    assert.strictEqual(taskRecs[0].phase, '3');
   });
 
   test('output includes project_root field', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [{ number: '1', name: 'Test' }]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // macOS resolves /var → /private/var; normalize both sides
@@ -440,7 +440,7 @@ describe('init manager', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [{ number: '1', name: 'Test' }]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.ok(output.manager_flags, 'should include manager_flags');
@@ -467,7 +467,7 @@ describe('init manager', () => {
       })
     );
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.ok(output.manager_flags, 'should include manager_flags');
@@ -493,7 +493,7 @@ describe('init manager', () => {
       })
     );
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     // Invalid flags should be sanitized to empty string
@@ -516,7 +516,7 @@ describe('init manager', () => {
     fs.mkdirSync(backlogDir, { recursive: true });
     fs.writeFileSync(path.join(backlogDir, '999.1-01-PLAN.md'), '# Backlog Plan');
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -538,7 +538,7 @@ describe('init manager', () => {
       JSON.stringify({ response_language: 'Japanese' })
     );
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.response_language, 'Japanese');
@@ -548,7 +548,7 @@ describe('init manager', () => {
     writeState(tmpDir);
     writeRoadmap(tmpDir, [{ number: '1', name: 'Test' }]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.response_language, undefined);
@@ -568,7 +568,7 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 2, { slug: 'core', plans: 1, summaries: 1 });
     scaffoldPhase(tmpDir, 3, { slug: 'polish', plans: 1, summaries: 1 });
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -588,7 +588,7 @@ describe('init manager', () => {
     scaffoldPhase(tmpDir, 2, { slug: 'core', plans: 1, summaries: 1 });
     // Phase 3 has no directory — should trigger discuss recommendation
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

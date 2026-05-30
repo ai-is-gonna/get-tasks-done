@@ -1,12 +1,12 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const projection = require(path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'shell-command-projection.cjs'));
+const projection = require(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'shell-command-projection.cjs'));
 const install = require(path.join(__dirname, '..', 'bin', 'install.js'));
 
 const {
@@ -53,7 +53,7 @@ describe('bug #3413: Shell Command Projection Module uses runtime-aware hook pol
 
 describe('bug #3413: installer hook surfaces consume runtime-aware projection', () => {
   test('buildHookCommand emits shell-neutral Claude hook command on Windows', () => {
-    const cmd = buildHookCommand('C:/Users/me/.claude', 'gsd-check-update.js', {
+    const cmd = buildHookCommand('C:/Users/me/.claude', 'gtd-check-update.js', {
       platform: 'win32',
       runtime: 'claude',
     });
@@ -64,7 +64,7 @@ describe('bug #3413: installer hook surfaces consume runtime-aware projection', 
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Users/me/.claude/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Users/me/.claude/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -75,39 +75,39 @@ describe('bug #3413: installer hook surfaces consume runtime-aware projection', 
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" "C:/Users/me/.claude/hooks/gsd-check-update.js"',
+      '"/usr/local/bin/node" "C:/Users/me/.claude/hooks/gtd-check-update.js"',
     );
   });
 });
 
 describe('bug #3439: shell projection module owns managed-hook policy and legacy rewrite projection', () => {
   test('isManagedHookBasename is surface-aware', () => {
-    assert.equal(isManagedHookBasename('/x/hooks/gsd-check-update.js', { surface: 'settings-json' }), true);
-    assert.equal(isManagedHookBasename('/x/hooks/gsd-statusline.js', { surface: 'settings-json' }), true);
-    assert.equal(isManagedHookBasename('/x/hooks/gsd-statusline.js', { surface: 'codex-toml' }), false);
+    assert.equal(isManagedHookBasename('/x/hooks/gtd-check-update.js', { surface: 'settings-json' }), true);
+    assert.equal(isManagedHookBasename('/x/hooks/gtd-statusline.js', { surface: 'settings-json' }), true);
+    assert.equal(isManagedHookBasename('/x/hooks/gtd-statusline.js', { surface: 'codex-toml' }), false);
     assert.equal(isManagedHookBasename('/x/hooks/custom-hook.js', { surface: 'settings-json' }), false);
   });
 
   test('projectLegacySettingsHookCommand preserves non-Windows script token shape', () => {
     const command = projectLegacySettingsHookCommand({
       absoluteRunner: '"/usr/local/bin/node"',
-      scriptPath: '/x/hooks/gsd-statusline.js',
-      scriptToken: "'/x/hooks/gsd-statusline.js'",
+      scriptPath: '/x/hooks/gtd-statusline.js',
+      scriptToken: "'/x/hooks/gtd-statusline.js'",
       platform: 'linux',
       runtime: 'claude',
     });
-    assert.equal(command, `"/usr/local/bin/node" '/x/hooks/gsd-statusline.js'`);
+    assert.equal(command, `"/usr/local/bin/node" '/x/hooks/gtd-statusline.js'`);
   });
 
   test('projectLegacySettingsHookCommand normalizes Windows managed paths and runtime wrapper policy', () => {
     const command = projectLegacySettingsHookCommand({
       absoluteRunner: '"C:/nvm4w/nodejs/node.exe"',
-      scriptPath: 'C:\\Users\\me\\.gemini\\hooks\\gsd-prompt-guard.js',
-      scriptToken: "'C:\\Users\\me\\.gemini\\hooks\\gsd-prompt-guard.js'",
+      scriptPath: 'C:\\Users\\me\\.gemini\\hooks\\gtd-prompt-guard.js',
+      scriptToken: "'C:\\Users\\me\\.gemini\\hooks\\gtd-prompt-guard.js'",
       platform: 'win32',
       runtime: 'gemini',
     });
-    assert.equal(command, '& "C:/nvm4w/nodejs/node.exe" "C:/Users/me/.gemini/hooks/gsd-prompt-guard.js"');
+    assert.equal(command, '& "C:/nvm4w/nodejs/node.exe" "C:/Users/me/.gemini/hooks/gtd-prompt-guard.js"');
   });
 
   test('projectLocalHookPrefix centralizes runtime-specific project-dir interpolation policy', () => {
@@ -145,13 +145,13 @@ describe('bug #3439: shell projection module owns managed-hook policy and legacy
 
   test('isManagedHookCommand classifies managed settings hooks and leaves user commands untouched', () => {
     assert.equal(
-      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.claude/hooks/gsd-statusline.js"', {
+      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.claude/hooks/gtd-statusline.js"', {
         surface: 'settings-json',
       }),
       true,
     );
     assert.equal(
-      isManagedHookCommand('"C:/Program Files/Git/bin/bash.exe" "C:/Users/me/.claude/hooks/gsd-session-state.sh"', {
+      isManagedHookCommand('"C:/Program Files/Git/bin/bash.exe" "C:/Users/me/.claude/hooks/gtd-session-state.sh"', {
         surface: 'settings-json',
       }),
       true,
@@ -165,7 +165,7 @@ describe('bug #3439: shell projection module owns managed-hook policy and legacy
   });
 
   test('isManagedHookCommand supports codex surfaces and optional legacy alias matching', () => {
-    const command = '"/usr/local/bin/node" "/Users/me/.codex/hooks/gsd-check-update.js"';
+    const command = '"/usr/local/bin/node" "/Users/me/.codex/hooks/gtd-check-update.js"';
     assert.equal(
       isManagedHookCommand(command, {
         surface: 'codex-toml',
@@ -173,13 +173,13 @@ describe('bug #3439: shell projection module owns managed-hook policy and legacy
       true,
     );
     assert.equal(
-      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.codex/hooks/gsd-update-check.js"', {
+      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.codex/hooks/gtd-update-check.js"', {
         surface: 'codex-toml',
       }),
       false,
     );
     assert.equal(
-      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.codex/hooks/gsd-update-check.js"', {
+      isManagedHookCommand('"/usr/local/bin/node" "/Users/me/.codex/hooks/gtd-update-check.js"', {
         surface: 'codex-toml',
         includeLegacyAliases: true,
       }),

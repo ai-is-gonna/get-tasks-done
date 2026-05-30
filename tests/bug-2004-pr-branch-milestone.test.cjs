@@ -1,7 +1,7 @@
 /**
  * Regression tests for bug #2004
  *
- * /gsd-pr-branch must not exclude milestone archive and structural planning
+ * /gtd-pr-branch must not exclude milestone archive and structural planning
  * commits. The previous implementation filtered ALL .planning/-only commits,
  * including STATE.md, ROADMAP.md, MILESTONES.md, and milestones/** updates
  * that are needed to preserve repository planning state after a merge.
@@ -22,7 +22,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const workflowPath = path.resolve(
-  __dirname, '..', 'get-shit-done', 'workflows', 'pr-branch.md'
+  __dirname, '..', 'get-tasks-done', 'workflows', 'pr-branch.md'
 );
 
 describe('bug #2004: pr-branch preserves structural planning commits', () => {
@@ -76,9 +76,9 @@ describe('bug #2004: pr-branch preserves structural planning commits', () => {
     content = content || fs.readFileSync(workflowPath, 'utf-8');
     // The original bug: `git rm -r --cached .planning/` nuked structural files.
     // The fix must either remove this wholesale rm or scope it to transient dirs.
-    // Acceptable: narrowed rm targeting only phase/, quick/, research/, etc.
+    // Acceptable: narrowed rm targeting only phase/, quick/, research/, github/, etc.
     // Not acceptable: `git rm -r --cached .planning/` with no scoping.
-    const hasUnscoped = /git rm -r --cached \.planning\/(?!\*)?(?!phases|quick|research|threads|todos|debug|seeds|ui-reviews|codebase)/
+    const hasUnscoped = /git rm -r --cached \.planning\/(?!\*)?(?!phases|quick|research|threads|todos|debug|seeds|ui-reviews|codebase|github)/
       .test(content);
     assert.ok(
       !hasUnscoped,

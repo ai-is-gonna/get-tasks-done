@@ -5,7 +5,7 @@
  * Reads the compiled ESM output from sdk/dist/workstream-inventory/builder.js,
  * extracts function source via Function.prototype.toString() for exports
  * and via source-text extraction for internal helpers, then emits
- * get-shit-done/bin/lib/workstream-inventory-builder.generated.cjs.
+ * get-tasks-done/bin/lib/workstream-inventory-builder.generated.cjs.
  *
  * Run: cd sdk && npm run gen:workstream-inventory-builder
  * Freshness check: node sdk/scripts/check-workstream-inventory-builder-fresh.mjs
@@ -102,7 +102,7 @@ export async function buildWorkstreamInventoryBuilderCjs() {
 async function main() {
   const content = await buildWorkstreamInventoryBuilderCjs();
   const outPath = fileURLToPath(
-    new URL('../../get-shit-done/bin/lib/workstream-inventory-builder.generated.cjs', import.meta.url),
+    new URL('../../get-tasks-done/bin/lib/workstream-inventory-builder.generated.cjs', import.meta.url),
   );
   await writeFile(outPath, content, 'utf-8');
   console.log(`Written: ${outPath}`);

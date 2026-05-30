@@ -10,7 +10,7 @@
  * Bounded by FIND_PROJECT_ROOT_MAX_DEPTH ancestors. Sync I/O.
  *
  * Source of truth for `findProjectRoot` — the CJS artifact at
- * get-shit-done/bin/lib/project-root.generated.cjs is generated from this file.
+ * get-tasks-done/bin/lib/project-root.generated.cjs is generated from this file.
  */
 
 import { dirname, resolve, sep, relative, parse as parsePath } from 'node:path';
@@ -27,9 +27,9 @@ export const FIND_PROJECT_ROOT_MAX_DEPTH = 10;
 /**
  * Walk up from `startDir` to find the project root that owns `.planning/`.
  *
- * Ported from `get-shit-done/bin/lib/core.cjs:findProjectRoot` so that
- * `gsd-sdk query` resolves the same parent `.planning/` root as the legacy
- * `gsd-tools.cjs` CLI when invoked inside a `sub_repos`-listed child repo.
+ * Ported from `get-tasks-done/bin/lib/core.cjs:findProjectRoot` so that
+ * `gtd-sdk query` resolves the same parent `.planning/` root as the legacy
+ * `gtd-tools.cjs` CLI when invoked inside a `sub_repos`-listed child repo.
  *
  * Detection strategy (checked in order for each ancestor, up to
  * `FIND_PROJECT_ROOT_MAX_DEPTH` levels):

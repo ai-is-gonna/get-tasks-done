@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const PLANNER_PATH = path.join(__dirname, '..', 'agents', 'gsd-planner.md');
+const PLANNER_PATH = path.join(__dirname, '..', 'agents', 'gtd-planner.md');
 
 function readPlanner() {
   return fs.readFileSync(PLANNER_PATH, 'utf8');

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify the published get-shit-done-cc tarball actually contains
+# Verify the published get-tasks-done tarball actually contains
 # sdk/dist/cli.js and that the `query` subcommand is exposed.
 #
 # Guards regression of bug #2647: v1.38.3 shipped without sdk/dist/
@@ -37,7 +37,7 @@ if [ ! -f "$CLI_JS" ]; then
 fi
 echo "    OK: sdk/dist/cli.js present ($(wc -c < "$CLI_JS") bytes)"
 
-echo "==> Installing runtime deps inside the extracted package and invoking gsd-sdk query --help"
+echo "==> Installing runtime deps inside the extracted package and invoking gtd-sdk query --help"
 pushd "$EXTRACT_DIR/package" >/dev/null
 # Install only production deps so the extracted tarball resolves
 # @anthropic-ai/claude-agent-sdk / ws the same way a real user install would.
@@ -55,14 +55,14 @@ if echo "$OUTPUT" | grep -qiE 'unknown command|unrecognized'; then
   exit 1
 fi
 
-echo "==> Also verifying gsd-sdk bin shim resolves ../sdk/dist/cli.js"
-SHIM="$EXTRACT_DIR/package/bin/gsd-sdk.js"
+echo "==> Also verifying gtd-sdk bin shim resolves ../sdk/dist/cli.js"
+SHIM="$EXTRACT_DIR/package/bin/gtd-sdk.js"
 if [ ! -f "$SHIM" ]; then
-  echo "::error::bin/gsd-sdk.js missing from tarball"
+  echo "::error::bin/gtd-sdk.js missing from tarball"
   exit 1
 fi
 if ! grep -qE "sdk.*dist.*cli\.js" "$SHIM"; then
-  echo "::error::bin/gsd-sdk.js does not reference sdk/dist/cli.js"
+  echo "::error::bin/gtd-sdk.js does not reference sdk/dist/cli.js"
   exit 1
 fi
 

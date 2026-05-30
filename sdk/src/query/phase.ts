@@ -1,7 +1,7 @@
 /**
  * Phase finding and plan index query handlers.
  *
- * Ported from get-shit-done/bin/lib/phase.cjs and core.cjs.
+ * Ported from get-tasks-done/bin/lib/phase.cjs and core.cjs.
  * Provides find-phase (directory lookup with archived fallback)
  * and phase-plan-index (plan metadata with wave grouping).
  *
@@ -19,7 +19,7 @@
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter } from './frontmatter.js';
 import {
   normalizePhaseName,
@@ -169,12 +169,12 @@ function extractObjective(content: string): string | null {
  * @param args - args[0] is the phase identifier (required)
  * @param projectDir - Project root directory
  * @returns QueryResult with PhaseInfo
- * @throws GSDError with Validation classification if phase identifier missing
+ * @throws GTDError with Validation classification if phase identifier missing
  */
 export const findPhase: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
-    throw new GSDError('phase identifier required', ErrorClassification.Validation);
+    throw new GTDError('phase identifier required', ErrorClassification.Validation);
   }
 
   const phasesDir = planningPaths(projectDir, workstream).phases;
@@ -236,12 +236,12 @@ export const findPhase: QueryHandler = async (args, projectDir, workstream) => {
  * @param args - args[0] is the phase identifier (required)
  * @param projectDir - Project root directory
  * @returns QueryResult with { phase, plans[], waves{}, incomplete[], has_checkpoints }
- * @throws GSDError with Validation classification if phase identifier missing
+ * @throws GTDError with Validation classification if phase identifier missing
  */
 export const phasePlanIndex: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
-    throw new GSDError('phase required for phase-plan-index', ErrorClassification.Validation);
+    throw new GTDError('phase required for phase-plan-index', ErrorClassification.Validation);
   }
 
   const phasesDir = planningPaths(projectDir, workstream).phases;
@@ -465,7 +465,7 @@ export const phasePlanIndex: QueryHandler = async (args, projectDir, workstream)
   // Cycle detection — any node not visited has a cycle.
   if (visited < rawPlans.length) {
     const cycleNodes = rawPlans.filter(p => !level.has(p.id)).map(p => p.id);
-    throw new GSDError(
+    throw new GTDError(
       `depends_on cycle detected in phase ${normalized} — cycle involves: ${cycleNodes.join(', ')}`,
       ErrorClassification.Execution,
     );

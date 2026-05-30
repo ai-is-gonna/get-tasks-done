@@ -1,6 +1,6 @@
 /**
  * E2E integration test — proves InitRunner.run() drives real Agent SDK
- * sessions for the gsd-sdk init workflow.
+ * sessions for the gtd-sdk init workflow.
  *
  * Requires Claude Code CLI (`claude`) installed and authenticated.
  * Skips gracefully if CLI is unavailable.
@@ -19,10 +19,10 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 import { InitRunner } from './init-runner.js';
-import { GSDTools, resolveGsdToolsPath } from './gsd-tools.js';
-import { GSDEventStream } from './event-stream.js';
-import { GSDEventType } from './types.js';
-import type { GSDEvent } from './types.js';
+import { GTDTools, resolveGtdToolsPath } from './gtd-tools.js';
+import { GTDEventStream } from './event-stream.js';
+import { GTDEventType } from './types.js';
+import type { GTDEvent } from './types.js';
 
 // ─── CLI availability check ─────────────────────────────────────────────────
 
@@ -34,21 +34,21 @@ try {
   cliAvailable = false;
 }
 
-const e2eEnabled = process.env.GSD_ENABLE_E2E === '1';
+const e2eEnabled = process.env.GTD_ENABLE_E2E === '1';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const sdkPromptsDir = join(__dirname, '..', 'prompts');
-const GSD_TOOLS_PATH = resolveGsdToolsPath(process.cwd());
-const gsdToolsAvailable = existsSync(GSD_TOOLS_PATH);
+const GTD_TOOLS_PATH = resolveGtdToolsPath(process.cwd());
+const gtdToolsAvailable = existsSync(GTD_TOOLS_PATH);
 
 // ─── Test suite ──────────────────────────────────────────────────────────────
 
-describe.skipIf(!cliAvailable || !gsdToolsAvailable || !e2eEnabled)('E2E: InitRunner.run() full workflow', () => {
+describe.skipIf(!cliAvailable || !gtdToolsAvailable || !e2eEnabled)('E2E: InitRunner.run() full workflow', () => {
   let tmpDir: string;
-  let events: GSDEvent[];
+  let events: GTDEvent[];
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-init-e2e-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-init-e2e-'));
 
     // Initialize git in the temp dir (required by InitRunner)
     execSync('git init', { cwd: tmpDir, stdio: 'ignore' });
@@ -64,12 +64,12 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable || !e2eEnabled)('E2E: InitRu
 
   it('InitRunner.run() bootstraps a project without human intervention', async () => {
     events = [];
-    const eventStream = new GSDEventStream();
-    eventStream.on('event', (e: GSDEvent) => events.push(e));
+    const eventStream = new GTDEventStream();
+    eventStream.on('event', (e: GTDEvent) => events.push(e));
 
-    const tools = new GSDTools({
+    const tools = new GTDTools({
       projectDir: tmpDir,
-      gsdToolsPath: GSD_TOOLS_PATH,
+      gtdToolsPath: GTD_TOOLS_PATH,
       timeoutMs: 30_000,
     });
 
@@ -115,14 +115,14 @@ describe.skipIf(!cliAvailable || !gsdToolsAvailable || !e2eEnabled)('E2E: InitRu
     }
 
     // ── Assert: events captured include InitStart and at least one InitStepComplete ──
-    const initStartEvents = events.filter(e => e.type === GSDEventType.InitStart);
+    const initStartEvents = events.filter(e => e.type === GTDEventType.InitStart);
     expect(initStartEvents.length).toBe(1);
 
-    const stepCompleteEvents = events.filter(e => e.type === GSDEventType.InitStepComplete);
+    const stepCompleteEvents = events.filter(e => e.type === GTDEventType.InitStepComplete);
     expect(stepCompleteEvents.length).toBeGreaterThanOrEqual(1);
 
     // ── Assert: InitComplete event emitted ──
-    const initCompleteEvents = events.filter(e => e.type === GSDEventType.InitComplete);
+    const initCompleteEvents = events.filter(e => e.type === GTDEventType.InitComplete);
     expect(initCompleteEvents.length).toBe(1);
 
     // ── Assert: cost and duration are tracked ──

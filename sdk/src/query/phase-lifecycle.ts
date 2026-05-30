@@ -1,7 +1,7 @@
 /**
  * Phase lifecycle handlers — add, insert, scaffold operations.
  *
- * Ported from get-shit-done/bin/lib/phase.cjs and commands.cjs.
+ * Ported from get-tasks-done/bin/lib/phase.cjs and commands.cjs.
  * Provides phaseAdd (append phase), phaseAddBatch (append multiple phases),
  * phaseInsert (decimal phase insertion), and phaseScaffold (template file/directory creation).
  *
@@ -21,7 +21,7 @@
 import { readFile, writeFile, mkdir, readdir, rename, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import {
   escapeRegex,
   normalizeMd,
@@ -95,7 +95,7 @@ export const phaseAdd: QueryHandler = async (args, projectDir, workstream) => {
   for (const arg of args) {
     if (arg.startsWith('--')) {
       if (!RECOGNIZED_FLAGS.has(arg)) {
-        throw new GSDError(
+        throw new GTDError(
           `Unknown flag ${arg} for phase.add`,
           ErrorClassification.Validation,
         );
@@ -108,7 +108,7 @@ export const phaseAdd: QueryHandler = async (args, projectDir, workstream) => {
 
   const description = positional[0];
   if (!description) {
-    throw new GSDError('description required for phase add', ErrorClassification.Validation);
+    throw new GTDError('description required for phase add', ErrorClassification.Validation);
   }
   assertNoNullBytes(description, 'description');
 
@@ -146,10 +146,10 @@ export const phaseAdd: QueryHandler = async (args, projectDir, workstream) => {
     );
 
     if (!resolvedDirName) {
-      throw new GSDError('Phase directory name was not computed', ErrorClassification.Execution);
+      throw new GTDError('Phase directory name was not computed', ErrorClassification.Execution);
     }
     if (resolvedPhaseId === '') {
-      throw new GSDError('Phase ID was not computed', ErrorClassification.Execution);
+      throw new GTDError('Phase ID was not computed', ErrorClassification.Execution);
     }
 
     const resolvedEntry = buildPhaseRoadmapEntry(resolvedPhaseId, description, config.phase_naming);
@@ -231,31 +231,31 @@ export const phaseAddBatch: QueryHandler = async (args, projectDir, workstream) 
     try {
       const parsed = JSON.parse(args[descIdx + 1]) as unknown;
       if (!Array.isArray(parsed)) {
-        throw new GSDError('--descriptions must be a JSON array', ErrorClassification.Validation);
+        throw new GTDError('--descriptions must be a JSON array', ErrorClassification.Validation);
       }
       descriptions = parsed.map((x) => String(x));
     } catch (e) {
-      if (e instanceof GSDError) throw e;
-      throw new GSDError('--descriptions must be a valid JSON array', ErrorClassification.Validation);
+      if (e instanceof GTDError) throw e;
+      throw new GTDError('--descriptions must be a valid JSON array', ErrorClassification.Validation);
     }
   } else {
     descriptions = args.filter((a) => a !== '--raw');
   }
 
   if (descriptions.length === 0) {
-    throw new GSDError('descriptions array required for phase add-batch', ErrorClassification.Validation);
+    throw new GTDError('descriptions array required for phase add-batch', ErrorClassification.Validation);
   }
 
   for (const d of descriptions) {
     assertNoNullBytes(d, 'description');
     if (!d.trim()) {
-      throw new GSDError('description must be non-empty', ErrorClassification.Validation);
+      throw new GTDError('description must be non-empty', ErrorClassification.Validation);
     }
   }
 
   const roadmapPath = planningPaths(projectDir, workstream).roadmap;
   if (!existsSync(roadmapPath)) {
-    throw new GSDError('ROADMAP.md not found', ErrorClassification.Validation);
+    throw new GTDError('ROADMAP.md not found', ErrorClassification.Validation);
   }
 
   let config: Record<string, unknown> = {};
@@ -349,7 +349,7 @@ export const phaseInsert: QueryHandler = async (args, projectDir, workstream) =>
   const description = args[1];
 
   if (!afterPhase || !description) {
-    throw new GSDError('after-phase and description required for phase insert', ErrorClassification.Validation);
+    throw new GTDError('after-phase and description required for phase insert', ErrorClassification.Validation);
   }
   assertNoNullBytes(afterPhase, 'afterPhase');
   assertNoNullBytes(description, 'description');
@@ -367,7 +367,7 @@ export const phaseInsert: QueryHandler = async (args, projectDir, workstream) =>
     const afterPhaseEscaped = unpadded.replace(/\./g, '\\.');
     const targetPattern = new RegExp(`#{2,4}\\s*Phase\\s+0*${afterPhaseEscaped}:`, 'i');
     if (!targetPattern.test(content)) {
-      throw new GSDError(`Phase ${afterPhase} not found in ROADMAP.md`, ErrorClassification.Validation);
+      throw new GTDError(`Phase ${afterPhase} not found in ROADMAP.md`, ErrorClassification.Validation);
     }
 
     // Calculate next decimal by scanning both directories AND ROADMAP.md entries
@@ -404,13 +404,13 @@ export const phaseInsert: QueryHandler = async (args, projectDir, workstream) =>
     await ensureDirectoryWithGitkeep(dirPath);
 
     // Build phase entry
-    const phaseEntry = `\n### Phase ${decimalPhase}: ${description} (INSERTED)\n\n**Goal:** [Urgent work - to be planned]\n**Requirements**: TBD\n**Depends on:** Phase ${afterPhase}\n**Plans:** 0 plans\n\nPlans:\n- [ ] TBD (run /gsd-plan-phase ${decimalPhase} to break down)\n`;
+    const phaseEntry = `\n### Phase ${decimalPhase}: ${description} (INSERTED)\n\n**Goal:** [Urgent work - to be planned]\n**Requirements**: TBD\n**Depends on:** Phase ${afterPhase}\n**Plans:** 0 plans\n\nPlans:\n- [ ] TBD (run /gtd-plan-phase ${decimalPhase} to break down)\n`;
 
     // Insert after the target phase section
     const headerPattern = new RegExp(`(#{2,4}\\s*Phase\\s+0*${afterPhaseEscaped}:[^\\n]*\\n)`, 'i');
     const headerMatch = rawContent.match(headerPattern);
     if (!headerMatch) {
-      throw new GSDError(`Could not find Phase ${afterPhase} header`, ErrorClassification.Execution);
+      throw new GTDError(`Could not find Phase ${afterPhase} header`, ErrorClassification.Execution);
     }
 
     const headerIdx = rawContent.indexOf(headerMatch[0]);
@@ -428,10 +428,10 @@ export const phaseInsert: QueryHandler = async (args, projectDir, workstream) =>
   }, workstream);
 
   if (!decimalPhase) {
-    throw new GSDError('Decimal phase was not computed', ErrorClassification.Execution);
+    throw new GTDError('Decimal phase was not computed', ErrorClassification.Execution);
   }
   if (!dirName) {
-    throw new GSDError('Phase directory name was not computed', ErrorClassification.Execution);
+    throw new GTDError('Phase directory name was not computed', ErrorClassification.Execution);
   }
 
   const result = {
@@ -480,7 +480,7 @@ async function findPhaseDir(
  * Port of cmdScaffold from commands.cjs lines 750-806.
  * Creates template files (context, uat, verification) or phase directories.
  *
- * @param args - Positional `[type, phase, name?]` **or** gsd-tools style
+ * @param args - Positional `[type, phase, name?]` **or** gtd-tools style
  *   `[type, '--phase', N, '--name', title]` (name may be multiple words).
  * @param projectDir - Project root directory
  * @returns QueryResult with { created, path } or { created: false, reason: 'already_exists' }
@@ -512,12 +512,12 @@ export const phaseScaffold: QueryHandler = async (args, projectDir, workstream) 
   const name = normalized[2] || undefined;
 
   if (!type) {
-    throw new GSDError('type required for scaffold', ErrorClassification.Validation);
+    throw new GTDError('type required for scaffold', ErrorClassification.Validation);
   }
 
   const validTypes = new Set(['context', 'uat', 'verification', 'phase-dir']);
   if (!validTypes.has(type)) {
-    throw new GSDError(
+    throw new GTDError(
       `Unknown scaffold type: ${type}. Available: context, uat, verification, phase-dir`,
       ErrorClassification.Validation,
     );
@@ -536,7 +536,7 @@ export const phaseScaffold: QueryHandler = async (args, projectDir, workstream) 
   // Handle phase-dir type separately
   if (type === 'phase-dir') {
     if (!phase || !name) {
-      throw new GSDError('phase and name required for phase-dir scaffold', ErrorClassification.Validation);
+      throw new GTDError('phase and name required for phase-dir scaffold', ErrorClassification.Validation);
     }
     const slug = generatePhaseSlug(name);
     // #3287: apply project_code prefix to stay consistent with phase.add/phase.insert
@@ -565,7 +565,7 @@ export const phaseScaffold: QueryHandler = async (args, projectDir, workstream) 
   // For context/uat/verification types, find the phase directory
   const phaseInfo = phase ? await findPhaseDir(projectDir, phase, workstream) : null;
   if (phase && !phaseInfo) {
-    throw new GSDError(`Phase ${phase} directory not found`, ErrorClassification.Blocked);
+    throw new GTDError(`Phase ${phase} directory not found`, ErrorClassification.Blocked);
   }
 
   const phaseDir = phaseInfo!.dirPath;
@@ -577,7 +577,7 @@ export const phaseScaffold: QueryHandler = async (args, projectDir, workstream) 
   switch (type) {
     case 'context': {
       filePath = join(phaseDir, `${padded}-CONTEXT.md`);
-      content = `---\nphase: "${padded}"\nname: "${phaseName}"\ncreated: ${today}\n---\n\n# Phase ${phase}: ${phaseName} — Context\n\n## Decisions\n\n_Decisions will be captured during /gsd-discuss-phase ${phase}_\n\n## Discretion Areas\n\n_Areas where the executor can use judgment_\n\n## Deferred Ideas\n\n_Ideas to consider later_\n`;
+      content = `---\nphase: "${padded}"\nname: "${phaseName}"\ncreated: ${today}\n---\n\n# Phase ${phase}: ${phaseName} — Context\n\n## Decisions\n\n_Decisions will be captured during /gtd-discuss-phase ${phase}_\n\n## Discretion Areas\n\n_Areas where the executor can use judgment_\n\n## Deferred Ideas\n\n_Ideas to consider later_\n`;
       break;
     }
     case 'uat': {
@@ -591,7 +591,7 @@ export const phaseScaffold: QueryHandler = async (args, projectDir, workstream) 
       break;
     }
     default:
-      throw new GSDError(`Unknown scaffold type: ${type}`, ErrorClassification.Validation);
+      throw new GTDError(`Unknown scaffold type: ${type}`, ErrorClassification.Validation);
   }
 
   // Check if file already exists
@@ -850,18 +850,18 @@ export const phaseRemove: QueryHandler = async (args, projectDir, workstream) =>
       continue;
     }
     if (token.startsWith('--')) {
-      throw new GSDError(`phase remove does not support ${token}`, ErrorClassification.Validation);
+      throw new GTDError(`phase remove does not support ${token}`, ErrorClassification.Validation);
     }
     positional.push(token);
   }
 
   if (positional.length > 1) {
-    throw new GSDError('phase remove accepts exactly one phase number', ErrorClassification.Validation);
+    throw new GTDError('phase remove accepts exactly one phase number', ErrorClassification.Validation);
   }
 
   const targetPhase = positional[0];
   if (!targetPhase) {
-    throw new GSDError('phase number required for phase remove', ErrorClassification.Validation);
+    throw new GTDError('phase number required for phase remove', ErrorClassification.Validation);
   }
   assertNoNullBytes(targetPhase, 'targetPhase');
 
@@ -869,7 +869,7 @@ export const phaseRemove: QueryHandler = async (args, projectDir, workstream) =>
   const phasesDir = paths.phases;
 
   if (!existsSync(paths.roadmap)) {
-    throw new GSDError('ROADMAP.md not found', ErrorClassification.Validation);
+    throw new GTDError('ROADMAP.md not found', ErrorClassification.Validation);
   }
 
   const normalized = normalizePhaseName(targetPhase);
@@ -880,7 +880,7 @@ export const phaseRemove: QueryHandler = async (args, projectDir, workstream) =>
   const dirs = entries.filter(e => e.isDirectory()).map(e => e.name);
   const targetDir = dirs.find(d => phaseTokenMatches(d, normalized)) ?? null;
   if (!targetDir) {
-    throw new GSDError(`Phase ${targetPhase} not found`, ErrorClassification.Validation);
+    throw new GTDError(`Phase ${targetPhase} not found`, ErrorClassification.Validation);
   }
 
   // Guard against removing executed work
@@ -888,7 +888,7 @@ export const phaseRemove: QueryHandler = async (args, projectDir, workstream) =>
     const files = await readdir(join(phasesDir, targetDir));
     const summaries = files.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md');
     if (summaries.length > 0) {
-      throw new GSDError(
+      throw new GTDError(
         `Phase ${targetPhase} has ${summaries.length} executed plan(s). Use --force to remove anyway.`,
         ErrorClassification.Validation,
       );
@@ -906,11 +906,11 @@ export const phaseRemove: QueryHandler = async (args, projectDir, workstream) =>
     if (isDecimal) {
       const parts = normalized.split('.');
       if (parts.length < 2 || !parts[1]) {
-        throw new GSDError(`Invalid decimal phase identifier: ${targetPhase}`, ErrorClassification.Validation);
+        throw new GTDError(`Invalid decimal phase identifier: ${targetPhase}`, ErrorClassification.Validation);
       }
       const decimalPart = parseInt(parts[1], 10);
       if (isNaN(decimalPart)) {
-        throw new GSDError(`Invalid decimal part in phase: ${targetPhase}`, ErrorClassification.Validation);
+        throw new GTDError(`Invalid decimal part in phase: ${targetPhase}`, ErrorClassification.Validation);
       }
       renamed = await renameDecimalPhases(phasesDir, parts[0], decimalPart);
     } else {
@@ -1046,7 +1046,7 @@ function updatePerformanceMetricsSection(
 export const phaseComplete: QueryHandler = async (args, projectDir, workstream) => {
   const phaseNum = args[0];
   if (!phaseNum) {
-    throw new GSDError('phase number required for phase complete', ErrorClassification.Validation);
+    throw new GTDError('phase number required for phase complete', ErrorClassification.Validation);
   }
   assertNoNullBytes(phaseNum, 'phaseNum');
 
@@ -1056,7 +1056,7 @@ export const phaseComplete: QueryHandler = async (args, projectDir, workstream) 
   // Step A: Validate phase exists and get info
   const phaseInfo = await findPhaseDir(projectDir, phaseNum, workstream);
   if (!phaseInfo) {
-    throw new GSDError(`Phase ${phaseNum} not found`, ErrorClassification.Validation);
+    throw new GTDError(`Phase ${phaseNum} not found`, ErrorClassification.Validation);
   }
 
   const phaseDir = phaseInfo.dirPath;
@@ -1475,7 +1475,7 @@ export const phasesClear: QueryHandler = async (args, projectDir, workstream) =>
     const dirs = entries.filter(e => e.isDirectory() && !/^999(?:\.|$)/.test(e.name));
 
     if (dirs.length > 0 && !confirm) {
-      throw new GSDError(
+      throw new GTDError(
         `phases clear would delete ${dirs.length} phase director${dirs.length === 1 ? 'y' : 'ies'}. ` +
         `Pass --confirm to proceed.`,
         ErrorClassification.Validation,
@@ -1570,7 +1570,7 @@ export const phasesList: QueryHandler = async (args, projectDir, workstream) => 
 export const phaseNextDecimal: QueryHandler = async (args, projectDir, workstream) => {
   const basePhase = args[0];
   if (!basePhase) {
-    throw new GSDError('base phase number required', ErrorClassification.Validation);
+    throw new GTDError('base phase number required', ErrorClassification.Validation);
   }
   assertNoNullBytes(basePhase, 'basePhase');
 
@@ -1611,7 +1611,7 @@ export const phaseNextDecimal: QueryHandler = async (args, projectDir, workstrea
 export const phasesArchive: QueryHandler = async (args, projectDir, workstream) => {
   const version = args[0];
   if (!version) {
-    throw new GSDError('version required for phases archive', ErrorClassification.Validation);
+    throw new GTDError('version required for phases archive', ErrorClassification.Validation);
   }
   assertNoNullBytes(version, 'version');
 
@@ -1639,13 +1639,13 @@ export const phasesArchive: QueryHandler = async (args, projectDir, workstream) 
 export const milestoneComplete: QueryHandler = async (args, projectDir, workstream) => {
   const version = args[0];
   if (!version) {
-    throw new GSDError('version required for milestone complete (e.g., v1.0)', ErrorClassification.Validation);
+    throw new GTDError('version required for milestone complete (e.g., v1.0)', ErrorClassification.Validation);
   }
   // #3259: defense-in-depth — reject --help / -h as a version value before
   // any disk write, regardless of whether the dispatcher guard intercepted first.
   if (version === '--help' || version === '-h') {
-    throw new GSDError(
-      `"${version}" is not a valid milestone version; see \`gsd-sdk query --help\` for command list`,
+    throw new GTDError(
+      `"${version}" is not a valid milestone version; see \`gtd-sdk query --help\` for command list`,
       ErrorClassification.Validation,
     );
   }
@@ -1786,10 +1786,10 @@ export const milestoneComplete: QueryHandler = async (args, projectDir, workstre
       if (operatorPattern.test(next)) {
         next = next.replace(
           operatorPattern,
-          `$1\n- Start the next milestone with /gsd-new-milestone\n\n`,
+          `$1\n- Start the next milestone with /gtd-new-milestone\n\n`,
         );
       } else {
-        next = `${next.trimEnd()}\n\n## Operator Next Steps\n\n- Start the next milestone with /gsd-new-milestone\n`;
+        next = `${next.trimEnd()}\n\n## Operator Next Steps\n\n- Start the next milestone with /gtd-new-milestone\n`;
       }
 
       return next;

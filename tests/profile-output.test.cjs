@@ -12,12 +12,12 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, createTempGitProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, createTempGitProject, cleanup } = require('./helpers.cjs');
 
 const {
   PROFILING_QUESTIONS,
   CLAUDE_INSTRUCTIONS,
-} = require('../get-shit-done/bin/lib/profile-output.cjs');
+} = require('../get-tasks-done/bin/lib/profile-output.cjs');
 
 // ─── PROFILING_QUESTIONS data ─────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ describe('write-profile command', () => {
     const analysisPath = path.join(tmpDir, 'analysis.json');
     fs.writeFileSync(analysisPath, JSON.stringify(analysis));
 
-    const result = runGsdTools(['write-profile', '--input', analysisPath, '--raw'], tmpDir, { HOME: tmpDir });
+    const result = runGtdTools(['write-profile', '--input', analysisPath, '--raw'], tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.ok(out.profile_path, 'should return profile_path');
@@ -118,7 +118,7 @@ describe('write-profile command', () => {
   });
 
   test('errors when --input is missing', () => {
-    const result = runGsdTools('write-profile --raw', tmpDir);
+    const result = runGtdTools('write-profile --raw', tmpDir);
     assert.ok(!result.success, 'should fail without --input');
     assert.ok(result.error.includes('--input'), 'should mention --input');
   });
@@ -143,7 +143,7 @@ describe('generate-claude-md command', () => {
 
   test('generates CLAUDE.md with --auto flag', () => {
     const outputPath = path.join(tmpDir, 'CLAUDE.md');
-    const result = runGsdTools(['generate-claude-md', '--output', outputPath, '--auto', '--raw'], tmpDir);
+    const result = runGtdTools(['generate-claude-md', '--output', outputPath, '--auto', '--raw'], tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
 
     if (fs.existsSync(outputPath)) {
@@ -156,14 +156,14 @@ describe('generate-claude-md command', () => {
     const outputPath = path.join(tmpDir, 'CLAUDE.md');
     fs.writeFileSync(outputPath, '# Custom CLAUDE.md\n\nUser content.\n');
 
-    const result = runGsdTools(['generate-claude-md', '--output', outputPath, '--auto', '--raw'], tmpDir);
+    const result = runGtdTools(['generate-claude-md', '--output', outputPath, '--auto', '--raw'], tmpDir);
     // Should merge, not overwrite
     const content = fs.readFileSync(outputPath, 'utf-8');
     assert.ok(content.length > 0, 'should still have content');
   });
 
   test('skills fallback mentions the normalized project roots', () => {
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -172,7 +172,7 @@ describe('generate-claude-md command', () => {
     assert.ok(content.includes('.cursor/skills/'));
     assert.ok(content.includes('.github/skills/'));
     assert.ok(content.includes('.codex/skills/'));
-    assert.ok(!content.includes('get-shit-done/skills'));
+    assert.ok(!content.includes('get-tasks-done/skills'));
   });
 });
 
@@ -190,7 +190,7 @@ describe('generate-dev-preferences command', () => {
   });
 
   test('errors when --analysis is missing', () => {
-    const result = runGsdTools('generate-dev-preferences --raw', tmpDir);
+    const result = runGtdTools('generate-dev-preferences --raw', tmpDir);
     assert.ok(!result.success, 'should fail without --analysis');
     assert.ok(result.error.includes('--analysis'), 'should mention --analysis');
   });
@@ -206,7 +206,7 @@ describe('generate-dev-preferences command', () => {
     const analysisPath = path.join(tmpDir, 'analysis.json');
     fs.writeFileSync(analysisPath, JSON.stringify(analysis));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['generate-dev-preferences', '--analysis', analysisPath, '--raw'],
       tmpDir,
       { HOME: tmpDir }
@@ -227,14 +227,14 @@ describe('generate-dev-preferences command', () => {
     const codexHome = path.join(tmpDir, 'codex-home');
     fs.writeFileSync(analysisPath, JSON.stringify(analysis));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['generate-dev-preferences', '--analysis', analysisPath, '--raw'],
       tmpDir,
-      { CODEX_HOME: codexHome, GSD_RUNTIME: 'codex' }
+      { CODEX_HOME: codexHome, GTD_RUNTIME: 'codex' }
     );
     assert.ok(result.success, `Failed: ${result.error}`);
     const out = JSON.parse(result.output);
-    assert.strictEqual(out.command_path, path.join(codexHome, 'skills', 'gsd-dev-preferences', 'SKILL.md'));
+    assert.strictEqual(out.command_path, path.join(codexHome, 'skills', 'gtd-dev-preferences', 'SKILL.md'));
     assert.ok(fs.existsSync(out.command_path), 'runtime-aware output should be written');
   });
 
@@ -248,10 +248,10 @@ describe('generate-dev-preferences command', () => {
     const analysisPath = path.join(tmpDir, 'analysis.json');
     fs.writeFileSync(analysisPath, JSON.stringify(analysis));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['generate-dev-preferences', '--analysis', analysisPath, '--raw'],
       tmpDir,
-      { GSD_RUNTIME: 'cline' }
+      { GTD_RUNTIME: 'cline' }
     );
     assert.ok(!result.success, 'cline should require explicit --output');
     assert.ok(result.error.includes('does not use a skills directory'), 'should explain unsupported runtime');

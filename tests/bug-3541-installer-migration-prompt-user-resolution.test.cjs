@@ -1,12 +1,12 @@
 /**
  * Regression test for #3541: first-time-baseline installer migration
  * `prompt-user` actions threw hard with no resolution path, making
- * `/gsd-update` unrecoverable when leftover `gsd-*` files were classified
- * as `stale-gsd-looking`.
+ * `/gtd-update` unrecoverable when leftover `gtd-*` files were classified
+ * as `stale-gtd-looking`.
  *
  * Fix shape (per triage brief):
  *   A. Classify-and-default for safe categories - stale SDK build
- *      artifacts default to "remove"; user-facing skills/gsd-asterisk/SKILL.md
+ *      artifacts default to "remove"; user-facing skills/gtd-asterisk/SKILL.md
  *      defaults to "keep". Each resolution is logged.
  *   B. Improved error message when an unresolved prompt-user action
  *      remains: lists choices, suggests the resolution path, groups
@@ -19,7 +19,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -29,11 +29,11 @@ const crypto = require('node:crypto');
 
 const {
   runInstallerMigrations,
-} = require('../get-shit-done/bin/lib/installer-migrations.cjs');
+} = require('../get-tasks-done/bin/lib/installer-migrations.cjs');
 const {
   assertInstallerMigrationsUnblocked,
   resolveInstallerMigrationPromptsForNonTty,
-} = require('../get-shit-done/bin/lib/installer-migration-report.cjs');
+} = require('../get-tasks-done/bin/lib/installer-migration-report.cjs');
 const { createTempDir, cleanup } = require('./helpers.cjs');
 
 function sha256(content) {
@@ -48,7 +48,7 @@ function writeFile(root, relPath, content) {
 
 function writeManifest(root, files) {
   fs.writeFileSync(
-    path.join(root, 'gsd-file-manifest.json'),
+    path.join(root, 'gtd-file-manifest.json'),
     JSON.stringify({
       version: '1.41.2',
       timestamp: '2026-05-10T00:00:00.000Z',
@@ -63,7 +63,7 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
   let configDir;
 
   beforeEach(() => {
-    configDir = createTempDir('gsd-3541-');
+    configDir = createTempDir('gtd-3541-');
   });
 
   afterEach(() => {
@@ -72,15 +72,15 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
 
   test('Test A: non-TTY default resolution removes stale SDK artifacts and keeps user skills', () => {
     // Stale SDK build artifact: replicates the 1.41.2 → 1.42.2 upgrade where
-    // 24 stale `get-shit-done/sdk/{dist,src}/gsd-*` files leaked into the
+    // 24 stale `get-tasks-done/sdk/{dist,src}/gtd-*` files leaked into the
     // baseline because the new manifest no longer classifies them as managed.
-    writeFile(configDir, 'get-shit-done/sdk/dist/gsd-old-bundle.js', 'stale sdk bundle\n');
-    // User-facing skill: replicates `skills/gsd-roadmap/SKILL.md` from the
+    writeFile(configDir, 'get-tasks-done/sdk/dist/gtd-old-bundle.js', 'stale sdk bundle\n');
+    // User-facing skill: replicates `skills/gtd-roadmap/SKILL.md` from the
     // same incident — user-owned content that must be preserved.
-    writeFile(configDir, 'skills/gsd-roadmap/SKILL.md', '# Roadmap skill\nuser content\n');
+    writeFile(configDir, 'skills/gtd-roadmap/SKILL.md', '# Roadmap skill\nuser content\n');
 
-    // Plant an empty manifest so both files classify as `stale-gsd-looking`
-    // (they look like GSD artifacts but are not manifest-managed).
+    // Plant an empty manifest so both files classify as `stale-gtd-looking`
+    // (they look like GTD artifacts but are not manifest-managed).
     writeManifest(configDir, {});
 
     const result = runInstallerMigrations({
@@ -95,7 +95,7 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
     const blockedPaths = (result.blocked || []).map((a) => a.relPath).sort();
     assert.deepEqual(
       blockedPaths,
-      ['get-shit-done/sdk/dist/gsd-old-bundle.js', 'skills/gsd-roadmap/SKILL.md'],
+      ['get-tasks-done/sdk/dist/gtd-old-bundle.js', 'skills/gtd-roadmap/SKILL.md'],
       'precondition: both stale-looking files should be flagged for explicit user choice'
     );
 
@@ -111,8 +111,8 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
     );
 
     const byPath = new Map(resolved.resolutions.map((r) => [r.relPath, r]));
-    const sdkResolution = byPath.get('get-shit-done/sdk/dist/gsd-old-bundle.js');
-    const skillResolution = byPath.get('skills/gsd-roadmap/SKILL.md');
+    const sdkResolution = byPath.get('get-tasks-done/sdk/dist/gtd-old-bundle.js');
+    const skillResolution = byPath.get('skills/gtd-roadmap/SKILL.md');
 
     assert.ok(sdkResolution, 'SDK artifact resolution logged');
     assert.equal(sdkResolution.choice, 'remove', 'stale SDK build artifact defaults to remove');
@@ -141,18 +141,18 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
     const blocked = [
       {
         type: 'prompt-user',
-        relPath: 'get-shit-done/sdk/dist/gsd-a.js',
-        reason: 'GSD-looking file is not proven manifest-managed and needs explicit user choice',
-        classification: 'stale-gsd-looking',
-        prompt: 'Choose whether to remove this stale-looking GSD artifact or keep it as user-owned.',
+        relPath: 'get-tasks-done/sdk/dist/gtd-a.js',
+        reason: 'GTD-looking file is not proven manifest-managed and needs explicit user choice',
+        classification: 'stale-gtd-looking',
+        prompt: 'Choose whether to remove this stale-looking GTD artifact or keep it as user-owned.',
         choices: ['keep', 'remove'],
       },
       {
         type: 'prompt-user',
-        relPath: 'get-shit-done/sdk/dist/gsd-b.js',
-        reason: 'GSD-looking file is not proven manifest-managed and needs explicit user choice',
-        classification: 'stale-gsd-looking',
-        prompt: 'Choose whether to remove this stale-looking GSD artifact or keep it as user-owned.',
+        relPath: 'get-tasks-done/sdk/dist/gtd-b.js',
+        reason: 'GTD-looking file is not proven manifest-managed and needs explicit user choice',
+        classification: 'stale-gtd-looking',
+        prompt: 'Choose whether to remove this stale-looking GTD artifact or keep it as user-owned.',
         choices: ['keep', 'remove'],
       },
     ];
@@ -177,7 +177,7 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
     // surface — the message must point users at it.
     assert.match(
       message,
-      /GSD_INSTALLER_MIGRATION_RESOLVE/,
+      /GTD_INSTALLER_MIGRATION_RESOLVE/,
       'error message suggests the non-interactive resolution env var'
     );
 
@@ -204,7 +204,7 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
       blocked: [
         {
           type: 'prompt-user',
-          relPath: 'skills/gsd-custom/SKILL.toml',
+          relPath: 'skills/gtd-custom/SKILL.toml',
           reason: 'custom skill metadata requires user decision',
           choices: ['keep', 'remove'],
         },
@@ -214,7 +214,7 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
         blocked: [
           {
             type: 'prompt-user',
-            relPath: 'skills/gsd-custom/SKILL.toml',
+            relPath: 'skills/gtd-custom/SKILL.toml',
             reason: 'custom skill metadata requires user decision',
             choices: ['keep', 'remove'],
           },
@@ -224,12 +224,12 @@ describe('#3541: installer migration prompt-user non-TTY resolution', { concurre
 
     const resolved = resolveInstallerMigrationPromptsForNonTty(result, {
       isTty: false,
-      env: { GSD_INSTALLER_MIGRATION_RESOLVE: 'keep' },
+      env: { GTD_INSTALLER_MIGRATION_RESOLVE: 'keep' },
     });
 
     assert.equal(resolved.resolutions.length, 1, 'env override resolves prompt-user action');
     assert.equal(resolved.resolutions[0].choice, 'keep');
-    assert.equal(resolved.resolutions[0].source, 'GSD_INSTALLER_MIGRATION_RESOLVE');
+    assert.equal(resolved.resolutions[0].source, 'GTD_INSTALLER_MIGRATION_RESOLVE');
     assert.equal(resolved.resolutions[0].category, 'operator-override');
     assert.equal((resolved.result.blocked || []).length, 0);
     assert.equal((resolved.result.plan.blocked || []).length, 0);

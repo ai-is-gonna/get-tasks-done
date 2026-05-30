@@ -18,10 +18,10 @@ const fs = require('fs');
 const path = require('path');
 
 const REFERENCE_PATH = path.join(
-  __dirname, '..', 'get-shit-done', 'references', 'common-bug-patterns.md'
+  __dirname, '..', 'get-tasks-done', 'references', 'common-bug-patterns.md'
 );
 const DEBUGGER_AGENT_PATH = path.join(
-  __dirname, '..', 'agents', 'gsd-debugger.md'
+  __dirname, '..', 'agents', 'gtd-debugger.md'
 );
 
 const EXPECTED_CATEGORIES = [
@@ -86,14 +86,14 @@ describe('common-bug-patterns.md reference', () => {
 });
 
 describe('debugger agent references bug patterns', () => {
-  test('gsd-debugger.md exists', () => {
+  test('gtd-debugger.md exists', () => {
     assert.ok(
       fs.existsSync(DEBUGGER_AGENT_PATH),
       `Expected debugger agent at ${DEBUGGER_AGENT_PATH}`
     );
   });
 
-  test('gsd-debugger.md references common-bug-patterns.md', () => {
+  test('gtd-debugger.md references common-bug-patterns.md', () => {
     const content = fs.readFileSync(DEBUGGER_AGENT_PATH, 'utf-8');
     assert.ok(
       content.includes('common-bug-patterns.md'),

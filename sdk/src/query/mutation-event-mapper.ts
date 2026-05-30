@@ -1,11 +1,11 @@
 import {
-  GSDEventType,
-  type GSDEvent,
-  type GSDStateMutationEvent,
-  type GSDConfigMutationEvent,
-  type GSDFrontmatterMutationEvent,
-  type GSDGitCommitEvent,
-  type GSDTemplateFillEvent,
+  GTDEventType,
+  type GTDEvent,
+  type GTDStateMutationEvent,
+  type GTDConfigMutationEvent,
+  type GTDFrontmatterMutationEvent,
+  type GTDGitCommitEvent,
+  type GTDTemplateFillEvent,
 } from '../types.js';
 import type { QueryResult } from './utils.js';
 
@@ -43,7 +43,7 @@ export function buildMutationEvent(
   cmd: string,
   args: string[],
   result: QueryResult,
-): GSDEvent {
+): GTDEvent {
   const base: EventBase = {
     timestamp: new Date().toISOString(),
     sessionId: correlationSessionId,
@@ -54,49 +54,49 @@ export function buildMutationEvent(
       const data = result.data as Record<string, unknown> | null;
       return {
         ...base,
-        type: GSDEventType.TemplateFill,
+        type: GTDEventType.TemplateFill,
         templateType: (data?.template as string) ?? args[0] ?? '',
         path: (data?.path as string) ?? args[1] ?? '',
         created: (data?.created as boolean) ?? false,
-      } as GSDTemplateFillEvent;
+      } as GTDTemplateFillEvent;
     }
     case 'git': {
       const data = result.data as Record<string, unknown> | null;
       return {
         ...base,
-        type: GSDEventType.GitCommit,
+        type: GTDEventType.GitCommit,
         hash: (data?.hash as string) ?? null,
         committed: (data?.committed as boolean) ?? false,
         reason: (data?.reason as string) ?? '',
-      } as GSDGitCommitEvent;
+      } as GTDGitCommitEvent;
     }
     case 'frontmatter':
       return {
         ...base,
-        type: GSDEventType.FrontmatterMutation,
+        type: GTDEventType.FrontmatterMutation,
         command: cmd,
         file: args[0] ?? '',
         fields: args.slice(1),
         success: true,
-      } as GSDFrontmatterMutationEvent;
+      } as GTDFrontmatterMutationEvent;
     case 'config':
     case 'validate':
       return {
         ...base,
-        type: GSDEventType.ConfigMutation,
+        type: GTDEventType.ConfigMutation,
         command: cmd,
         key: args[0] ?? '',
         success: true,
-      } as GSDConfigMutationEvent;
+      } as GTDConfigMutationEvent;
     case 'phase':
     case 'state':
     case 'default':
       return {
         ...base,
-        type: GSDEventType.StateMutation,
+        type: GTDEventType.StateMutation,
         command: cmd,
         fields: args.slice(0, 2),
         success: true,
-      } as GSDStateMutationEvent;
+      } as GTDStateMutationEvent;
   }
 }

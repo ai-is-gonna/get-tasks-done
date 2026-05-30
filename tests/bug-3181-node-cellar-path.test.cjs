@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Bug #3181: `resolveNodeRunner()` bakes versioned Homebrew Cellar paths
@@ -171,7 +171,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
         SessionStart: [{
           hooks: [{
             type: 'command',
-            command: '"/usr/local/Cellar/node/25.8.1/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+            command: '"/usr/local/Cellar/node/25.8.1/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
           }],
         }],
       },
@@ -181,7 +181,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
     assert.equal(changed, true, 'expected rewrite to occur');
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
     );
   });
 
@@ -191,7 +191,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
         SessionStart: [{
           hooks: [{
             type: 'command',
-            command: '"/opt/homebrew/Cellar/node/25.8.1/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+            command: '"/opt/homebrew/Cellar/node/25.8.1/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
           }],
         }],
       },
@@ -201,7 +201,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
     assert.equal(changed, true, 'expected rewrite to occur');
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/opt/homebrew/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+      '"/opt/homebrew/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
     );
   });
 
@@ -211,7 +211,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
         SessionStart: [{
           hooks: [{
             type: 'command',
-            command: '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+            command: '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
           }],
         }],
       },
@@ -248,7 +248,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
         SessionStart: [{
           hooks: [{
             type: 'command',
-            command: 'node "/Users/x/.gemini/hooks/gsd-check-update.js"',
+            command: 'node "/Users/x/.gemini/hooks/gtd-check-update.js"',
           }],
         }],
       },
@@ -258,7 +258,7 @@ describe('Bug #3181: rewriteLegacyManagedNodeHookCommands — rewrites baked Cel
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
     );
   });
 });

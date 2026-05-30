@@ -3,7 +3,7 @@
 // Behavioral tests cover detection flow via validate health output.
 
 /**
- * GSD Tools Tests - Orphan/Stale Worktree Detection (W017)
+ * GTD Tools Tests - Orphan/Stale Worktree Detection (W017)
  *
  * Tests for feat/worktree-health-w017-2167:
  *   - Worktree Safety Policy Module exports health inspection interface (structural)
@@ -15,7 +15,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempGitProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempGitProject, cleanup } = require('./helpers.cjs');
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -67,13 +67,13 @@ function setupHealthyProject(tmpDir) {
 
 describe('W017: structural presence', () => {
   test('worktree-safety module exports inspectWorktreeHealth', () => {
-    const modulePath = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'worktree-safety.cjs');
+    const modulePath = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'worktree-safety.cjs');
     const seam = require(modulePath);
     assert.strictEqual(typeof seam.inspectWorktreeHealth, 'function');
   });
 
   test('worktree-safety module exports linked worktree listing interface', () => {
-    const modulePath = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'worktree-safety.cjs');
+    const modulePath = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'worktree-safety.cjs');
     const seam = require(modulePath);
     assert.strictEqual(typeof seam.listLinkedWorktreePaths, 'function');
   });
@@ -94,7 +94,7 @@ describe('W017: no false positives', () => {
   afterEach(() => cleanup(tmpDir));
 
   test('no W017 when project has no linked worktrees', () => {
-    const result = runGsdTools('validate health --raw', tmpDir);
+    const result = runGtdTools('validate health --raw', tmpDir);
     assert.ok(result.success, `validate health should succeed: ${result.error || ''}`);
     const parsed = JSON.parse(result.output);
 
@@ -119,7 +119,7 @@ describe('W017: no regression on healthy projects', () => {
   afterEach(() => cleanup(tmpDir));
 
   test('validate health still reports healthy on a clean project', () => {
-    const result = runGsdTools('validate health --raw', tmpDir);
+    const result = runGtdTools('validate health --raw', tmpDir);
     assert.ok(result.success, `validate health should succeed: ${result.error || ''}`);
     const parsed = JSON.parse(result.output);
     assert.equal(parsed.status, 'healthy', `Expected healthy status, got ${parsed.status}. Errors: ${JSON.stringify(parsed.errors)}. Warnings: ${JSON.stringify(parsed.warnings)}`);

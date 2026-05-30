@@ -31,13 +31,13 @@ const os = require('os');
 let computePathPrefix;
 
 before(() => {
-  process.env.GSD_TEST_MODE = '1';
+  process.env.GTD_TEST_MODE = '1';
   delete require.cache[require.resolve('../bin/install.js')];
   ({ computePathPrefix } = require('../bin/install.js'));
 });
 
 after(() => {
-  delete process.env.GSD_TEST_MODE;
+  delete process.env.GTD_TEST_MODE;
 });
 
 describe('bug-2831: OpenCode pathPrefix uses absolute path on all platforms', () => {
@@ -107,18 +107,18 @@ describe('bug-2831: OpenCode pathPrefix uses absolute path on all platforms', ()
     // copyFlattenedCommands when writing OpenCode command files. We invoke the
     // real exported computePathPrefix; the regex passes mirror the install.js
     // call sites (globalClaudeRegex / globalClaudeHomeRegex).
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2831-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2831-'));
     try {
       const srcRoot = path.join(tmp, 'src');
       const targetRoot = path.join(tmp, 'home', '.config', 'opencode');
-      const srcCmdDir = path.join(srcRoot, 'commands', 'gsd');
+      const srcCmdDir = path.join(srcRoot, 'commands', 'gtd');
       fs.mkdirSync(srcCmdDir, { recursive: true });
       fs.mkdirSync(targetRoot, { recursive: true });
 
       const srcFile = path.join(srcCmdDir, 'autonomous.md');
       fs.writeFileSync(
         srcFile,
-        '---\nname: autonomous\n---\n<execution_context>\n@~/.claude/get-shit-done/workflows/autonomous.md\n@$HOME/.claude/get-shit-done/references/ui-brand.md\n</execution_context>\n'
+        '---\nname: autonomous\n---\n<execution_context>\n@~/.claude/get-tasks-done/workflows/autonomous.md\n@$HOME/.claude/get-tasks-done/references/ui-brand.md\n</execution_context>\n'
       );
 
       const homeDir = path.join(tmp, 'home').replace(/\\/g, '/');

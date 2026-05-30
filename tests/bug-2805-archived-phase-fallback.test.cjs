@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2805
  *
- * `gsd-sdk query init.plan-phase <N>` returned the archived prior-milestone
+ * `gtd-sdk query init.plan-phase <N>` returned the archived prior-milestone
  * directory when the current milestone had a phase with the same number but
  * no directory yet. getPhaseInfoWithFallback did not treat an archived hit as
  * "not yet created" when the current ROADMAP listed the phase.
@@ -36,7 +36,7 @@ function runSdkQuery(subcommand, args, projectDir) {
     stdout = execFileSync(process.execPath, [SDK_CLI, ...argv], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, GSD_SESSION_KEY: '' },
+      env: { ...process.env, GTD_SESSION_KEY: '' },
     });
   } catch (err) {
     exitCode = err.status ?? 1;
@@ -97,7 +97,7 @@ describe('bug-2805: init.plan-phase prefers current ROADMAP over archived dir', 
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempGitProject('gsd-test-2805-');
+    tmpDir = createTempGitProject('gtd-test-2805-');
   });
 
   afterEach(() => {

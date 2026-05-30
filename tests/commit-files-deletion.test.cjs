@@ -1,5 +1,5 @@
 /**
- * Regression test for #2014: gsd-tools commit --files silently deletes
+ * Regression test for #2014: gtd-tools commit --files silently deletes
  * planning files when a filename passed via --files does not exist on disk.
  *
  * Prior to this fix, when --files STATE.md was passed and STATE.md did not
@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const { createTempGitProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempGitProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('commit --files: missing files must not stage deletions (#2014)', () => {
   let tmpDir;
@@ -37,7 +37,7 @@ describe('commit --files: missing files must not stage deletions (#2014)', () =>
   test('passing --files for a missing tracked file does not commit a deletion', () => {
     // STATE.md is tracked in git but deleted from disk.
     // commit --files .planning/STATE.md should skip it (no deletion committed).
-    runGsdTools(
+    runGtdTools(
       ['commit', 'test commit', '--files', '.planning/STATE.md'],
       tmpDir
     );
@@ -61,7 +61,7 @@ describe('commit --files: missing files must not stage deletions (#2014)', () =>
     // Create ROADMAP.md -- this file exists, should be staged normally
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), '# Roadmap\n\nPhase 01.\n');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['commit', 'add roadmap', '--files', '.planning/ROADMAP.md'],
       tmpDir
     );
@@ -81,7 +81,7 @@ describe('commit --files: missing files must not stage deletions (#2014)', () =>
     // ROADMAP.md exists on disk, STATE.md does not
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), '# Roadmap\n');
 
-    runGsdTools(
+    runGtdTools(
       ['commit', 'partial files', '--files', '.planning/ROADMAP.md', '.planning/STATE.md'],
       tmpDir
     );

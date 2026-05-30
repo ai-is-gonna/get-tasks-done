@@ -1,14 +1,14 @@
 'use strict';
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md text IS what the runtime loads — testing description
+// commands/gtd/*.md text IS what the runtime loads — testing description
 // length tests the deployed system-prompt contract.
 
 /**
  * Tests for #2789 — Trim skill description anti-patterns; enforce 100-char budget
  *
  * Verifies:
- * 1. All skill descriptions in commands/gsd/*.md are <= 100 chars
+ * 1. All skill descriptions in commands/gtd/*.md are <= 100 chars
  * 2. No descriptions contain flag documentation anti-patterns (Use --)
  * 3. No descriptions contain "Triggers:" keyword stuffing
  * 4. lint-descriptions.cjs rejects descriptions over 100 chars
@@ -22,7 +22,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 
-const COMMANDS_DIR = path.join(__dirname, '../commands/gsd');
+const COMMANDS_DIR = path.join(__dirname, '../commands/gtd');
 const LINT_SCRIPT = path.join(__dirname, '../scripts/lint-descriptions.cjs');
 
 const MAX_DESCRIPTION_LENGTH = 100;
@@ -49,7 +49,7 @@ function parseDescription(content) {
 }
 
 /**
- * Get all .md files in commands/gsd/ with their descriptions.
+ * Get all .md files in commands/gtd/ with their descriptions.
  */
 function getAllCommandDescriptions() {
   const files = fs.readdirSync(COMMANDS_DIR).filter(f => f.endsWith('.md'));
@@ -64,7 +64,7 @@ function getAllCommandDescriptions() {
 // ── Test 1: All descriptions <= 100 chars ────────────────────────────────────
 
 describe('description length budget', () => {
-  test('all commands/gsd/*.md descriptions are <= 100 chars', () => {
+  test('all commands/gtd/*.md descriptions are <= 100 chars', () => {
     const commands = getAllCommandDescriptions();
     const violators = commands
       .filter(c => c.description !== null && c.description.length > MAX_DESCRIPTION_LENGTH)
@@ -133,7 +133,7 @@ describe('lint-descriptions.cjs', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-lint-desc-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-lint-desc-test-'));
   });
 
   afterEach(() => {
@@ -144,7 +144,7 @@ describe('lint-descriptions.cjs', () => {
     const longDesc = 'A'.repeat(101);
     const content = [
       '---',
-      'name: gsd:test-long',
+      'name: gtd:test-long',
       'description: ' + longDesc,
       '---',
       '',
@@ -169,7 +169,7 @@ describe('lint-descriptions.cjs', () => {
     const shortDesc = 'Short routing description for this skill.';
     const content = [
       '---',
-      'name: gsd:test-short',
+      'name: gtd:test-short',
       'description: ' + shortDesc,
       '---',
       '',

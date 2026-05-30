@@ -13,7 +13,7 @@ const path = require('node:path');
 describe('debug session management implementation', () => {
   test('DEBUG.md template contains reasoning_checkpoint field', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/templates/DEBUG.md'),
+      path.join(process.cwd(), 'get-tasks-done/templates/DEBUG.md'),
       'utf8'
     );
     assert.ok(content.includes('reasoning_checkpoint'), 'DEBUG.md must contain reasoning_checkpoint field');
@@ -21,7 +21,7 @@ describe('debug session management implementation', () => {
 
   test('DEBUG.md template contains tdd_checkpoint field', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/templates/DEBUG.md'),
+      path.join(process.cwd(), 'get-tasks-done/templates/DEBUG.md'),
       'utf8'
     );
     assert.ok(content.includes('tdd_checkpoint'), 'DEBUG.md must contain tdd_checkpoint field');
@@ -29,7 +29,7 @@ describe('debug session management implementation', () => {
 
   test('debug command contains list subcommand logic', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -40,7 +40,7 @@ describe('debug session management implementation', () => {
 
   test('debug command contains continue subcommand logic', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -51,7 +51,7 @@ describe('debug session management implementation', () => {
 
   test('debug command contains status subcommand logic', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -62,7 +62,7 @@ describe('debug session management implementation', () => {
 
   test('debug command contains TDD gate logic', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -73,7 +73,7 @@ describe('debug session management implementation', () => {
 
   test('debug.md reads tdd_mode via workflow.tdd_mode key (not bare tdd_mode)', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -88,7 +88,7 @@ describe('debug session management implementation', () => {
 
   test('debug command contains security hardening', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(content.includes('DATA_START'), 'debug.md must contain DATA_START injection boundary marker');
@@ -96,7 +96,7 @@ describe('debug session management implementation', () => {
 
   test('debug command surfaces next_action before spawn', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'get-shit-done/workflows/debug.md'),
+      path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'),
       'utf8'
     );
     assert.ok(
@@ -105,90 +105,90 @@ describe('debug session management implementation', () => {
     );
   });
 
-  test('gsd-debugger contains structured reasoning checkpoint', () => {
+  test('gtd-debugger contains structured reasoning checkpoint', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'agents/gsd-debugger.md'),
+      path.join(process.cwd(), 'agents/gtd-debugger.md'),
       'utf8'
     );
-    assert.ok(content.includes('reasoning_checkpoint'), 'gsd-debugger.md must contain reasoning_checkpoint');
+    assert.ok(content.includes('reasoning_checkpoint'), 'gtd-debugger.md must contain reasoning_checkpoint');
   });
 
-  test('gsd-debugger contains TDD checkpoint mode', () => {
+  test('gtd-debugger contains TDD checkpoint mode', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'agents/gsd-debugger.md'),
+      path.join(process.cwd(), 'agents/gtd-debugger.md'),
       'utf8'
     );
-    assert.ok(content.includes('tdd_mode'), 'gsd-debugger.md must contain tdd_mode');
-    assert.ok(content.includes('TDD CHECKPOINT'), 'gsd-debugger.md must contain TDD CHECKPOINT return format');
+    assert.ok(content.includes('tdd_mode'), 'gtd-debugger.md must contain tdd_mode');
+    assert.ok(content.includes('TDD CHECKPOINT'), 'gtd-debugger.md must contain TDD CHECKPOINT return format');
   });
 
-  test('gsd-debugger contains delta debugging technique', () => {
+  test('gtd-debugger contains delta debugging technique', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'agents/gsd-debugger.md'),
+      path.join(process.cwd(), 'agents/gtd-debugger.md'),
       'utf8'
     );
-    assert.ok(content.includes('Delta Debugging'), 'gsd-debugger.md must contain Delta Debugging technique');
+    assert.ok(content.includes('Delta Debugging'), 'gtd-debugger.md must contain Delta Debugging technique');
   });
 
-  test('gsd-debugger contains security note about DATA_START', () => {
+  test('gtd-debugger contains security note about DATA_START', () => {
     const content = fs.readFileSync(
-      path.join(process.cwd(), 'agents/gsd-debugger.md'),
+      path.join(process.cwd(), 'agents/gtd-debugger.md'),
       'utf8'
     );
-    assert.ok(content.includes('DATA_START'), 'gsd-debugger.md must contain DATA_START security reference');
+    assert.ok(content.includes('DATA_START'), 'gtd-debugger.md must contain DATA_START security reference');
   });
 });
 
 // Tests for #2148 and #2151
 describe('debug skill dispatch and sub-orchestrator (#2148, #2151)', () => {
-  test('gsd-debugger ROOT CAUSE FOUND format includes specialist_hint field', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debugger.md'), 'utf8');
-    assert.ok(content.includes('specialist_hint'), 'gsd-debugger missing specialist_hint in ROOT CAUSE FOUND');
-    assert.ok(content.includes('swift_concurrency'), 'gsd-debugger missing specialist_hint derivation guidance');
+  test('gtd-debugger ROOT CAUSE FOUND format includes specialist_hint field', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debugger.md'), 'utf8');
+    assert.ok(content.includes('specialist_hint'), 'gtd-debugger missing specialist_hint in ROOT CAUSE FOUND');
+    assert.ok(content.includes('swift_concurrency'), 'gtd-debugger missing specialist_hint derivation guidance');
   });
 
   test('debug.md orchestrator has specialist skill dispatch step', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'get-shit-done/workflows/debug.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'), 'utf8');
     assert.ok(content.includes('specialist_hint'), 'debug.md missing specialist dispatch logic');
     assert.ok(content.includes('typescript-expert'), 'debug.md missing skill dispatch mapping');
   });
 
   test('debug.md specialist dispatch prompt uses DATA_START/DATA_END boundaries', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'get-shit-done/workflows/debug.md'), 'utf8');
+    const content = fs.readFileSync(path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'), 'utf8');
     assert.ok(content.includes('DATA_START') && content.includes('DATA_END'),
       'debug.md specialist dispatch prompt missing security boundaries');
   });
 
-  test('gsd-debug-session-manager agent exists with correct tools', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debug-session-manager.md'), 'utf8');
-    assert.ok(content.includes('Agent'), 'gsd-debug-session-manager missing Agent tool');
-    assert.ok(content.includes('AskUserQuestion'), 'gsd-debug-session-manager missing AskUserQuestion tool');
+  test('gtd-debug-session-manager agent exists with correct tools', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debug-session-manager.md'), 'utf8');
+    assert.ok(content.includes('Agent'), 'gtd-debug-session-manager missing Agent tool');
+    assert.ok(content.includes('AskUserQuestion'), 'gtd-debug-session-manager missing AskUserQuestion tool');
   });
 
-  test('gsd-debug-session-manager spawns debugger with Agent() dispatcher', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debug-session-manager.md'), 'utf8');
+  test('gtd-debug-session-manager spawns debugger with Agent() dispatcher', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debug-session-manager.md'), 'utf8');
     assert.ok(content.includes('\nAgent('), 'session manager must dispatch debugger with Agent(');
   });
 
-  test('gsd-debug-session-manager uses DATA_START/DATA_END for checkpoint responses', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debug-session-manager.md'), 'utf8');
+  test('gtd-debug-session-manager uses DATA_START/DATA_END for checkpoint responses', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debug-session-manager.md'), 'utf8');
     assert.ok(content.includes('DATA_START') && content.includes('DATA_END'),
-      'gsd-debug-session-manager missing security boundaries on checkpoint responses');
+      'gtd-debug-session-manager missing security boundaries on checkpoint responses');
   });
 
-  test('gsd-debug-session-manager has compact summary output format', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debug-session-manager.md'), 'utf8');
+  test('gtd-debug-session-manager has compact summary output format', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debug-session-manager.md'), 'utf8');
     assert.ok(content.includes('DEBUG SESSION COMPLETE'), 'session manager missing compact summary format');
   });
 
-  test('gsd-debug-session-manager includes anti-heredoc rule', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gsd-debug-session-manager.md'), 'utf8');
+  test('gtd-debug-session-manager includes anti-heredoc rule', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'agents', 'gtd-debug-session-manager.md'), 'utf8');
     assert.ok(content.includes('heredoc'), 'session manager missing anti-heredoc rule');
   });
 
-  test('debug.md delegates to gsd-debug-session-manager', () => {
-    const content = fs.readFileSync(path.join(process.cwd(), 'get-shit-done/workflows/debug.md'), 'utf8');
-    assert.ok(content.includes('gsd-debug-session-manager'),
+  test('debug.md delegates to gtd-debug-session-manager', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'get-tasks-done/workflows/debug.md'), 'utf8');
+    assert.ok(content.includes('gtd-debug-session-manager'),
       'debug.md does not delegate to session manager');
   });
 });

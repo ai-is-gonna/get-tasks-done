@@ -8,7 +8,7 @@ const path = require('path');
 const {
   discoverInstallerMigrations,
   planInstallerMigrations,
-} = require('../get-shit-done/bin/lib/installer-migrations.cjs');
+} = require('../get-tasks-done/bin/lib/installer-migrations.cjs');
 const { cleanup, createTempDir } = require('./helpers.cjs');
 
 function writeMigration(dir, fileName, source) {
@@ -29,7 +29,7 @@ function completeMigrationRecord(overrides = {}) {
 }
 
 test('rejects discovered migration records missing required authoring metadata', (t) => {
-  const migrationsDir = createTempDir('gsd-migration-authoring-');
+  const migrationsDir = createTempDir('gtd-migration-authoring-');
   t.after(() => cleanup(migrationsDir));
 
   writeMigration(
@@ -54,11 +54,11 @@ module.exports = {
 });
 
 test('rejects direct migration records missing required authoring metadata during planning', (t) => {
-  const configDir = createTempDir('gsd-migration-authoring-plan-');
+  const configDir = createTempDir('gtd-migration-authoring-plan-');
   t.after(() => cleanup(configDir));
 
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify({ version: '1.50.0', timestamp: '2026-05-11T00:00:00.000Z', mode: 'full', files: {} }),
     'utf8'
   );
@@ -82,11 +82,11 @@ test('rejects direct migration records missing required authoring metadata durin
 });
 
 test('rejects migration records without explicit install scopes', (t) => {
-  const configDir = createTempDir('gsd-migration-authoring-scope-');
+  const configDir = createTempDir('gtd-migration-authoring-scope-');
   t.after(() => cleanup(configDir));
 
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify({ version: '1.50.0', timestamp: '2026-05-11T00:00:00.000Z', mode: 'full', files: {} }),
     'utf8'
   );
@@ -110,11 +110,11 @@ test('rejects migration records without explicit install scopes', (t) => {
 });
 
 test('rejects destructive migration actions without ownership evidence', (t) => {
-  const configDir = createTempDir('gsd-migration-authoring-action-');
+  const configDir = createTempDir('gtd-migration-authoring-action-');
   t.after(() => cleanup(configDir));
 
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify({
       version: '1.50.0',
       timestamp: '2026-05-11T00:00:00.000Z',
@@ -145,11 +145,11 @@ test('rejects destructive migration actions without ownership evidence', (t) => 
 });
 
 test('rejects migration actions with absolute or traversal relPaths', (t) => {
-  const configDir = createTempDir('gsd-migration-authoring-relpath-');
+  const configDir = createTempDir('gtd-migration-authoring-relpath-');
   t.after(() => cleanup(configDir));
 
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify({ version: '1.50.0', timestamp: '2026-05-11T00:00:00.000Z', mode: 'full', files: {} }),
     'utf8'
   );
@@ -178,11 +178,11 @@ test('rejects migration actions with absolute or traversal relPaths', (t) => {
 });
 
 test('rejects runtime config rewrites without a runtime contract citation', (t) => {
-  const configDir = createTempDir('gsd-migration-authoring-runtime-');
+  const configDir = createTempDir('gtd-migration-authoring-runtime-');
   t.after(() => cleanup(configDir));
 
   fs.writeFileSync(
-    path.join(configDir, 'gsd-file-manifest.json'),
+    path.join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify({ version: '1.50.0', timestamp: '2026-05-11T00:00:00.000Z', mode: 'full', files: {} }),
     'utf8'
   );
@@ -202,7 +202,7 @@ test('rejects runtime config rewrites without a runtime contract citation', (t) 
               value: {},
               deleteIfEmpty: true,
               reason: 'retired generated Codex hook registration',
-              ownershipEvidence: 'matches generated GSD hook command path',
+              ownershipEvidence: 'matches generated GTD hook command path',
             },
           ],
         }),

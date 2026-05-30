@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * #3164 — gsd-tools doesn't support .planning/milestones/v*-phases/ layout.
+ * #3164 — gtd-tools doesn't support .planning/milestones/v*-phases/ layout.
  *
  * Validators hardcode `phasesDir = .planning/phases/`. On projects that have
  * graduated to milestone-archive layout (.planning/milestones/v*-phases/),
@@ -16,7 +16,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 function setupMilestoneArchiveProject(tmpDir, options = {}) {
   const {
@@ -75,7 +75,7 @@ describe('#3164 — validate consistency: milestone-archive layout', () => {
       roadmapPhases: ['64'],
     });
 
-    const result = runGsdTools('validate consistency', tmpDir);
+    const result = runGtdTools('validate consistency', tmpDir);
     assert.ok(result.success, `validate consistency should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -93,7 +93,7 @@ describe('#3164 — validate consistency: milestone-archive layout', () => {
       roadmapPhases: ['48', '51', '64'],
     });
 
-    const result = runGsdTools('validate consistency', tmpDir);
+    const result = runGtdTools('validate consistency', tmpDir);
     assert.ok(result.success, `validate consistency should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -111,7 +111,7 @@ describe('#3164 — validate consistency: milestone-archive layout', () => {
       roadmapPhases: ['64'],
     });
 
-    const result = runGsdTools('validate consistency', tmpDir);
+    const result = runGtdTools('validate consistency', tmpDir);
     assert.ok(result.success, `validate consistency should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -146,7 +146,7 @@ describe('#3164 — validate consistency: milestone-archive layout', () => {
       '# Roadmap\n\n## Roadmap v1.7: Current\n\n### Phase 65: Current work\n\nGoal: test.\n'
     );
 
-    const result = runGsdTools('validate consistency', tmpDir);
+    const result = runGtdTools('validate consistency', tmpDir);
     assert.ok(result.success, `validate consistency should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -182,7 +182,7 @@ describe('#3164 — validate health: milestone-archive layout', () => {
       roadmapPhases: ['64'],
     });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `validate health should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -210,7 +210,7 @@ describe('#3164 — find-phase: milestone-archive layout', () => {
       roadmapPhases: ['64'],
     });
 
-    const result = runGsdTools('find-phase 64', tmpDir);
+    const result = runGtdTools('find-phase 64', tmpDir);
     assert.ok(result.success, `find-phase should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -229,7 +229,7 @@ describe('#3164 — find-phase: milestone-archive layout', () => {
     fs.writeFileSync(path.join(v110, 'PLAN.md'), '# v1.10 plan\n');
     fs.writeFileSync(path.join(v12, 'PLAN.md'), '# v1.2 plan\n');
 
-    const result = runGsdTools('find-phase 64', tmpDir);
+    const result = runGtdTools('find-phase 64', tmpDir);
     assert.ok(result.success, `find-phase should succeed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -248,7 +248,7 @@ describe('#3164 — find-phase: milestone-archive layout', () => {
       roadmapPhases: ['64'],
     });
 
-    const result = runGsdTools('find-phase 999', tmpDir);
+    const result = runGtdTools('find-phase 999', tmpDir);
     assert.ok(result.success, `find-phase should succeed with found:false payload: ${result.error}`);
 
     const out = JSON.parse(result.output);

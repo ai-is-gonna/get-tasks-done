@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -11,7 +11,7 @@ const os = require('node:os');
 const projection = require(path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'shell-command-projection.cjs',
@@ -19,7 +19,7 @@ const projection = require(path.join(
 const install = require(path.join(__dirname, '..', 'bin', 'install.js'));
 
 function createTempHome() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-home-3441-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-home-3441-'));
 }
 
 function cleanup(dir) {

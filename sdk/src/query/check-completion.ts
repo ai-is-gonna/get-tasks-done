@@ -2,14 +2,14 @@
  * Phase or milestone completion rollup (`check.completion`).
  *
  * Replaces repeated PLAN/SUMMARY counting and verification checks in
- * `transition.md`, `complete-milestone.md`, `execute-phase.md`.
+ * `transition.md`, `complete-milestone.md`, `work-task-issue.md`.
  * See `.planning/research/decision-routing-audit.md` §3.7.
  */
 
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { normalizePhaseName, planningPaths } from './helpers.js';
 import { findPhase } from './phase.js';
 import { roadmapAnalyze } from './roadmap.js';
@@ -158,10 +158,10 @@ async function checkMilestoneCompletion(projectDir: string): Promise<Record<stri
 export const checkCompletion: QueryHandler = async (args, projectDir) => {
   const scope = args[0];
   if (!scope) {
-    throw new GSDError('scope required for check completion (phase|milestone)', ErrorClassification.Validation);
+    throw new GTDError('scope required for check completion (phase|milestone)', ErrorClassification.Validation);
   }
   if (!VALID_SCOPES.has(scope)) {
-    throw new GSDError(
+    throw new GTDError(
       `invalid scope "${scope}" — must be "phase" or "milestone"`,
       ErrorClassification.Validation,
     );
@@ -170,7 +170,7 @@ export const checkCompletion: QueryHandler = async (args, projectDir) => {
   if (scope === 'phase') {
     const phaseNum = args[1];
     if (!phaseNum) {
-      throw new GSDError('phase number required for check completion phase', ErrorClassification.Validation);
+      throw new GTDError('phase number required for check completion phase', ErrorClassification.Validation);
     }
     const result = await checkPhaseCompletion(phaseNum, projectDir);
     return { data: result };

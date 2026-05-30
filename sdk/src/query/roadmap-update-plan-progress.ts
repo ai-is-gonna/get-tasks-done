@@ -2,7 +2,7 @@
  * roadmap.update-plan-progress — sync ROADMAP.md progress table + plan checkboxes
  * from on-disk PLAN/SUMMARY counts for a phase.
  *
- * Port of `cmdRoadmapUpdatePlanProgress` from get-shit-done/bin/lib/roadmap.cjs
+ * Port of `cmdRoadmapUpdatePlanProgress` from get-tasks-done/bin/lib/roadmap.cjs
  * (lines 257–354). Uses `findPhase` for disk stats and `readModifyWriteRoadmapMd`
  * for atomic writes (same pattern as `phase.complete`).
  */
@@ -11,7 +11,7 @@ import { findPhase } from './phase.js';
 import { readModifyWriteRoadmapMd, replaceInCurrentMilestone } from './phase-roadmap-mutation.js';
 import { existsSync } from 'node:fs';
 import { escapeRegex, planningPaths } from './helpers.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import type { QueryHandler } from './utils.js';
 
 function phaseMarkdownRegexSource(phaseNum: string): string {
@@ -27,7 +27,7 @@ function phaseMarkdownRegexSource(phaseNum: string): string {
 
 export const roadmapUpdatePlanProgress: QueryHandler = async (args, projectDir, workstream) => {
   // Support --phase <N> flag form in addition to positional (fixes #2796).
-  // execute-phase.md:228 passes --phase so positional-only parsing silently
+  // work-task-issue.md:228 passes --phase so positional-only parsing silently
   // took the literal string "--phase" as the phase value.
   const phaseIdx = args.indexOf('--phase');
   let phaseNum: string;
@@ -44,7 +44,7 @@ export const roadmapUpdatePlanProgress: QueryHandler = async (args, projectDir, 
     phaseNum = positional[0] ? String(positional[0]) : '';
   }
   if (!phaseNum) {
-    throw new GSDError('phase number required for roadmap update-plan-progress', ErrorClassification.Validation);
+    throw new GTDError('phase number required for roadmap update-plan-progress', ErrorClassification.Validation);
   }
 
   const phaseResult = await findPhase([phaseNum], projectDir, workstream);
@@ -55,7 +55,7 @@ export const roadmapUpdatePlanProgress: QueryHandler = async (args, projectDir, 
   };
 
   if (!info.found) {
-    throw new GSDError(`Phase ${phaseNum} not found`, ErrorClassification.Validation);
+    throw new GTDError(`Phase ${phaseNum} not found`, ErrorClassification.Validation);
   }
 
   const planCount = info.plans.length;

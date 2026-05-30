@@ -1,7 +1,7 @@
 {
-  "name": "@gsd-build/sdk",
-  "version": "1.50.0-canary.0",
-  "description": "GSD SDK — programmatic interface for running GSD plans via the Agent SDK",
+  "name": "@ai-is-gonna/gtd-sdk",
+  "version": "0.2.3",
+  "description": "GTD SDK — programmatic interface for running GTD plans via the Agent SDK",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "gsd-sdk": "./dist/cli.js"
+    "gtd-sdk": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -21,14 +21,17 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/get-shit-done.git",
+    "url": "git+https://github.com/ai-is-gonna/get-tasks-done.git",
     "directory": "sdk"
   },
-  "homepage": "https://github.com/gsd-build/get-shit-done/tree/main/sdk",
+  "homepage": "https://github.com/ai-is-gonna/get-tasks-done",
   "bugs": {
-    "url": "https://github.com/gsd-build/get-shit-done/issues"
+    "url": "https://github.com/ai-is-gonna/get-tasks-done/issues"
   },
-  "author": "TÂCHES",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Davide Troiani",
   "license": "MIT",
   "engines": {
     "node": ">=22.0.0"

@@ -17,7 +17,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -40,7 +40,7 @@ function buildStateWithCuratedProgress(opts) {
 
   return [
     '---',
-    'gsd_state_version: 1.0',
+    'gtd_state_version: 1.0',
     'status: executing',
     'progress:',
     `  total_phases: ${totalPhases}`,
@@ -50,7 +50,7 @@ function buildStateWithCuratedProgress(opts) {
     `  percent: ${percent}`,
     '---',
     '',
-    '# GSD State',
+    '# GTD State',
     '',
     '## Configuration',
     'Current Phase: 6',
@@ -120,14 +120,14 @@ describe('#3242 Bug A: body-only state.update preserves curated progress frontma
     const phasesDir = path.join(tmpDir, '.planning', 'phases');
     createPhaseDirs(phasesDir, 6);
 
-    const updateResult = runGsdTools(
+    const updateResult = runGtdTools(
       ['state', 'update', 'Last Activity', '2026-05-07'],
       tmpDir,
     );
     assert.ok(updateResult.success, `state update failed: ${updateResult.error}`);
 
     // Read back and assert via state json (JSON return value, not raw file grep)
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const fm = JSON.parse(jsonResult.output);
@@ -163,7 +163,7 @@ describe('#3242 Bug A: body-only state.update preserves curated progress frontma
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     fs.writeFileSync(statePath, buildStateWithCuratedProgress({ lastActivity: '2026-01-01' }));
 
-    const updateResult = runGsdTools(
+    const updateResult = runGtdTools(
       ['state', 'update', 'Last Activity', '2026-05-07'],
       tmpDir,
     );
@@ -172,7 +172,7 @@ describe('#3242 Bug A: body-only state.update preserves curated progress frontma
     // Assert via structured JSON output — not raw file text scanning.
     // state json extracts Last Activity from the body and surfaces it as
     // fm.last_activity, matching the no-source-grep testing standard.
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
     const fm = JSON.parse(jsonResult.output);
     assert.strictEqual(
@@ -192,13 +192,13 @@ describe('#3242 Bug A: body-only state.update preserves curated progress frontma
       percent: 50,
     }).replace('Last Activity: 2026-01-01\n', 'Last Activity: 2026-01-01\nProgress: [█████░░░░░] 50%\n'));
 
-    const updateResult = runGsdTools(
+    const updateResult = runGtdTools(
       ['state', 'update', 'Progress', '[████████░░] 80%'],
       tmpDir,
     );
     assert.ok(updateResult.success, `state update failed: ${updateResult.error}`);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
     const fm = JSON.parse(jsonResult.output);
     assert.strictEqual(fm.progress.percent, 80);
@@ -226,7 +226,7 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     // Body: 6 realized phases visible to disk scan.
     // Frontmatter: intentionally absent so buildStateFrontmatter runs fresh.
     fs.writeFileSync(statePath, [
-      '# GSD State',
+      '# GTD State',
       '',
       '## Configuration',
       'Current Phase: 6',
@@ -249,7 +249,7 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     createPhaseDirs(phasesDir, 6);
 
     // state json rebuilds frontmatter from disk+body — this exercises buildStateFrontmatter
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const fm = JSON.parse(jsonResult.output);
@@ -277,7 +277,7 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
 
     fs.writeFileSync(statePath, [
-      '# GSD State',
+      '# GTD State',
       '',
       '## Configuration',
       'Current Phase: 3',
@@ -298,7 +298,7 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     const phasesDir = path.join(tmpDir, '.planning', 'phases');
     createPhaseDirs(phasesDir, 3);
 
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const fm = JSON.parse(jsonResult.output);
@@ -319,7 +319,7 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
 
     fs.writeFileSync(statePath, [
-      '# GSD State',
+      '# GTD State',
       '',
       '## Configuration',
       'Current Phase: 6',
@@ -340,11 +340,11 @@ describe('#3242 Bug B: progress.percent reflects phase fraction when ROADMAP dec
     const phasesDir = path.join(tmpDir, '.planning', 'phases');
     createPhaseDirs(phasesDir, 6);
 
-    const syncResult = runGsdTools('state sync', tmpDir);
+    const syncResult = runGtdTools('state sync', tmpDir);
     assert.ok(syncResult.success, `state sync failed: ${syncResult.error}`);
 
     // Read the body's Progress field via state json (JSON output is authoritative)
-    const jsonResult = runGsdTools('state json', tmpDir);
+    const jsonResult = runGtdTools('state json', tmpDir);
     assert.ok(jsonResult.success, `state json failed: ${jsonResult.error}`);
 
     const fm = JSON.parse(jsonResult.output);

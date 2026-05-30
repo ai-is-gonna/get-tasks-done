@@ -8,15 +8,14 @@
  * terminations look identical to a crashed agent — but the right user
  * response is "wait for reset and resume", not "retry now or abort".
  *
- * Sentinel coverage spans the runtimes GSD supports as executor targets:
+ * Sentinel coverage spans the runtimes GTD supports as executor targets:
  *   - Anthropic / Claude Code  — "usage limit", "rate limit", "quota", "429", "retry-after"
  *   - GitHub Copilot CLI       — "rate limit", "rate_limited", "user_weekly_rate_limited"
  *   - OpenAI Codex CLI         — "429", "usage_limit_reached", "too many requests"
  *   - Google Gemini CLI        — "RESOURCE_EXHAUSTED", "exceeded your", "quota"
  *
- * See docs/research/provider-rate-limit-signals.md for the proactive (header
- * / SDK event) signals the orchestrator could use once the host runtime
- * (Claude Code, Copilot, Codex) exposes them to hooks.
+ * Proactive header / SDK event signals can replace these text sentinels once
+ * host runtimes expose rate-limit metadata to hooks.
  */
 
 export type AgentFailureClass =
@@ -66,7 +65,7 @@ function parseRetryAfter(body: string): number | undefined {
 /**
  * Query-handler wrapper for `agent.classify-failure`. Reads the body to
  * classify from the joined positional args (typed via `--`) so workflow
- * shell snippets can pass it as `gsd-sdk query agent.classify-failure -- "$BODY"`.
+ * shell snippets can pass it as `gtd-sdk query agent.classify-failure -- "$BODY"`.
  */
 export async function agentClassifyFailure(
   args: string[],

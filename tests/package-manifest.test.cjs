@@ -21,9 +21,9 @@ const PKG_PATH = path.join(__dirname, '..', 'package.json');
 const HOOKS_DIR = path.join(__dirname, '..', 'hooks');
 
 const SH_HOOKS = [
-  'gsd-session-state.sh',
-  'gsd-validate-commit.sh',
-  'gsd-phase-boundary.sh',
+  'gtd-session-state.sh',
+  'gtd-validate-commit.sh',
+  'gtd-phase-boundary.sh',
 ];
 
 describe('package.json manifest — hooks .sh files (#1852 #1862)', () => {
@@ -43,7 +43,7 @@ describe('package.json manifest — hooks .sh files (#1852 #1862)', () => {
       [
         '"hooks/dist" must not appear alone in package.json "files".',
         'This entry only bundles compiled .js files and excludes the .sh hooks',
-        'in hooks/ (gsd-session-state.sh, gsd-validate-commit.sh, gsd-phase-boundary.sh).',
+        'in hooks/ (gtd-session-state.sh, gtd-validate-commit.sh, gtd-phase-boundary.sh).',
         'Replace "hooks/dist" with "hooks" to include all hook files.',
       ].join(' ')
     );

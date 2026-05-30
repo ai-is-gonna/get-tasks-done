@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Writable } from 'node:stream';
-import { GSDLogger } from './logger.js';
+import { GTDLogger } from './logger.js';
 import type { LogEntry } from './logger.js';
 import { PhaseType } from './types.js';
 
@@ -21,7 +21,7 @@ function parseLogEntry(line: string): LogEntry {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-describe('GSDLogger', () => {
+describe('GTDLogger', () => {
   let output: BufferStream;
 
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('GSDLogger', () => {
   });
 
   it('outputs valid JSON on each log call', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
     logger.info('test message');
 
     expect(output.lines).toHaveLength(1);
@@ -37,7 +37,7 @@ describe('GSDLogger', () => {
   });
 
   it('includes required fields: timestamp, level, message', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
     logger.info('hello world');
 
     const entry = parseLogEntry(output.lines[0]!);
@@ -47,7 +47,7 @@ describe('GSDLogger', () => {
   });
 
   it('filters messages below minimum log level', () => {
-    const logger = new GSDLogger({ output, level: 'warn' });
+    const logger = new GTDLogger({ output, level: 'warn' });
 
     logger.debug('should be dropped');
     logger.info('should be dropped');
@@ -60,7 +60,7 @@ describe('GSDLogger', () => {
   });
 
   it('defaults to info level filtering', () => {
-    const logger = new GSDLogger({ output });
+    const logger = new GTDLogger({ output });
 
     logger.debug('dropped');
     logger.info('kept');
@@ -71,7 +71,7 @@ describe('GSDLogger', () => {
 
   it('writes to custom output stream', () => {
     const customOutput = new BufferStream();
-    const logger = new GSDLogger({ output: customOutput, level: 'debug' });
+    const logger = new GTDLogger({ output: customOutput, level: 'debug' });
     logger.info('custom');
 
     expect(customOutput.lines).toHaveLength(1);
@@ -79,7 +79,7 @@ describe('GSDLogger', () => {
   });
 
   it('includes phase, plan, and sessionId context when set', () => {
-    const logger = new GSDLogger({
+    const logger = new GTDLogger({
       output,
       level: 'debug',
       phase: PhaseType.Execute,
@@ -96,7 +96,7 @@ describe('GSDLogger', () => {
   });
 
   it('includes extra data when provided', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
     logger.info('with data', { count: 42, tool: 'Bash' });
 
     const entry = parseLogEntry(output.lines[0]!);
@@ -104,7 +104,7 @@ describe('GSDLogger', () => {
   });
 
   it('omits optional fields when not set', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
     logger.info('minimal');
 
     const entry = parseLogEntry(output.lines[0]!);
@@ -115,7 +115,7 @@ describe('GSDLogger', () => {
   });
 
   it('supports runtime context updates via setters', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
 
     logger.info('before');
     logger.setPhase(PhaseType.Research);
@@ -133,7 +133,7 @@ describe('GSDLogger', () => {
   });
 
   it('emits all four log levels correctly', () => {
-    const logger = new GSDLogger({ output, level: 'debug' });
+    const logger = new GTDLogger({ output, level: 'debug' });
 
     logger.debug('d');
     logger.info('i');

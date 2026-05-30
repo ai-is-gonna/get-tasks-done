@@ -6,15 +6,15 @@
 /**
  * Regression test for bug #2784
  *
- * /gsd-update cache-clear step only cleared per-runtime cache paths
- * (e.g. ~/.claude/cache/gsd-update-check.json) but the SessionStart hook
- * (hooks/gsd-check-update.js) writes to the shared tool-agnostic path
- * ~/.cache/gsd/gsd-update-check.json. After a successful update, the statusline
- * kept showing the stale "⬆ /gsd-update" indicator because the actual cache
+ * /gtd-update cache-clear step only cleared per-runtime cache paths
+ * (e.g. ~/.claude/cache/gtd-update-check.json) but the SessionStart hook
+ * (hooks/gtd-check-update.js) writes to the shared tool-agnostic path
+ * ~/.cache/gtd/gtd-update-check.json. After a successful update, the statusline
+ * kept showing the stale "⬆ /gtd-update" indicator because the actual cache
  * file was never deleted.
  *
- * Fix: add `rm -f "$HOME/.cache/gsd/gsd-update-check.json"` to the
- * run_update step's cache-clear block in get-shit-done/workflows/update.md.
+ * Fix: add `rm -f "$HOME/.cache/gtd/gtd-update-check.json"` to the
+ * run_update step's cache-clear block in get-tasks-done/workflows/update.md.
  */
 
 'use strict';
@@ -27,14 +27,14 @@ const path = require('node:path');
 const REPO_ROOT = path.join(__dirname, '..');
 const UPDATE_WORKFLOW = path.join(
   REPO_ROOT,
-  'get-shit-done',
+  'get-tasks-done',
   'workflows',
   'update.md'
 );
-const CHECK_UPDATE_HOOK = path.join(REPO_ROOT, 'hooks', 'gsd-check-update.js');
+const CHECK_UPDATE_HOOK = path.join(REPO_ROOT, 'hooks', 'gtd-check-update.js');
 
 describe('bug-2784: update.md cache-clear covers shared cache path', () => {
-  test('gsd-check-update.js hook constructs cache dir from .cache and gsd path segments', () => {
+  test('gtd-check-update.js hook constructs cache dir from .cache and gtd path segments', () => {
     const hookContent = fs.readFileSync(CHECK_UPDATE_HOOK, 'utf-8');
     // Parse the path.join() call structurally rather than text-grepping.
     const m = hookContent.match(/const cacheDir\s*=\s*path\.join\(([^)]+)\)/);
@@ -48,12 +48,12 @@ describe('bug-2784: update.md cache-clear covers shared cache path', () => {
       `hook cacheDir path.join() must include '.cache' segment; got: ${JSON.stringify(segments)}`
     );
     assert.ok(
-      segments.includes('gsd'),
-      `hook cacheDir path.join() must include 'gsd' segment; got: ${JSON.stringify(segments)}`
+      segments.includes('gtd'),
+      `hook cacheDir path.join() must include 'gtd' segment; got: ${JSON.stringify(segments)}`
     );
   });
 
-  test('update.md run_update bash commands include rm for shared gsd cache file', () => {
+  test('update.md run_update bash commands include rm for shared gtd cache file', () => {
     const workflowContent = fs.readFileSync(UPDATE_WORKFLOW, 'utf-8');
     // Parse the step block structurally, then extract only bash fenced code lines.
     const stepMatch = workflowContent.match(/<step name="run_update">[\s\S]*?<\/step>/);
@@ -71,12 +71,12 @@ describe('bug-2784: update.md cache-clear covers shared cache path', () => {
     }
 
     const sharedCacheClearCmds = bashLines.filter(
-      (line) => /^rm\b/.test(line) && line.includes('.cache/gsd/gsd-update-check.json')
+      (line) => /^rm\b/.test(line) && line.includes('.cache/gtd/gtd-update-check.json')
     );
     assert.ok(
       sharedCacheClearCmds.length > 0,
       [
-        'run_update step bash blocks must include an `rm` command targeting .cache/gsd/gsd-update-check.json.',
+        'run_update step bash blocks must include an `rm` command targeting .cache/gtd/gtd-update-check.json.',
         `Bash lines found: ${JSON.stringify(bashLines)}`,
       ].join('\n')
     );

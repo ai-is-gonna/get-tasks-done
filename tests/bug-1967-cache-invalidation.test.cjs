@@ -9,7 +9,7 @@
  * The disk scan cache in buildStateFrontmatter must be invalidated on
  * writeStateMd to prevent stale reads if multiple state-mutating
  * operations occur within the same Node process. This matters for:
- *   - SDK callers that require() gsd-tools.cjs as a module
+ *   - SDK callers that require() gtd-tools.cjs as a module
  *   - Future dispatcher extensions that handle compound operations
  *   - Tests that import state.cjs directly
  */
@@ -22,7 +22,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const state = require('../get-shit-done/bin/lib/state.cjs');
+const state = require('../get-tasks-done/bin/lib/state.cjs');
 
 describe('buildStateFrontmatter cache invalidation (#1967)', () => {
   let tmpDir;
@@ -31,7 +31,7 @@ describe('buildStateFrontmatter cache invalidation (#1967)', () => {
   let statePath;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-1967-cache-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-1967-cache-'));
     planningDir = path.join(tmpDir, '.planning');
     phasesDir = path.join(planningDir, 'phases');
     fs.mkdirSync(phasesDir, { recursive: true });

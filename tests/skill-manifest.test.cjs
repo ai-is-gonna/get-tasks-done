@@ -6,7 +6,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeSkill(rootDir, name, description, body = '') {
   const skillDir = path.join(rootDir, name);
@@ -27,23 +27,23 @@ describe('skill-manifest', () => {
 
   beforeEach(() => {
     tmpDir = createTempProject();
-    homeDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gsd-skill-manifest-home-'));
+    homeDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gtd-skill-manifest-home-'));
 
     writeSkill(path.join(tmpDir, '.claude', 'skills'), 'project-claude', 'Project Claude skill');
-    writeSkill(path.join(tmpDir, '.claude', 'skills'), 'gsd-help', 'Installed GSD skill');
+    writeSkill(path.join(tmpDir, '.claude', 'skills'), 'gtd-help', 'Installed GTD skill');
     writeSkill(path.join(tmpDir, '.agents', 'skills'), 'project-agents', 'Project agent skill');
     writeSkill(path.join(tmpDir, '.codex', 'skills'), 'project-codex', 'Project Codex skill');
 
     writeSkill(path.join(homeDir, '.claude', 'skills'), 'global-claude', 'Global Claude skill');
     writeSkill(path.join(homeDir, '.codex', 'skills'), 'global-codex', 'Global Codex skill');
     writeSkill(
-      path.join(homeDir, '.claude', 'get-shit-done', 'skills'),
+      path.join(homeDir, '.claude', 'get-tasks-done', 'skills'),
       'legacy-import',
       'Deprecated import-only skill'
     );
 
-    fs.mkdirSync(path.join(homeDir, '.claude', 'commands', 'gsd'), { recursive: true });
-    fs.writeFileSync(path.join(homeDir, '.claude', 'commands', 'gsd', 'help.md'), '# legacy');
+    fs.mkdirSync(path.join(homeDir, '.claude', 'commands', 'gtd'), { recursive: true });
+    fs.writeFileSync(path.join(homeDir, '.claude', 'commands', 'gtd', 'help.md'), '# legacy');
   });
 
   afterEach(() => {
@@ -52,7 +52,7 @@ describe('skill-manifest', () => {
   });
 
   test('returns normalized inventory across canonical roots', () => {
-    const result = runGsdTools(['skill-manifest'], tmpDir, { HOME: homeDir });
+    const result = runGtdTools(['skill-manifest'], tmpDir, { HOME: homeDir });
     assert.ok(result.success, `Command should succeed: ${result.error || result.output}`);
 
     const manifest = JSON.parse(result.output);
@@ -65,7 +65,7 @@ describe('skill-manifest', () => {
     assert.deepStrictEqual(skillNames, [
       'global-claude',
       'global-codex',
-      'gsd-help',
+      'gtd-help',
       'legacy-import',
       'project-agents',
       'project-claude',
@@ -97,27 +97,27 @@ describe('skill-manifest', () => {
         deprecated: importedSkill.deprecated,
       },
       {
-        root: '.claude/get-shit-done/skills',
+        root: '.claude/get-tasks-done/skills',
         scope: 'import-only',
         installed: false,
         deprecated: true,
       }
     );
 
-    const gsdSkill = manifest.skills.find((skill) => skill.name === 'gsd-help');
-    assert.strictEqual(gsdSkill.installed, true);
+    const gtdSkill = manifest.skills.find((skill) => skill.name === 'gtd-help');
+    assert.strictEqual(gtdSkill.installed, true);
 
     const legacyRoot = manifest.roots.find((root) => root.scope === 'legacy-commands');
     assert.ok(legacyRoot, 'legacy commands root should be reported');
     assert.strictEqual(legacyRoot.present, true);
 
-    assert.strictEqual(manifest.installation.gsd_skills_installed, true);
+    assert.strictEqual(manifest.installation.gtd_skills_installed, true);
     assert.strictEqual(manifest.installation.legacy_claude_commands_installed, true);
     assert.strictEqual(manifest.counts.skills, 7);
   });
 
   test('writes manifest to .planning/skill-manifest.json when --write flag is used', () => {
-    const result = runGsdTools(['skill-manifest', '--write'], tmpDir, { HOME: homeDir });
+    const result = runGtdTools(['skill-manifest', '--write'], tmpDir, { HOME: homeDir });
     assert.ok(result.success, `Command should succeed: ${result.error || result.output}`);
 
     const manifestPath = path.join(tmpDir, '.planning', 'skill-manifest.json');
@@ -129,7 +129,7 @@ describe('skill-manifest', () => {
   });
 
   test('global roots honor runtime-home env overrides instead of hardcoded home paths', () => {
-    const result = runGsdTools(['skill-manifest'], tmpDir, {
+    const result = runGtdTools(['skill-manifest'], tmpDir, {
       HOME: homeDir,
       CLAUDE_CONFIG_DIR: path.join(homeDir, 'claude-custom'),
       CODEX_HOME: path.join(homeDir, 'codex-custom'),

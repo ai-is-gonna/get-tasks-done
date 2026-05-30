@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 describe('bug #3446: resume-project detects non-phase and legacy continue-here handoffs', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'resume-project.md');
+  const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'resume-project.md');
   const workflowContent = fs.readFileSync(workflowPath, 'utf8');
 
   function readCheckBlock() {

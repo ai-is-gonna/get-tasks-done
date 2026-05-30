@@ -36,10 +36,10 @@ describe('QuerySubprocessAdapter', () => {
     return scriptPath;
   }
 
-  function createAdapter(gsdToolsPath: string): QuerySubprocessAdapter {
+  function createAdapter(gtdToolsPath: string): QuerySubprocessAdapter {
     return new QuerySubprocessAdapter({
       projectDir: dir,
-      gsdToolsPath,
+      gtdToolsPath,
       timeoutMs: 2_000,
       createTimeoutError: (message, command, args, stderr) =>
         new FakeToolsError(message, command, args, null, stderr) as never,

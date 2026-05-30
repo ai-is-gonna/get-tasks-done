@@ -16,14 +16,14 @@ function writeExec(filePath, content) {
 
 describe('.githooks/pre-commit alias drift guard', () => {
   test('runs npm check when staged files include command-manifest/alias artifacts', (t) => {
-    const tmpDir = createTempDir('gsd-precommit-hook-');
+    const tmpDir = createTempDir('gtd-precommit-hook-');
     t.after(() => cleanup(tmpDir));
 
     const binDir = path.join(tmpDir, 'bin');
     fs.mkdirSync(binDir, { recursive: true });
 
     writeExec(path.join(binDir, 'git'), `#!/usr/bin/env bash\nprintf "%s\\n" "${'sdk/src/query/command-manifest.phase.ts'}"\n`);
-    writeExec(path.join(binDir, 'npm'), `#!/usr/bin/env bash\nprintf "called" > "$GSD_TEST_NPM_MARKER"\n`);
+    writeExec(path.join(binDir, 'npm'), `#!/usr/bin/env bash\nprintf "called" > "$GTD_TEST_NPM_MARKER"\n`);
 
     const marker = path.join(tmpDir, 'npm-called.txt');
 
@@ -32,7 +32,7 @@ describe('.githooks/pre-commit alias drift guard', () => {
       env: {
         ...process.env,
         PATH: `${binDir}:${process.env.PATH}`,
-        GSD_TEST_NPM_MARKER: marker,
+        GTD_TEST_NPM_MARKER: marker,
       },
       stdio: 'pipe',
     });
@@ -41,14 +41,14 @@ describe('.githooks/pre-commit alias drift guard', () => {
   });
 
   test('does not run npm check when staged files are unrelated', (t) => {
-    const tmpDir = createTempDir('gsd-precommit-hook-');
+    const tmpDir = createTempDir('gtd-precommit-hook-');
     t.after(() => cleanup(tmpDir));
 
     const binDir = path.join(tmpDir, 'bin');
     fs.mkdirSync(binDir, { recursive: true });
 
     writeExec(path.join(binDir, 'git'), `#!/usr/bin/env bash\nprintf "%s\\n" "README.md"\n`);
-    writeExec(path.join(binDir, 'npm'), `#!/usr/bin/env bash\nprintf "called" > "$GSD_TEST_NPM_MARKER"\n`);
+    writeExec(path.join(binDir, 'npm'), `#!/usr/bin/env bash\nprintf "called" > "$GTD_TEST_NPM_MARKER"\n`);
 
     const marker = path.join(tmpDir, 'npm-called.txt');
 
@@ -57,7 +57,7 @@ describe('.githooks/pre-commit alias drift guard', () => {
       env: {
         ...process.env,
         PATH: `${binDir}:${process.env.PATH}`,
-        GSD_TEST_NPM_MARKER: marker,
+        GTD_TEST_NPM_MARKER: marker,
       },
       stdio: 'pipe',
     });

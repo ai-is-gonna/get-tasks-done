@@ -9,32 +9,32 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const { writeSurface, applySurface } = require('../get-shit-done/bin/lib/surface.cjs');
-const { loadSkillsManifest, writeActiveProfile } = require('../get-shit-done/bin/lib/install-profiles.cjs');
-const { CLUSTERS } = require('../get-shit-done/bin/lib/clusters.cjs');
+const { writeSurface, applySurface } = require('../get-tasks-done/bin/lib/surface.cjs');
+const { loadSkillsManifest, writeActiveProfile } = require('../get-tasks-done/bin/lib/install-profiles.cjs');
+const { CLUSTERS } = require('../get-tasks-done/bin/lib/clusters.cjs');
 
-const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 const REAL_AGENTS_DIR = path.join(__dirname, '..', 'agents');
 
 function tmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-surface-apply-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-surface-apply-'));
 }
 
 /**
  * Create a minimal fixture install dir structure.
  * Returns { runtimeConfigDir, commandsDir, agentsDir }.
- * runtimeConfigDir has a .gsd-source marker pointing to REAL_COMMANDS_DIR.
+ * runtimeConfigDir has a .gtd-source marker pointing to REAL_COMMANDS_DIR.
  */
 function createFixtureRuntime() {
   const base = tmpDir();
   const runtimeConfigDir = path.join(base, 'config');
-  const commandsDir = path.join(base, 'commands', 'gsd');
+  const commandsDir = path.join(base, 'commands', 'gtd');
   const agentsDir = path.join(base, 'agents');
   fs.mkdirSync(runtimeConfigDir, { recursive: true });
   fs.mkdirSync(commandsDir, { recursive: true });
   fs.mkdirSync(agentsDir, { recursive: true });
   // Write source marker so surface.cjs can find the install source
-  fs.writeFileSync(path.join(runtimeConfigDir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+  fs.writeFileSync(path.join(runtimeConfigDir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
   return { base, runtimeConfigDir, commandsDir, agentsDir };
 }
 
@@ -58,7 +58,7 @@ describe('applySurface', () => {
         assert.ok(fs.existsSync(path.join(REAL_COMMANDS_DIR, file)), `unexpected file: ${file}`);
       }
       // At minimum core skills should be present
-      const coreStems = ['new-project', 'discuss-phase', 'plan-phase', 'execute-phase', 'help', 'update'];
+      const coreStems = ['new-project', 'discuss-phase', 'plan-phase', 'export-phase-issues', 'work-task-issue', 'orchestrate-tasks', 'help', 'update'];
       for (const stem of coreStems) {
         assert.ok(files.includes(`${stem}.md`), `core skill "${stem}" should be in commandsDir`);
       }
@@ -98,7 +98,7 @@ describe('applySurface', () => {
       assert.ok(afterCore.size <= afterStandard.size, 'core should have fewer or equal files than standard');
 
       // Files removed should not be in core set
-      const coreStems = new Set(['new-project', 'discuss-phase', 'plan-phase', 'execute-phase', 'help', 'update']);
+      const coreStems = new Set(['new-project', 'discuss-phase', 'plan-phase', 'export-phase-issues', 'work-task-issue', 'orchestrate-tasks', 'help', 'update']);
       for (const file of afterCore) {
         const stem = file.slice(0, -3);
         assert.ok(
@@ -111,10 +111,10 @@ describe('applySurface', () => {
     }
   });
 
-  test('leaves non-gsd .md files alone in agentsDir', () => {
+  test('leaves non-gtd .md files alone in agentsDir', () => {
     const { base, runtimeConfigDir, commandsDir, agentsDir } = createFixtureRuntime();
     try {
-      // Place a non-gsd agent file in agentsDir
+      // Place a non-gtd agent file in agentsDir
       const foreignAgent = path.join(agentsDir, 'my-custom-agent.md');
       fs.writeFileSync(foreignAgent, '# custom agent\n', 'utf8');
 
@@ -128,8 +128,8 @@ describe('applySurface', () => {
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
       applySurface(runtimeConfigDir, commandsDir, agentsDir, manifest, CLUSTERS);
 
-      // Non-gsd file should still be there
-      assert.ok(fs.existsSync(foreignAgent), 'non-gsd agent file should not be touched');
+      // Non-gtd file should still be there
+      assert.ok(fs.existsSync(foreignAgent), 'non-gtd agent file should not be touched');
     } finally {
       fs.rmSync(base, { recursive: true, force: true });
     }

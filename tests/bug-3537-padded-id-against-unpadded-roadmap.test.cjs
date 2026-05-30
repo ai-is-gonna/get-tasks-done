@@ -27,12 +27,12 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 
-const gsdTools = path.resolve(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const gtdTools = path.resolve(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 
 function run(args, cwd) {
   try {
     return {
-      stdout: execFileSync('node', [gsdTools, ...args], {
+      stdout: execFileSync('node', [gtdTools, ...args], {
         cwd,
         timeout: 15000,
         encoding: 'utf-8',
@@ -145,8 +145,8 @@ function setupFixture(tmpDir, opts = {}) {
  * one side.
  */
 function expectParity({ verbWithPadded, verbWithUnpadded, fixtureOpts }) {
-  const tmpA = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-A-'));
-  const tmpB = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-B-'));
+  const tmpA = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-A-'));
+  const tmpB = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-B-'));
   try {
     const a = setupFixture(tmpA, fixtureOpts);
     const b = setupFixture(tmpB, fixtureOpts);
@@ -188,7 +188,7 @@ describe('bug #3537: phase verbs accept padded ids against un-padded ROADMAP pro
   });
 
   test('roadmap get-phase: padded 02.7 returns the same section as un-padded 2.7', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-get-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-get-'));
     try {
       setupFixture(tmp, {});
       const padded = run(['roadmap', 'get-phase', '02.7', '--raw'], tmp);
@@ -212,7 +212,7 @@ describe('bug #3537: phase verbs accept padded ids against un-padded ROADMAP pro
   });
 
   test('phase next-decimal: padded 02 finds decimals in un-padded ROADMAP', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-nd-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-nd-'));
     try {
       setupFixture(tmp, {
         paddedId: '02.7',
@@ -252,8 +252,8 @@ describe('bug #3537: phase verbs accept padded ids against un-padded ROADMAP pro
   });
 
   test('phase insert: padded base 02 finds anchor in un-padded ROADMAP', () => {
-    const tmpA = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-ins-A-'));
-    const tmpB = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-ins-B-'));
+    const tmpA = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-ins-A-'));
+    const tmpB = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-ins-B-'));
     try {
       // Use a phase 2 (no decimal) base so insert proposes 2.1.
       const optsA = {
@@ -304,7 +304,7 @@ describe('bug #3537: phase verbs accept padded ids against un-padded ROADMAP pro
   });
 
   test('roadmap annotate-dependencies: padded 02.7 finds phase section', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-ann-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-ann-'));
     try {
       const { roadmapPath } = setupFixture(tmp, {});
       const before = fs.readFileSync(roadmapPath, 'utf-8');
@@ -323,7 +323,7 @@ describe('bug #3537: phase verbs accept padded ids against un-padded ROADMAP pro
       // cross-cutting truths, but the verb must have reached the phase
       // section. Confirm by running parity against un-padded form on a
       // separate fixture and asserting equality.
-      const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3537-ann2-'));
+      const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3537-ann2-'));
       try {
         const { roadmapPath: rp2 } = setupFixture(tmp2, {});
         run(['roadmap', 'annotate-dependencies', '2.7'], tmp2);

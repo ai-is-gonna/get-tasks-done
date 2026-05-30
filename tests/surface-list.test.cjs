@@ -9,14 +9,14 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const { writeSurface, listSurface } = require('../get-shit-done/bin/lib/surface.cjs');
-const { loadSkillsManifest, writeActiveProfile } = require('../get-shit-done/bin/lib/install-profiles.cjs');
-const { CLUSTERS } = require('../get-shit-done/bin/lib/clusters.cjs');
+const { writeSurface, listSurface } = require('../get-tasks-done/bin/lib/surface.cjs');
+const { loadSkillsManifest, writeActiveProfile } = require('../get-tasks-done/bin/lib/install-profiles.cjs');
+const { CLUSTERS } = require('../get-tasks-done/bin/lib/clusters.cjs');
 
-const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const REAL_COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 function tmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-surface-list-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-surface-list-'));
 }
 
 function readFrontmatterDescription(markdown) {
@@ -40,7 +40,7 @@ describe('listSurface', () => {
     const dir = tmpDir();
     try {
       // Write source marker so listSurface can find descriptions
-      fs.writeFileSync(path.join(dir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
       writeActiveProfile(dir, 'core');
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
       const result = listSurface(dir, manifest, CLUSTERS);
@@ -57,7 +57,7 @@ describe('listSurface', () => {
   test('core profile: enabled has fewer skills than full', () => {
     const dir = tmpDir();
     try {
-      fs.writeFileSync(path.join(dir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
       writeActiveProfile(dir, 'core');
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
       const coreList = listSurface(dir, manifest, CLUSTERS);
@@ -79,7 +79,7 @@ describe('listSurface', () => {
   test('disabling utility cluster reduces enabled count', () => {
     const dir = tmpDir();
     try {
-      fs.writeFileSync(path.join(dir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
       writeActiveProfile(dir, 'standard');
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
 
@@ -105,7 +105,7 @@ describe('listSurface', () => {
   test('tokenCost is sum of description char lengths ÷ 4 for enabled skills', () => {
     const dir = tmpDir();
     try {
-      fs.writeFileSync(path.join(dir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
       writeActiveProfile(dir, 'core');
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
       const result = listSurface(dir, manifest, CLUSTERS);
@@ -129,7 +129,7 @@ describe('listSurface', () => {
   test('enabled and disabled arrays are sorted', () => {
     const dir = tmpDir();
     try {
-      fs.writeFileSync(path.join(dir, '.gsd-source'), REAL_COMMANDS_DIR, 'utf8');
+      fs.writeFileSync(path.join(dir, '.gtd-source'), REAL_COMMANDS_DIR, 'utf8');
       writeActiveProfile(dir, 'standard');
       const manifest = loadSkillsManifest(REAL_COMMANDS_DIR);
       const result = listSurface(dir, manifest, CLUSTERS);

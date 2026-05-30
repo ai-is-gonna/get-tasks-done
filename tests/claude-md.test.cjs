@@ -10,7 +10,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('generate-claude-md', () => {
   let tmpDir;
@@ -29,7 +29,7 @@ describe('generate-claude-md', () => {
       '# Test Project\n\n## What This Is\n\nA small test project.\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -39,16 +39,16 @@ describe('generate-claude-md', () => {
 
     const claudePath = path.join(tmpDir, 'CLAUDE.md');
     const content = fs.readFileSync(claudePath, 'utf-8');
-    assert.ok(content.includes('## GSD Workflow Enforcement'));
+    assert.ok(content.includes('## GTD Workflow Enforcement'));
     // #3584: generated CLAUDE.md must emit the runtime-routable hyphen-form
     // (Claude/Cursor/OpenCode/Kilo etc.); the legacy colon form is no longer
     // dispatched by current skill installs.
-    assert.ok(content.includes('/gsd-quick'));
-    assert.ok(content.includes('/gsd-debug'));
-    assert.ok(content.includes('/gsd-execute-phase'));
-    assert.ok(!content.includes('/gsd:quick'));
-    assert.ok(!content.includes('/gsd:execute-phase'));
-    assert.ok(content.includes('Do not make direct repo edits outside a GSD workflow'));
+    assert.ok(content.includes('/gtd-quick'));
+    assert.ok(content.includes('/gtd-debug'));
+    assert.ok(content.includes('/gtd-work-task-issue'));
+    assert.ok(!content.includes('/gtd:quick'));
+    assert.ok(!content.includes('/gtd:work-task-issue --phase'));
+    assert.ok(content.includes('Do not make direct repo edits outside a GTD workflow'));
   });
 
   test('adds workflow enforcement section when updating an existing CLAUDE.md', () => {
@@ -58,7 +58,7 @@ describe('generate-claude-md', () => {
     );
     fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), '## Local Notes\n\nKeep this intro.\n');
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -66,12 +66,12 @@ describe('generate-claude-md', () => {
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     assert.ok(content.includes('## Local Notes'));
-    assert.ok(content.includes('## GSD Workflow Enforcement'));
+    assert.ok(content.includes('## GTD Workflow Enforcement'));
   });
 });
 
 describe('new-project workflow includes CLAUDE.md generation', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'new-project.md');
+  const workflowPath = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'new-project.md');
   const commandsPath = path.join(__dirname, '..', 'docs', 'COMMANDS.md');
 
   test('new-project workflow generates instruction file before final commit', () => {
@@ -111,15 +111,15 @@ describe('generate-claude-md skills section', () => {
   });
 
   test('includes skills fallback when no skills directories exist', () => {
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.ok(output.sections_fallback.includes('skills'));
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(content.includes('<!-- GSD:skills-start'));
-    assert.ok(content.includes('<!-- GSD:skills-end -->'));
+    assert.ok(content.includes('<!-- GTD:skills-start'));
+    assert.ok(content.includes('<!-- GTD:skills-end -->'));
     assert.ok(content.includes('No project skills found. Add skills to any of'));
   });
 
@@ -131,7 +131,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: api-payments\ndescription: Payment gateway integration.\n---\n\n# API Payments\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -152,7 +152,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: data-sync\ndescription: ERP synchronization flows.\n---\n\n# Data Sync\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -168,10 +168,10 @@ describe('generate-claude-md skills section', () => {
       '---\nname: automation\ndescription: Project Codex skill.\n---\n\n# Automation\n'
     );
 
-    const homeDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gsd-claude-skills-home-'));
-    fs.mkdirSync(path.join(homeDir, '.claude', 'get-shit-done', 'skills', 'import-only'), { recursive: true });
+    const homeDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gtd-claude-skills-home-'));
+    fs.mkdirSync(path.join(homeDir, '.claude', 'get-tasks-done', 'skills', 'import-only'), { recursive: true });
     fs.writeFileSync(
-      path.join(homeDir, '.claude', 'get-shit-done', 'skills', 'import-only', 'SKILL.md'),
+      path.join(homeDir, '.claude', 'get-tasks-done', 'skills', 'import-only', 'SKILL.md'),
       '---\nname: import-only\ndescription: Deprecated import-only skill.\n---\n'
     );
 
@@ -179,7 +179,7 @@ describe('generate-claude-md skills section', () => {
     process.env.HOME = homeDir;
 
     try {
-      const result = runGsdTools('generate-claude-md', tmpDir);
+      const result = runGtdTools('generate-claude-md', tmpDir);
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -192,25 +192,25 @@ describe('generate-claude-md skills section', () => {
     }
   });
 
-  test('skips gsd- prefixed skill directories', () => {
-    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'gsd-plan-phase');
+  test('skips gtd- prefixed skill directories', () => {
+    const gtdSkillDir = path.join(tmpDir, '.claude', 'skills', 'gtd-plan-phase');
     const userSkillDir = path.join(tmpDir, '.claude', 'skills', 'my-feature');
-    fs.mkdirSync(gsdSkillDir, { recursive: true });
+    fs.mkdirSync(gtdSkillDir, { recursive: true });
     fs.mkdirSync(userSkillDir, { recursive: true });
     fs.writeFileSync(
-      path.join(gsdSkillDir, 'SKILL.md'),
-      '---\nname: gsd-plan-phase\ndescription: GSD internal skill.\n---\n'
+      path.join(gtdSkillDir, 'SKILL.md'),
+      '---\nname: gtd-plan-phase\ndescription: GTD internal skill.\n---\n'
     );
     fs.writeFileSync(
       path.join(userSkillDir, 'SKILL.md'),
       '---\nname: my-feature\ndescription: Custom project skill.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(!content.includes('gsd-plan-phase'));
+    assert.ok(!content.includes('gtd-plan-phase'));
     assert.ok(content.includes('my-feature'));
     assert.ok(content.includes('Custom project skill'));
   });
@@ -223,7 +223,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: complex-skill\ndescription: First line of description.\n  Continued on second line.\n  And a third line.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -242,7 +242,7 @@ describe('generate-claude-md skills section', () => {
     fs.writeFileSync(path.join(dir1, 'SKILL.md'), skillContent);
     fs.writeFileSync(path.join(dir2, 'SKILL.md'), skillContent);
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -253,7 +253,7 @@ describe('generate-claude-md skills section', () => {
 
   test('updates existing skills section on regeneration', () => {
     // First generation — no skills
-    runGsdTools('generate-claude-md', tmpDir);
+    runGtdTools('generate-claude-md', tmpDir);
     let content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     assert.ok(content.includes('No project skills found'));
 
@@ -265,7 +265,7 @@ describe('generate-claude-md skills section', () => {
       '---\nname: new-skill\ndescription: Just added.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
@@ -282,13 +282,13 @@ describe('generate-claude-md skills section', () => {
       '---\nname: ordering-test\ndescription: Verify section order.\n---\n'
     );
 
-    const result = runGsdTools('generate-claude-md', tmpDir);
+    const result = runGtdTools('generate-claude-md', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     const archIdx = content.indexOf('## Architecture');
     const skillsIdx = content.indexOf('## Project Skills');
-    const workflowIdx = content.indexOf('## GSD Workflow Enforcement');
+    const workflowIdx = content.indexOf('## GTD Workflow Enforcement');
     assert.ok(archIdx < skillsIdx, 'Skills section should come after Architecture');
     assert.ok(skillsIdx < workflowIdx, 'Skills section should come before Workflow Enforcement');
   });

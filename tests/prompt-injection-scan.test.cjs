@@ -29,7 +29,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const { scanForInjection, INJECTION_PATTERNS } = require('../get-shit-done/bin/lib/security.cjs');
+const { scanForInjection, INJECTION_PATTERNS } = require('../get-tasks-done/bin/lib/security.cjs');
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
@@ -39,8 +39,8 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 const SCAN_DIRS = [
   'agents',
   'commands',
-  'get-shit-done/workflows',
-  'get-shit-done/bin/lib',
+  'get-tasks-done/workflows',
+  'get-tasks-done/bin/lib',
   'hooks',
 ];
 
@@ -50,13 +50,13 @@ const SCAN_EXTS = new Set(['.md', '.cjs', '.js', '.json']);
 // Files that legitimately reference injection patterns (e.g., security docs, this test)
 // or exceed the 50K size threshold due to legitimate workflow complexity
 const ALLOWLIST = new Set([
-  'get-shit-done/bin/lib/security.cjs',        // The security module itself
-  'get-shit-done/workflows/discuss-phase.md',  // Large workflow (~50K) with power mode + i18n
-  'get-shit-done/workflows/new-project.md',     // Large workflow (~50K) — agent install, runtime detect, brownfield map, #3491 worktree gating
-  'get-shit-done/workflows/execute-phase.md',  // Large orchestration workflow (~51K) with wave execution + code-review gate
-  'get-shit-done/workflows/plan-phase.md',      // Large orchestration workflow (~51K) with TDD mode integration
-  'hooks/gsd-prompt-guard.js',                  // The prompt guard hook
-  'hooks/gsd-read-injection-scanner.js',        // The read injection scanner (contains patterns)
+  'get-tasks-done/bin/lib/security.cjs',        // The security module itself
+  'get-tasks-done/workflows/discuss-phase.md',  // Large workflow (~50K) with power mode + i18n
+  'get-tasks-done/workflows/new-project.md',     // Large workflow (~50K) — agent install, runtime detect, brownfield map, #3491 worktree gating
+  'get-tasks-done/workflows/work-task-issue.md',  // Large orchestration workflow (~51K) with wave execution + code-review gate
+  'get-tasks-done/workflows/plan-phase.md',      // Large orchestration workflow (~51K) with TDD mode integration
+  'hooks/gtd-prompt-guard.js',                  // The prompt guard hook
+  'hooks/gtd-read-injection-scanner.js',        // The read injection scanner (contains patterns)
   'tests/security.test.cjs',                    // Security tests
   'tests/prompt-injection-scan.test.cjs',       // This file
 ]);

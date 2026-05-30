@@ -2,7 +2,7 @@
  * Profile and learnings query handlers — session scanning, questionnaire,
  * profile generation, and knowledge store management.
  *
- * Ported from get-shit-done/bin/lib/profile-pipeline.cjs, profile-output.cjs,
+ * Ported from get-tasks-done/bin/lib/profile-pipeline.cjs, profile-output.cjs,
  * and learnings.cjs.
  *
  * @example
@@ -13,7 +13,7 @@
  * // { data: { projects: [...], project_count: 5, session_count: 42 } }
  *
  * await profileQuestionnaire([], '/project');
- * // { data: { mode: 'interactive', questions: [...] } } — same shape as gsd-tools.cjs
+ * // { data: { mode: 'interactive', questions: [...] } } — same shape as gtd-tools.cjs
  * ```
  */
 
@@ -23,7 +23,7 @@ import { homedir } from 'node:os';
 import { createHash, randomBytes } from 'node:crypto';
 
 import { planningPaths } from './helpers.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import type { QueryHandler } from './utils.js';
 import { buildScanSessionsProjects, getScanSessionsRoot } from './profile-scan-sessions.js';
 import { runExtractMessages } from './profile-extract-messages.js';
@@ -34,9 +34,9 @@ import {
   isAmbiguousAnswer,
 } from './profile-questionnaire-data.js';
 
-// ─── Learnings — ~/.gsd/knowledge/ knowledge store ───────────────────────
+// ─── Learnings — ~/.gtd/knowledge/ knowledge store ───────────────────────
 
-const STORE_DIR = join(homedir(), '.gsd', 'knowledge');
+const STORE_DIR = join(homedir(), '.gtd', 'knowledge');
 
 function ensureStore(): void {
   if (!existsSync(STORE_DIR)) mkdirSync(STORE_DIR, { recursive: true });
@@ -71,7 +71,7 @@ function learningsList(): Array<Record<string, unknown>> {
 }
 
 /**
- * List all entries in the global learnings store (`~/.gsd/knowledge/`).
+ * List all entries in the global learnings store (`~/.gtd/knowledge/`).
  *
  * Port of `cmdLearningsList` from learnings.cjs.
  */
@@ -84,7 +84,7 @@ export const learningsListHandler: QueryHandler = async () => {
  * Query learnings from the global knowledge store, optionally filtered by tag.
  *
  * Port of `cmdLearningsQuery` from learnings.cjs lines 316-323.
- * Called by gsd-planner agent to inject prior learnings into plan generation.
+ * Called by gtd-planner agent to inject prior learnings into plan generation.
  *
  * Args: --tag <tag> [--limit N]
  */
@@ -166,13 +166,13 @@ export const learningsPrune: QueryHandler = async (args) => {
   const olderIdx = args.indexOf('--older-than');
   const olderThan = olderIdx !== -1 ? args[olderIdx + 1] : null;
   if (!olderThan) {
-    throw new GSDError('Usage: learnings prune --older-than <duration>', ErrorClassification.Validation);
+    throw new GTDError('Usage: learnings prune --older-than <duration>', ErrorClassification.Validation);
   }
   try {
     return { data: learningsPruneStore(olderThan) };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    throw new GSDError(msg, ErrorClassification.Validation);
+    throw new GTDError(msg, ErrorClassification.Validation);
   }
 };
 
@@ -180,10 +180,10 @@ export const learningsPrune: QueryHandler = async (args) => {
 export const learningsDelete: QueryHandler = async (args) => {
   const id = args[0];
   if (!id) {
-    throw new GSDError('Usage: learnings delete <id>', ErrorClassification.Validation);
+    throw new GTDError('Usage: learnings delete <id>', ErrorClassification.Validation);
   }
   if (!/^[a-z0-9]+-[a-f0-9]+$/.test(id)) {
-    throw new GSDError(`Invalid learning ID: "${id}"`, ErrorClassification.Validation);
+    throw new GTDError(`Invalid learning ID: "${id}"`, ErrorClassification.Validation);
   }
   const filePath = join(STORE_DIR, `${id}.json`);
   if (!existsSync(filePath)) {
@@ -198,7 +198,7 @@ export const learningsDelete: QueryHandler = async (args) => {
 /**
  * Extract user messages from Claude Code session files for a given project.
  *
- * Port of `cmdExtractMessages` from profile-pipeline.cjs — JSON matches `gsd-tools extract-messages`
+ * Port of `cmdExtractMessages` from profile-pipeline.cjs — JSON matches `gtd-tools extract-messages`
  * (`output_file` JSONL + metadata). Uses `--session` (CJS); `--session-id` is accepted as an alias.
  *
  * @param args - args[0]: project name/keyword (required), `--session <id>`, `--limit N`, `--path <dir>`
@@ -213,8 +213,8 @@ export const extractMessages: QueryHandler = async (args) => {
   const limit = limitIdx !== -1 ? (parseInt(args[limitIdx + 1]!, 10) || null) : null;
   const projectArg = args[0];
   if (!projectArg || projectArg.startsWith('--')) {
-    throw new GSDError(
-      'Usage: gsd-tools extract-messages <project> [--session <id>] [--limit N] [--path <dir>]\nRun scan-sessions first to see available projects.',
+    throw new GTDError(
+      'Usage: gtd-tools extract-messages <project> [--session <id>] [--limit N] [--path <dir>]\nRun scan-sessions first to see available projects.',
       ErrorClassification.Validation,
     );
   }
@@ -231,7 +231,7 @@ export const scanSessions: QueryHandler = async (args) => {
 
   if (getScanSessionsRoot(overridePath) === null) {
     const searchedPath = overridePath || '~/.claude/projects';
-    throw new GSDError(
+    throw new GTDError(
       `No Claude Code sessions found at ${searchedPath}.${overridePath ? '' : ' Is Claude Code installed?'}`,
       ErrorClassification.Validation,
     );
@@ -243,7 +243,7 @@ export const scanSessions: QueryHandler = async (args) => {
 
 /**
  * Multi-project session sampling for profiling — port of `cmdProfileSample` (`profile-pipeline.cjs`).
- * JSON matches `gsd-tools profile-sample` (`output_file` JSONL + metadata).
+ * JSON matches `gtd-tools profile-sample` (`output_file` JSONL + metadata).
  */
 export const profileSample: QueryHandler = async (args) => {
   const pathIdx = args.indexOf('--path');
@@ -287,7 +287,7 @@ export const profileQuestionnaire: QueryHandler = async (args, _projectDir) => {
 
   const answerValues = answersStr.split(',').map((a) => a.trim());
   if (answerValues.length !== PROFILING_QUESTIONS.length) {
-    throw new GSDError(
+    throw new GTDError(
       `Expected ${PROFILING_QUESTIONS.length} answers (comma-separated), got ${answerValues.length}`,
       ErrorClassification.Validation,
     );
@@ -310,7 +310,7 @@ export const profileQuestionnaire: QueryHandler = async (args, _projectDir) => {
     const answerValue = answerValues[i]!;
     const selectedOption = question.options.find((o) => o.value === answerValue);
     if (!selectedOption) {
-      throw new GSDError(
+      throw new GTDError(
         `Invalid answer "${answerValue}" for ${question.dimension}. Valid values: ${question.options.map((o) => o.value).join(', ')}`,
         ErrorClassification.Validation,
       );

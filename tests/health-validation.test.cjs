@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Health Validation
+ * GTD Tools Tests - Health Validation
  *
  * Tests for fix/health-validation-1473c:
  *   - W011: STATE/ROADMAP cross-validation (phase divergence detection)
@@ -15,7 +15,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -80,7 +80,7 @@ describe('W011: STATE/ROADMAP cross-validation', () => {
     writeValidConfigJson(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '03-database-layer'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -103,7 +103,7 @@ describe('W011: STATE/ROADMAP cross-validation', () => {
     writeValidConfigJson(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '02-api-layer'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -136,7 +136,7 @@ describe('config field validation', () => {
     writeValidConfigJson(tmpDir, { branching_strategy: 'banana' });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -153,7 +153,7 @@ describe('config field validation', () => {
     writeValidConfigJson(tmpDir, { context_window: -500 });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -167,10 +167,10 @@ describe('config field validation', () => {
     writeMinimalProjectMd(tmpDir);
     writeMinimalRoadmap(tmpDir, ['1']);
     writeMinimalStateMd(tmpDir, '# Session State\n\nPhase 1 in progress.\n');
-    writeValidConfigJson(tmpDir, { phase_branch_template: 'gsd/no-placeholder-{slug}' });
+    writeValidConfigJson(tmpDir, { phase_branch_template: 'gtd/no-placeholder-{slug}' });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -187,7 +187,7 @@ describe('config field validation', () => {
     writeValidConfigJson(tmpDir, { milestone_branch_template: 'release/no-placeholder' });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -220,7 +220,7 @@ describe('boundary conditions', () => {
     writeValidConfigJson(tmpDir, { context_window: 500000 });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -237,7 +237,7 @@ describe('boundary conditions', () => {
     writeValidConfigJson(tmpDir, { context_window: 200000 });
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -254,7 +254,7 @@ describe('boundary conditions', () => {
     writeValidConfigJson(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -271,7 +271,7 @@ describe('boundary conditions', () => {
     writeValidConfigJson(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command should not crash: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -287,7 +287,7 @@ describe('boundary conditions', () => {
     writeValidConfigJson(tmpDir);
     fs.mkdirSync(path.join(tmpDir, '.planning', 'phases', '01-a'), { recursive: true });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command should not crash on empty ROADMAP.md: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -309,7 +309,7 @@ describe('boundary conditions', () => {
       '# Roadmap\n\n### Phase 1: Test Phase\n'
     );
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `validate health should not crash on invalid JSON: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -339,7 +339,7 @@ describe('stateReplaceFieldWithFallback field-miss warning', () => {
       `# Project State\n\n**Current Phase:** 01\n**Current Plan:** 1\n**Total Plans in Phase:** 3\n`
     );
 
-    const result = runGsdTools('state advance-plan', tmpDir);
+    const result = runGtdTools('state advance-plan', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -376,7 +376,7 @@ describe('stateReplaceFieldWithFallback field-miss warning', () => {
 
     const { performance } = require('perf_hooks');
     const start = performance.now();
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     const elapsed = performance.now() - start;
 
     assert.ok(result.success, `validate health should succeed: ${result.error}`);

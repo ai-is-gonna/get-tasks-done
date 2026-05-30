@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * CLI entry point for gsd-sdk.
+ * CLI entry point for gtd-sdk.
  *
- * Usage: gsd-sdk run "<prompt>" [--project-dir <dir>] [--ws-port <port>]
+ * Usage: gtd-sdk run "<prompt>" [--project-dir <dir>] [--ws-port <port>]
  *                                [--model <model>] [--max-budget <n>]
  */
 
@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GSD } from './index.js';
+import { GTD } from './index.js';
 import { CLITransport } from './cli-transport.js';
 import { WSTransport } from './ws-transport.js';
 import { InitRunner } from './init-runner.js';
@@ -39,13 +39,13 @@ export interface ParsedCliArgs {
   version: boolean;
   /**
    * When `command === 'query'`, tokens after `query` with only known SDK flags removed.
-   * Extra flags are kept so handlers that share gsd-tools-style argv (e.g. `--pick`) still receive them.
+   * Extra flags are kept so handlers that share gtd-tools-style argv (e.g. `--pick`) still receive them.
    */
   queryArgv?: string[];
 }
 
 /**
- * Parse `gsd-sdk query …` without rejecting unknown flags (query argv is forwarded to the registry).
+ * Parse `gtd-sdk query …` without rejecting unknown flags (query argv is forwarded to the registry).
  */
 function parseCliArgsQueryPermissive(argv: string[]): ParsedCliArgs {
   let projectDir = process.cwd();
@@ -86,13 +86,13 @@ function parseCliArgsQueryPermissive(argv: string[]): ParsedCliArgs {
       continue;
     }
     // #3019: do NOT consume -h / --help here unconditionally. Pushing the
-    // flag onto queryArgv lets the registered handler (or the gsd-tools.cjs
+    // flag onto queryArgv lets the registered handler (or the gtd-tools.cjs
     // fallback) render contextual subcommand help. We still set the global
     // `help` flag when the flag appears, but only short-circuit dispatch in
     // main() when there is no real subcommand to dispatch to (i.e. the only
     // tokens in queryArgv are the help flags themselves). That preserves
-    // `gsd-sdk query --help` → top-level USAGE while letting
-    // `gsd-sdk query phase add --help` reach the handler.
+    // `gtd-sdk query --help` → top-level USAGE while letting
+    // `gtd-sdk query phase add --help` reach the handler.
     if (a === '-h' || a === '--help') {
       help = true;
       queryArgv.push(a);
@@ -182,7 +182,7 @@ export function parseCliArgs(argv: string[]): ParsedCliArgs {
 // ─── Usage ───────────────────────────────────────────────────────────────────
 
 export const USAGE = `
-Usage: gsd-sdk <command> [args] [options]
+Usage: gtd-sdk <command> [args] [options]
 
 Commands:
   run <prompt>          Run a full milestone from a text prompt
@@ -263,9 +263,9 @@ async function readStdin(): Promise<string> {
   if (stdin.isTTY) {
     throw new Error(
       'No input provided. Usage:\n' +
-      '  gsd-sdk init @path/to/prd.md\n' +
-      '  gsd-sdk init "build a todo app"\n' +
-      '  cat prd.md | gsd-sdk init'
+      '  gtd-sdk init @path/to/prd.md\n' +
+      '  gtd-sdk init "build a todo app"\n' +
+      '  cat prd.md | gtd-sdk init'
     );
   }
 
@@ -299,7 +299,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (args.version) {
     const ver = await getVersion();
-    console.log(`gsd-sdk v${ver}`);
+    console.log(`gtd-sdk v${ver}`);
     return;
   }
 
@@ -323,11 +323,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
-  // Fall back to GSD_WORKSTREAM env var when --ws is not supplied (#2791).
-  // gsd-tools.cjs resolves the active workstream via this env var; parity
-  // means gsd-sdk command paths see the same .planning/ path as gsd-tools.
-  if (args.ws === undefined && process.env.GSD_WORKSTREAM) {
-    const envWs = process.env.GSD_WORKSTREAM;
+  // Fall back to GTD_WORKSTREAM env var when --ws is not supplied (#2791).
+  // gtd-tools.cjs resolves the active workstream via this env var; parity
+  // means gtd-sdk command paths see the same .planning/ path as gtd-tools.
+  if (args.ws === undefined && process.env.GTD_WORKSTREAM) {
+    const envWs = process.env.GTD_WORKSTREAM;
     if (validateWorkstreamName(envWs)) {
       args = { ...args, ws: envWs };
     }
@@ -340,14 +340,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (args.command !== 'run' && args.command !== 'init' && args.command !== 'auto') {
-    console.error('Error: Expected "gsd-sdk run <prompt>", "gsd-sdk auto", "gsd-sdk init [input]", or "gsd-sdk query <command>"');
+    console.error('Error: Expected "gtd-sdk run <prompt>", "gtd-sdk auto", "gtd-sdk init [input]", or "gtd-sdk query <command>"');
     console.error(USAGE);
     process.exitCode = 1;
     return;
   }
 
   if (args.command === 'run' && !args.prompt) {
-    console.error('Error: "gsd-sdk run" requires a prompt');
+    console.error('Error: "gtd-sdk run" requires a prompt');
     console.error(USAGE);
     process.exitCode = 1;
     return;
@@ -366,8 +366,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     console.log(`[init] Resolved input: ${input.length} chars`);
 
-    // Build GSD instance for tools and event stream
-    const gsd = new GSD({
+    // Build GTD instance for tools and event stream
+    const gtd = new GTD({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -376,23 +376,23 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     // Wire CLI transport
     const cliTransport = new CLITransport();
-    gsd.addTransport(cliTransport);
+    gtd.addTransport(cliTransport);
 
     // Optional WebSocket transport
     let wsTransport: WSTransport | undefined;
     if (args.wsPort !== undefined) {
       wsTransport = new WSTransport({ port: args.wsPort });
       await wsTransport.start();
-      gsd.addTransport(wsTransport);
+      gtd.addTransport(wsTransport);
       console.log(`WebSocket transport listening on port ${args.wsPort}`);
     }
 
     try {
-      const tools = gsd.createTools();
+      const tools = gtd.createTools();
       const runner = new InitRunner({
         projectDir: args.projectDir,
         tools,
-        eventStream: gsd.eventStream,
+        eventStream: gtd.eventStream,
         config: {
           maxBudgetPerSession: args.maxBudget,
           orchestratorModel: args.model,
@@ -439,7 +439,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   if (args.command === 'auto') {
     // #2832: refuse to silently route non-Claude runtime projects through the
     // Claude Agent SDK. Load project config (best effort — falls back to
-    // defaults when missing) and gate before constructing GSD/InitRunner.
+    // defaults when missing) and gate before constructing GTD/InitRunner.
     try {
       const cfg = await loadConfig(args.projectDir, args.ws);
       assertRuntimeSupportsAutoMode(cfg);
@@ -449,7 +449,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       return;
     }
 
-    const gsd = new GSD({
+    const gtd = new GTD({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -459,14 +459,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     // Wire CLI transport (always active)
     const cliTransport = new CLITransport();
-    gsd.addTransport(cliTransport);
+    gtd.addTransport(cliTransport);
 
     // Optional WebSocket transport
     let wsTransport: WSTransport | undefined;
     if (args.wsPort !== undefined) {
       wsTransport = new WSTransport({ port: args.wsPort });
       await wsTransport.start();
-      gsd.addTransport(wsTransport);
+      gtd.addTransport(wsTransport);
       console.log(`WebSocket transport listening on port ${args.wsPort}`);
     }
 
@@ -481,11 +481,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
         console.log(`[auto] Bootstrapping project from --init (${initInput.length} chars)`);
 
-        const tools = gsd.createTools();
+        const tools = gtd.createTools();
         const runner = new InitRunner({
           projectDir: args.projectDir,
           tools,
-          eventStream: gsd.eventStream,
+          eventStream: gtd.eventStream,
           config: {
             maxBudgetPerSession: args.maxBudget,
             orchestratorModel: args.model,
@@ -512,7 +512,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
         }
       }
 
-      const result = await gsd.run('');
+      const result = await gtd.run('');
 
       // Final summary
       const status = result.success ? 'SUCCESS' : 'FAILED';
@@ -538,8 +538,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Run command ─────────────────────────────────────────────────────────
 
-  // Build GSD instance
-  const gsd = new GSD({
+  // Build GTD instance
+  const gtd = new GTD({
     projectDir: args.projectDir,
     model: args.model,
     maxBudgetUsd: args.maxBudget,
@@ -548,19 +548,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // Wire CLI transport (always active)
   const cliTransport = new CLITransport();
-  gsd.addTransport(cliTransport);
+  gtd.addTransport(cliTransport);
 
   // Optional WebSocket transport
   let wsTransport: WSTransport | undefined;
   if (args.wsPort !== undefined) {
     wsTransport = new WSTransport({ port: args.wsPort });
     await wsTransport.start();
-    gsd.addTransport(wsTransport);
+    gtd.addTransport(wsTransport);
     console.log(`WebSocket transport listening on port ${args.wsPort}`);
   }
 
   try {
-    const result = await gsd.run(args.prompt!);
+    const result = await gtd.run(args.prompt!);
 
     // Final summary
     const status = result.success ? 'SUCCESS' : 'FAILED';

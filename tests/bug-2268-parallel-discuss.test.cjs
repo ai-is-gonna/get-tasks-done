@@ -16,7 +16,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 function writeRoadmap(tmpDir, phases) {
   const sections = phases.map(p => {
@@ -50,7 +50,7 @@ describe('bug #2268: parallel discuss — all undiscussed phases marked is_next_
       { number: '2', name: 'Cloud Deployment' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].is_next_to_discuss, true, 'phase 1 should be discussable');
@@ -64,7 +64,7 @@ describe('bug #2268: parallel discuss — all undiscussed phases marked is_next_
       { number: '2', name: 'Cloud Deployment' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     const discussActions = output.recommended_actions.filter(a => a.action === 'discuss');
@@ -84,7 +84,7 @@ describe('bug #2268: parallel discuss — all undiscussed phases marked is_next_
       { number: '5', name: 'Epsilon' },
     ]);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     for (const phase of output.phases) {
@@ -103,7 +103,7 @@ describe('bug #2268: parallel discuss — all undiscussed phases marked is_next_
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, '01-CONTEXT.md'), '# Context');
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     const output = JSON.parse(result.output);
 
     assert.strictEqual(output.phases[0].is_next_to_discuss, false, 'discussed phase must not be is_next_to_discuss');

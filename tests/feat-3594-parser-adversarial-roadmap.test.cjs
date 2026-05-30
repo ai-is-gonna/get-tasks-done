@@ -3,7 +3,7 @@
  *
  * Loads each fixture in `tests/fixtures/adversarial/roadmap/` as the
  * project's `.planning/ROADMAP.md` and pins invariants on the public
- * `gsd-tools roadmap get-phase <N>` surface — which routes through the
+ * `gtd-tools roadmap get-phase <N>` surface — which routes through the
  * SDK bridge when available and the CJS handler otherwise.
  *
  * Per CONTRIBUTING.md §"Testing Standards / Parser and project-file
@@ -52,7 +52,7 @@ function projectWithFixture(t, fixtureName) {
 }
 
 /**
- * Run `gsd-tools roadmap get-phase <N>` and parse the JSON payload.
+ * Run `gtd-tools roadmap get-phase <N>` and parse the JSON payload.
  * Returns `{ ok, exit, parsed, raw }` so tests can assert on either
  * the exit code or the structured payload.
  */

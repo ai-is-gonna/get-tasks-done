@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { escapeRegex, normalizePhaseName, planningPaths } from './helpers.js';
 import { findPhase } from './phase.js';
 import { detectSchemaFiles } from './schema-detect.js';
@@ -37,7 +37,7 @@ async function roadmapHeadingForPhase(projectDir: string, phaseNum: string, work
 export const detectPhaseType: QueryHandler = async (args, projectDir, workstream) => {
   const raw = args[0];
   if (!raw) {
-    throw new GSDError('phase number required for detect phase-type', ErrorClassification.Validation);
+    throw new GTDError('phase number required for detect phase-type', ErrorClassification.Validation);
   }
   const phaseArg = normalizePhaseName(raw);
 

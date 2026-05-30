@@ -3,9 +3,9 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD AI Evals Framework Tests
+ * GTD AI Evals Framework Tests
  *
- * Validates the /gsd-ai-integration-phase + /gsd-eval-review contribution:
+ * Validates the /gtd-ai-integration-phase + /gtd-eval-review contribution:
  * - workflow.ai_integration_phase key in config defaults and config-set/get
  * - W016 validate-health warning when ai_integration_phase absent
  * - addAiIntegrationPhaseKey repair action
@@ -20,14 +20,14 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const REPO_ROOT      = path.join(__dirname, '..');
 const AGENTS_DIR     = path.join(REPO_ROOT, 'agents');
-const COMMANDS_DIR   = path.join(REPO_ROOT, 'commands', 'gsd');
-const WORKFLOWS_DIR  = path.join(REPO_ROOT, 'get-shit-done', 'workflows');
-const TEMPLATES_DIR  = path.join(REPO_ROOT, 'get-shit-done', 'templates');
-const REFERENCES_DIR = path.join(REPO_ROOT, 'get-shit-done', 'references');
+const COMMANDS_DIR   = path.join(REPO_ROOT, 'commands', 'gtd');
+const WORKFLOWS_DIR  = path.join(REPO_ROOT, 'get-tasks-done', 'workflows');
+const TEMPLATES_DIR  = path.join(REPO_ROOT, 'get-tasks-done', 'templates');
+const REFERENCES_DIR = path.join(REPO_ROOT, 'get-tasks-done', 'references');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ describe('CONFIG: workflow.ai_integration_phase default', () => {
   afterEach(() => { cleanup(tmpDir); });
 
   test('config-ensure-section includes workflow.ai_integration_phase as boolean', () => {
-    const result = runGsdTools('config-ensure-section', tmpDir);
+    const result = runGtdTools('config-ensure-section', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const config = readConfig(tmpDir);
@@ -71,7 +71,7 @@ describe('CONFIG: workflow.ai_integration_phase default', () => {
   });
 
   test('workflow.ai_integration_phase defaults to true', () => {
-    runGsdTools('config-ensure-section', tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
     const config = readConfig(tmpDir);
     assert.strictEqual(config.workflow.ai_integration_phase, true, 'workflow.ai_integration_phase should default to true');
   });
@@ -84,13 +84,13 @@ describe('CONFIG: config-set / config-get workflow.ai_integration_phase', () => 
 
   beforeEach(() => {
     tmpDir = createTempProject();
-    runGsdTools('config-ensure-section', tmpDir);
+    runGtdTools('config-ensure-section', tmpDir);
   });
 
   afterEach(() => { cleanup(tmpDir); });
 
   test('config-set workflow.ai_integration_phase false persists as boolean false', () => {
-    const result = runGsdTools('config-set workflow.ai_integration_phase false', tmpDir);
+    const result = runGtdTools('config-set workflow.ai_integration_phase false', tmpDir);
     assert.ok(result.success, `config-set failed: ${result.error}`);
 
     const config = readConfig(tmpDir);
@@ -99,8 +99,8 @@ describe('CONFIG: config-set / config-get workflow.ai_integration_phase', () => 
   });
 
   test('config-set workflow.ai_integration_phase true persists as boolean true', () => {
-    runGsdTools('config-set workflow.ai_integration_phase false', tmpDir);
-    const result = runGsdTools('config-set workflow.ai_integration_phase true', tmpDir);
+    runGtdTools('config-set workflow.ai_integration_phase false', tmpDir);
+    const result = runGtdTools('config-set workflow.ai_integration_phase true', tmpDir);
     assert.ok(result.success, `config-set failed: ${result.error}`);
 
     const config = readConfig(tmpDir);
@@ -108,8 +108,8 @@ describe('CONFIG: config-set / config-get workflow.ai_integration_phase', () => 
   });
 
   test('config-get workflow.ai_integration_phase returns the stored value', () => {
-    runGsdTools('config-set workflow.ai_integration_phase false', tmpDir);
-    const result = runGsdTools('config-get workflow.ai_integration_phase', tmpDir);
+    runGtdTools('config-set workflow.ai_integration_phase false', tmpDir);
+    const result = runGtdTools('config-get workflow.ai_integration_phase', tmpDir);
     assert.ok(result.success, `config-get failed: ${result.error}`);
     assert.strictEqual(JSON.parse(result.output), false);
   });
@@ -127,7 +127,7 @@ describe('HEALTH: W016 — workflow.ai_integration_phase absent', () => {
     writeMinimalHealth(tmpDir);
     writeConfig(tmpDir, { model_profile: 'balanced', workflow: { research: true, nyquist_validation: true } });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -144,7 +144,7 @@ describe('HEALTH: W016 — workflow.ai_integration_phase absent', () => {
       workflow: { research: true, nyquist_validation: true, ai_integration_phase: true },
     });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -161,7 +161,7 @@ describe('HEALTH: W016 — workflow.ai_integration_phase absent', () => {
       workflow: { research: true, nyquist_validation: true, ai_integration_phase: false },
     });
 
-    const result = runGsdTools('validate health', tmpDir);
+    const result = runGtdTools('validate health', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -187,7 +187,7 @@ describe('HEALTH --repair: addAiIntegrationPhaseKey', () => {
       JSON.stringify({ model_profile: 'balanced', workflow: { research: true, nyquist_validation: true } }, null, 2)
     );
 
-    const result = runGsdTools('validate health --repair', tmpDir);
+    const result = runGtdTools('validate health --repair', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -263,7 +263,7 @@ describe('COMMAND: ai-integration-phase and eval-review frontmatter', () => {
   for (const cmd of commands) {
     test(`${cmd}.md exists`, () => {
       const p = path.join(COMMANDS_DIR, `${cmd}.md`);
-      assert.ok(fs.existsSync(p), `commands/gsd/${cmd}.md should exist`);
+      assert.ok(fs.existsSync(p), `commands/gtd/${cmd}.md should exist`);
     });
 
     test(`${cmd}.md has name, description, argument-hint`, () => {
@@ -275,14 +275,14 @@ describe('COMMAND: ai-integration-phase and eval-review frontmatter', () => {
     });
   }
 
-  test('ai-integration-phase.md name is gsd:ai-integration-phase', () => {
+  test('ai-integration-phase.md name is gtd:ai-integration-phase', () => {
     const content = fs.readFileSync(path.join(COMMANDS_DIR, 'ai-integration-phase.md'), 'utf-8');
-    assert.ok(content.includes('name: gsd:ai-integration-phase'), 'ai-integration-phase command name mismatch');
+    assert.ok(content.includes('name: gtd:ai-integration-phase'), 'ai-integration-phase command name mismatch');
   });
 
-  test('eval-review.md name is gsd:eval-review', () => {
+  test('eval-review.md name is gtd:eval-review', () => {
     const content = fs.readFileSync(path.join(COMMANDS_DIR, 'eval-review.md'), 'utf-8');
-    assert.ok(content.includes('name: gsd:eval-review'), 'eval-review command name mismatch');
+    assert.ok(content.includes('name: gtd:eval-review'), 'eval-review command name mismatch');
   });
 });
 
@@ -290,11 +290,11 @@ describe('COMMAND: ai-integration-phase and eval-review frontmatter', () => {
 
 describe('AGENTS: new AI-evals agents exist', () => {
   const newAgents = [
-    'gsd-framework-selector',
-    'gsd-ai-researcher',
-    'gsd-domain-researcher',
-    'gsd-eval-planner',
-    'gsd-eval-auditor',
+    'gtd-framework-selector',
+    'gtd-ai-researcher',
+    'gtd-domain-researcher',
+    'gtd-eval-planner',
+    'gtd-eval-auditor',
   ];
 
   for (const agent of newAgents) {
@@ -352,7 +352,7 @@ describe('WORKFLOW: plan-phase.md AI nudge integration', () => {
     );
   });
 
-  test('plan-phase.md references /gsd-ai-integration-phase nudge', () => {
+  test('plan-phase.md references /gtd-ai-integration-phase nudge', () => {
     const content = fs.readFileSync(planPhasePath, 'utf-8');
     assert.ok(
       content.includes('ai-integration-phase') || content.includes('ai_integration_phase'),
@@ -385,14 +385,14 @@ describe('WORKFLOW: ai-integration-phase and eval-review workflow files', () => 
 
   test('ai-integration-phase.md orchestrates 4 agents', () => {
     const content = fs.readFileSync(path.join(WORKFLOWS_DIR, 'ai-integration-phase.md'), 'utf-8');
-    for (const agent of ['gsd-framework-selector', 'gsd-ai-researcher', 'gsd-domain-researcher', 'gsd-eval-planner']) {
+    for (const agent of ['gtd-framework-selector', 'gtd-ai-researcher', 'gtd-domain-researcher', 'gtd-eval-planner']) {
       assert.ok(content.includes(agent), `ai-integration-phase.md should reference ${agent}`);
     }
   });
 
-  test('eval-review.md references gsd-eval-auditor', () => {
+  test('eval-review.md references gtd-eval-auditor', () => {
     const content = fs.readFileSync(path.join(WORKFLOWS_DIR, 'eval-review.md'), 'utf-8');
-    assert.ok(content.includes('gsd-eval-auditor'), 'eval-review.md should reference gsd-eval-auditor');
+    assert.ok(content.includes('gtd-eval-auditor'), 'eval-review.md should reference gtd-eval-auditor');
   });
 
   test('select-framework.md does NOT exist (removed per design)', () => {

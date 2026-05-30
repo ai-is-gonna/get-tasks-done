@@ -4,7 +4,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 function seedState(tmpDir, planLine = '1 of 2') {
   const state = `# Project State
@@ -79,7 +79,7 @@ describe('bug #3454: state mutation must preserve literal $N amounts', () => {
 
   test('state advance-plan keeps Current Position dollar amount literal', () => {
     seedState(tmpDir, '1 of 20');
-    const result = runGsdTools(['state', 'advance-plan'], tmpDir);
+    const result = runGtdTools(['state', 'advance-plan'], tmpDir);
     assert.equal(result.success, true, `state advance-plan failed: ${result.error || result.output}`);
 
     const parsed = parseStateFile(tmpDir);
@@ -90,7 +90,7 @@ describe('bug #3454: state mutation must preserve literal $N amounts', () => {
 
   test('state begin-phase keeps Current Position dollar amount literal', () => {
     seedState(tmpDir);
-    const result = runGsdTools(['state', 'begin-phase', '--phase', '1', '--name', 'setup', '--plans', '2'], tmpDir);
+    const result = runGtdTools(['state', 'begin-phase', '--phase', '1', '--name', 'setup', '--plans', '2'], tmpDir);
     assert.equal(result.success, true, `state begin-phase failed: ${result.error || result.output}`);
 
     const parsed = parseStateFile(tmpDir);
@@ -101,7 +101,7 @@ describe('bug #3454: state mutation must preserve literal $N amounts', () => {
 
   test('state complete-phase keeps Current Position dollar amount literal', () => {
     seedState(tmpDir);
-    const result = runGsdTools(['state', 'complete-phase', '--phase', '1'], tmpDir);
+    const result = runGtdTools(['state', 'complete-phase', '--phase', '1'], tmpDir);
     assert.equal(result.success, true, `state complete-phase failed: ${result.error || result.output}`);
 
     const parsed = parseStateFile(tmpDir);
@@ -115,7 +115,7 @@ describe('bug #3454: state mutation must preserve literal $N amounts', () => {
     const statePath = path.join(tmpDir, '.planning', 'STATE.md');
     let stabilizedSize = null;
     for (let i = 0; i < 8; i += 1) {
-      const result = runGsdTools(['state', 'advance-plan'], tmpDir);
+      const result = runGtdTools(['state', 'advance-plan'], tmpDir);
       assert.equal(result.success, true, `iteration ${i + 1} failed: ${result.error || result.output}`);
       if (i === 0) stabilizedSize = fs.statSync(statePath).size;
     }

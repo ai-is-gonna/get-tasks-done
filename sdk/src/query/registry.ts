@@ -2,12 +2,12 @@
  * Query command registry — routes commands to native SDK handlers.
  *
  * The registry is a flat `Map<string, QueryHandler>` that maps command names
- * to handler functions. Unknown keys passed to `dispatch()` throw `GSDError`.
- * The `gsd-sdk query` CLI resolves argv with `resolveQueryArgv()` before dispatch;
- * there is no automatic delegation to `gsd-tools.cjs`.
+ * to handler functions. Unknown keys passed to `dispatch()` throw `GTDError`.
+ * The `gtd-sdk query` CLI resolves argv with `resolveQueryArgv()` before dispatch;
+ * there is no automatic delegation to `gtd-tools.cjs`.
  *
  * Also exports `extractField` — a TypeScript port of the `--pick` field
- * extraction logic from gsd-tools.cjs (lines 365-382).
+ * extraction logic from gtd-tools.cjs (lines 365-382).
  *
  * @example
  * ```typescript
@@ -21,7 +21,7 @@
  */
 
 import type { QueryResult, QueryHandler } from './utils.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { resolveQueryTokens } from './query-command-resolution-strategy.js';
 
 // ─── extractField ──────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ import { resolveQueryTokens } from './query-command-resolution-strategy.js';
 /**
  * Extract a nested field from an object using dot-notation and bracket syntax.
  *
- * Direct port of `extractField()` from gsd-tools.cjs (lines 365-382).
+ * Direct port of `extractField()` from gtd-tools.cjs (lines 365-382).
  * Supports `a.b.c` dot paths, `items[0]` array indexing, and `items[-1]`
  * negative indexing.
  *
@@ -61,9 +61,9 @@ export function extractField(obj: unknown, fieldPath: string): unknown {
 /**
  * Flat command registry that routes query commands to native handlers.
  *
- * `dispatch()` throws `GSDError` for unknown command keys. The `gsd-sdk query`
+ * `dispatch()` throws `GTDError` for unknown command keys. The `gtd-sdk query`
  * CLI uses `resolveQueryArgv()` first; when no handler matches, it may shell out
- * to `gsd-tools.cjs` (see `cli.ts` and `QUERY-HANDLERS.md` fallback policy).
+ * to `gtd-tools.cjs` (see `cli.ts` and `QUERY-HANDLERS.md` fallback policy).
  */
 export class QueryRegistry {
   private handlers = new Map<string, QueryHandler>();
@@ -113,12 +113,12 @@ export class QueryRegistry {
    * @param projectDir - The project directory for context
    * @param workstream - Optional workstream name to scope .planning paths
    * @returns The query result from the handler
-   * @throws GSDError if no handler is registered for the command
+   * @throws GTDError if no handler is registered for the command
    */
   async dispatch(command: string, args: string[], projectDir: string, workstream?: string): Promise<QueryResult> {
     const handler = this.handlers.get(command);
     if (!handler) {
-      throw new GSDError(
+      throw new GTDError(
         `Unknown command: "${command}". No native handler registered.`,
         ErrorClassification.Validation,
       );
@@ -128,7 +128,7 @@ export class QueryRegistry {
 }
 
 /**
- * Map argv after `gsd-sdk query` to a registered handler key and remaining args.
+ * Map argv after `gtd-sdk query` to a registered handler key and remaining args.
  * Longest-prefix match on dotted (`a.b.c`) and spaced (`a b c`) keys; if no match,
  * expands a single dotted token (`state.validate` → `state`, `validate`) and retries.
  */

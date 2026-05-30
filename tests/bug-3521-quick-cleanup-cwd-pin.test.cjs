@@ -1,5 +1,5 @@
 // allow-test-rule: source-text-is-the-product
-// quick.md is the shipped orchestration contract for /gsd-quick; this
+// quick.md is the shipped orchestration contract for /gtd-quick; this
 // regression test locks the CWD-safety guard that prevents orchestrator-leaked
 // CWD from targeting the wrong worktree/branch in the post-merge cleanup loop.
 
@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const QUICK_MD = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
+const QUICK_MD = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'quick.md');
 
 function readQuickMd() {
   return fs.readFileSync(QUICK_MD, 'utf8');
@@ -18,7 +18,7 @@ function readQuickMd() {
 
 // Locate the shell-fallback cleanup loop in quick.md.
 // The loop is the `while IFS= read -r WT; do … done < "$WT_PATHS_FILE"` block
-// inside the `else` branch of the gsd-sdk availability check.
+// inside the `else` branch of the gtd-sdk availability check.
 function extractCleanupLoop(content) {
   const loopStart = content.indexOf('while IFS= read -r WT; do');
   assert.ok(loopStart !== -1, 'quick.md must contain the cleanup while-loop');

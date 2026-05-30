@@ -1,7 +1,7 @@
 /**
  * Roadmap query handlers — ROADMAP.md analysis and phase lookup.
  *
- * Ported from get-shit-done/bin/lib/roadmap.cjs and core.cjs.
+ * Ported from get-tasks-done/bin/lib/roadmap.cjs and core.cjs.
  * Provides roadmap.analyze (multi-pass parsing with disk correlation)
  * and roadmap.get-phase (single phase section extraction).
  *
@@ -20,8 +20,8 @@
 import { existsSync } from 'node:fs';
 import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
-import { resolveGsdToolsPath } from '../sdk-package-compatibility.js';
+import { GTDError, ErrorClassification } from '../errors.js';
+import { resolveGtdToolsPath } from '../sdk-package-compatibility.js';
 import {
   escapeRegex,
   normalizePhaseName,
@@ -121,7 +121,7 @@ export async function getMilestoneInfo(projectDir: string, workstream?: string):
       return { version: stateVersion ?? 'v' + barricadeMatch[1], name: barricadeMatch[2].trim() };
     }
 
-    // List-format: in flight / active (GSD ROADMAP template uses 🟡 for current milestone)
+    // List-format: in flight / active (GTD ROADMAP template uses 🟡 for current milestone)
     const inFlightMatch = roadmap.match(/🟡\s*\*\*v(\d+(?:\.\d+)+)\s+([^*]+)\*\*/);
     if (inFlightMatch) {
       return { version: stateVersion ?? 'v' + inFlightMatch[1], name: inFlightMatch[2].trim() };
@@ -326,7 +326,7 @@ export async function extractCurrentMilestone(content: string, projectDir: strin
   // bearing heading) or EOF.
   //
   // Bounded to a single append so a malformed roadmap can't loop. Only
-  // matches the literal `Phase Details` label (canonical per GSD ROADMAP
+  // matches the literal `Phase Details` label (canonical per GTD ROADMAP
   // template); anything else continues to terminate the slice.
   let phaseDetailsTail = '';
   if (sectionEnd < content.length) {
@@ -593,7 +593,7 @@ async function countPhasePlansAndSummaries(phaseDir: string): Promise<{ planCoun
 export const roadmapGetPhase: QueryHandler = async (args, projectDir, workstream) => {
   const phaseNum = args[0];
   if (!phaseNum) {
-    throw new GSDError(
+    throw new GTDError(
       'Usage: roadmap get-phase <phase-number>',
       ErrorClassification.Validation,
     );
@@ -776,7 +776,7 @@ export const roadmapAnalyze: QueryHandler = async (_args, projectDir, workstream
  * Annotate the ROADMAP.md plan list with wave dependency notes and
  * cross-cutting constraints derived from PLAN frontmatter.
  *
- * Delegates to gsd-tools.cjs which holds the full annotation logic.
+ * Delegates to gtd-tools.cjs which holds the full annotation logic.
  * Returns { updated, phase, waves, cross_cutting_constraints }.
  */
 export const roadmapAnnotateDependencies: QueryHandler = async (args, projectDir) => {
@@ -786,7 +786,7 @@ export const roadmapAnnotateDependencies: QueryHandler = async (args, projectDir
   }
 
   const { spawnSync } = await import('node:child_process');
-  const toolsPath = resolveGsdToolsPath(projectDir);
+  const toolsPath = resolveGtdToolsPath(projectDir);
 
   const result = spawnSync(process.execPath, [toolsPath, 'roadmap', 'annotate-dependencies', phase], {
     cwd: projectDir,
@@ -797,17 +797,17 @@ export const roadmapAnnotateDependencies: QueryHandler = async (args, projectDir
   });
 
   if (result.error) {
-    return { data: { updated: false, reason: result.error.message || 'gsd-tools invocation failed' } };
+    return { data: { updated: false, reason: result.error.message || 'gtd-tools invocation failed' } };
   }
 
   if (result.status !== 0) {
-    return { data: { updated: false, reason: result.stderr?.trim() || 'gsd-tools error' } };
+    return { data: { updated: false, reason: result.stderr?.trim() || 'gtd-tools error' } };
   }
 
   try {
     return { data: JSON.parse(result.stdout.trim()) };
   } catch {
-    return { data: { updated: false, reason: 'failed to parse gsd-tools output' } };
+    return { data: { updated: false, reason: 'failed to parse gtd-tools output' } };
   }
 };
 
@@ -820,7 +820,7 @@ export const roadmapAnnotateDependencies: QueryHandler = async (args, projectDir
  */
 export const requirementsMarkComplete: QueryHandler = async (args, projectDir, workstream) => {
   if (args.length === 0) {
-    throw new GSDError(
+    throw new GTDError(
       'requirement IDs required. Usage: requirements mark-complete REQ-01,REQ-02 or REQ-01 REQ-02',
       ErrorClassification.Validation,
     );
@@ -834,7 +834,7 @@ export const requirementsMarkComplete: QueryHandler = async (args, projectDir, w
     .filter(Boolean);
 
   if (reqIds.length === 0) {
-    throw new GSDError('no valid requirement IDs found', ErrorClassification.Validation);
+    throw new GTDError('no valid requirement IDs found', ErrorClassification.Validation);
   }
 
   const paths = planningPaths(projectDir, workstream);

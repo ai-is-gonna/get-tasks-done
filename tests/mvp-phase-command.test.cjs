@@ -1,5 +1,5 @@
 /**
- * /gsd mvp-phase command — frontmatter contract test
+ * /gtd mvp-phase command — frontmatter contract test
  * Verifies the command exists, has required frontmatter fields, and
  * points to the workflow file.
  */
@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const CMD = path.join(__dirname, '..', 'commands', 'gsd', 'mvp-phase.md');
+const CMD = path.join(__dirname, '..', 'commands', 'gtd', 'mvp-phase.md');
 
 function parseCommandContract(content) {
   const lines = content.split(/\r?\n/);
@@ -56,14 +56,14 @@ function parseCommandContract(content) {
   };
 }
 
-describe('/gsd mvp-phase command frontmatter', () => {
+describe('/gtd mvp-phase command frontmatter', () => {
   test('command file exists', () => {
     assert.ok(fs.existsSync(CMD), `${CMD} must exist`);
   });
 
   test('frontmatter declares correct command name', () => {
     const contract = parseCommandContract(fs.readFileSync(CMD, 'utf-8'));
-    assert.equal(contract.name, 'gsd:mvp-phase');
+    assert.equal(contract.name, 'gtd:mvp-phase');
   });
 
   test('argument-hint mentions phase number', () => {

@@ -10,7 +10,7 @@
  * permissions are written against the actual resolved install directory.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -39,7 +39,7 @@ describe('configureOpencodePermissions', () => {
   let configDir;
 
   beforeEach(() => {
-    configDir = createTempDir('gsd-opencode-');
+    configDir = createTempDir('gtd-opencode-');
   });
 
   afterEach(() => {
@@ -70,10 +70,10 @@ describe('configureOpencodePermissions', () => {
     configureOpencodePermissions(true, configDir);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gtdPath = `${configDir.replace(/\\/g, '/')}/get-tasks-done/*`;
 
-    assert.strictEqual(config.permission.read[gsdPath], 'allow');
-    assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
+    assert.strictEqual(config.permission.read[gtdPath], 'allow');
+    assert.strictEqual(config.permission.external_directory[gtdPath], 'allow');
   });
 
   test('finishInstall passes the actual config dir to OpenCode permissions', () => {

@@ -1,21 +1,21 @@
 /**
  * Regression test for bug #2948
  *
- * `/gsd:spike --wrap-up` was silently no-oping because:
- * 1. `commands/gsd/spike.md` listed `--wrap-up` as a flag but had no dispatch block.
- * 2. `workflows/spike.md` still referenced the deleted `/gsd-spike-wrap-up` entry-point
- *    instead of the correct `/gsd:spike --wrap-up` form.
+ * `/gtd:spike --wrap-up` was silently no-oping because:
+ * 1. `commands/gtd/spike.md` listed `--wrap-up` as a flag but had no dispatch block.
+ * 2. `workflows/spike.md` still referenced the deleted `/gtd-spike-wrap-up` entry-point
+ *    instead of the correct `/gtd:spike --wrap-up` form.
  *
  * Fix:
- * - `commands/gsd/spike.md` now has a dispatch block that routes `--wrap-up` to
+ * - `commands/gtd/spike.md` now has a dispatch block that routes `--wrap-up` to
  *   spike-wrap-up.md, and spike-wrap-up.md is listed in execution_context so the
  *   runtime can find it.
- * - `workflows/spike.md` companion references updated from `/gsd-spike-wrap-up` to
- *   `/gsd:spike --wrap-up`.
+ * - `workflows/spike.md` companion references updated from `/gtd-spike-wrap-up` to
+ *   `/gtd:spike --wrap-up`.
  */
 
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md files ARE what the runtime loads — testing their
+// commands/gtd/*.md files ARE what the runtime loads — testing their
 // frontmatter and section content tests the deployed system-prompt contract.
 
 'use strict';
@@ -25,8 +25,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SPIKE_CMD_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'spike.md');
-const SPIKE_WORKFLOW_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'spike.md');
+const SPIKE_CMD_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'spike.md');
+const SPIKE_WORKFLOW_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'spike.md');
 
 /**
  * Parse YAML frontmatter + body from a markdown file.
@@ -86,10 +86,10 @@ function parseExecutionContextRefs(section) {
     .map(l => l.slice(1).trim());
 }
 
-describe('bug-2948: /gsd:spike --wrap-up dispatch wiring', () => {
-  describe('commands/gsd/spike.md — frontmatter and section contract', () => {
+describe('bug-2948: /gtd:spike --wrap-up dispatch wiring', () => {
+  describe('commands/gtd/spike.md — frontmatter and section contract', () => {
     test('spike.md command file exists and has valid frontmatter', () => {
-      assert.ok(fs.existsSync(SPIKE_CMD_PATH), 'commands/gsd/spike.md should exist');
+      assert.ok(fs.existsSync(SPIKE_CMD_PATH), 'commands/gtd/spike.md should exist');
       const fm = parseFrontmatter(fs.readFileSync(SPIKE_CMD_PATH, 'utf-8'));
       assert.ok(fm.name, 'frontmatter must have a name field');
     });
@@ -138,24 +138,24 @@ describe('bug-2948: /gsd:spike --wrap-up dispatch wiring', () => {
     });
   });
 
-  describe('get-shit-done/workflows/spike.md — companion references', () => {
+  describe('get-tasks-done/workflows/spike.md — companion references', () => {
     test('spike workflow file exists', () => {
-      assert.ok(fs.existsSync(SPIKE_WORKFLOW_PATH), 'get-shit-done/workflows/spike.md should exist');
+      assert.ok(fs.existsSync(SPIKE_WORKFLOW_PATH), 'get-tasks-done/workflows/spike.md should exist');
     });
 
-    test('does NOT reference the deleted /gsd-spike-wrap-up entry-point', () => {
+    test('does NOT reference the deleted /gtd-spike-wrap-up entry-point', () => {
       const fm = parseFrontmatter(fs.readFileSync(SPIKE_WORKFLOW_PATH, 'utf-8'));
       assert.ok(
-        !fm._body.includes('/gsd-spike-wrap-up'),
-        'workflows/spike.md must not reference the deleted /gsd-spike-wrap-up command; use /gsd:spike --wrap-up instead'
+        !fm._body.includes('/gtd-spike-wrap-up'),
+        'workflows/spike.md must not reference the deleted /gtd-spike-wrap-up command; use /gtd:spike --wrap-up instead'
       );
     });
 
-    test('references /gsd:spike --wrap-up as the canonical wrap-up invocation', () => {
+    test('references /gtd:spike --wrap-up as the canonical wrap-up invocation', () => {
       const fm = parseFrontmatter(fs.readFileSync(SPIKE_WORKFLOW_PATH, 'utf-8'));
       assert.ok(
-        fm._body.includes('/gsd:spike --wrap-up'),
-        'workflows/spike.md must reference /gsd:spike --wrap-up as the canonical wrap-up command'
+        fm._body.includes('/gtd:spike --wrap-up'),
+        'workflows/spike.md must reference /gtd:spike --wrap-up as the canonical wrap-up command'
       );
     });
   });

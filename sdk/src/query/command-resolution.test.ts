@@ -17,9 +17,9 @@ describe('command resolution', () => {
 
   it('resolves dotted token directly when canonical is registered', () => {
     const registry = createRegistry();
-    const resolved = resolveQueryTokens(['init.execute-phase', '1'], registry);
+    const resolved = resolveQueryTokens(['init.plan-phase', '1'], registry);
     expect(resolved).toEqual({
-      cmd: 'init.execute-phase',
+      cmd: 'init.plan-phase',
       args: ['1'],
       matchedBy: 'dotted',
       expanded: false,
@@ -30,12 +30,12 @@ describe('command resolution', () => {
   it('marks expanded source when only spaced command exists', () => {
     const registry = {
       has(command: string) {
-        return command === 'init execute-phase';
+        return command === 'init plan-phase';
       },
     };
-    const resolved = resolveQueryTokens(['init.execute-phase', '1'], registry);
+    const resolved = resolveQueryTokens(['init.plan-phase', '1'], registry);
     expect(resolved).toEqual({
-      cmd: 'init execute-phase',
+      cmd: 'init plan-phase',
       args: ['1'],
       matchedBy: 'spaced',
       expanded: true,

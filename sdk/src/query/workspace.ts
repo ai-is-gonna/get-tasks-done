@@ -1,8 +1,8 @@
 /**
  * Workspace-aware state resolution — scopes .planning/ paths to a
- * GSD_WORKSTREAM or GSD_PROJECT environment context.
+ * GTD_WORKSTREAM or GTD_PROJECT environment context.
  *
- * Port of planningDir() workspace logic from get-shit-done/bin/lib/core.cjs
+ * Port of planningDir() workspace logic from get-tasks-done/bin/lib/core.cjs
  * (line 669+). Provides WorkspaceContext reading and validated path scoping.
  *
  * Security: workspace names are validated to reject path traversal (T-14-05).
@@ -20,7 +20,7 @@
  */
 
 import { join } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 
 export interface PlanningPaths {
   planning: string;
@@ -42,9 +42,9 @@ function toPosixPath(p: string): string {
  * Resolved workspace context from environment variables.
  */
 export interface WorkspaceContext {
-  /** Active workstream name (from GSD_WORKSTREAM env var), or null */
+  /** Active workstream name (from GTD_WORKSTREAM env var), or null */
   workstream: string | null;
-  /** Active project name (from GSD_PROJECT env var), or null */
+  /** Active project name (from GTD_PROJECT env var), or null */
   project: string | null;
 }
 
@@ -60,23 +60,23 @@ export interface WorkspaceContext {
  *
  * @param name - Workspace or project name to validate
  * @param kind - Label for error messages ('workstream' or 'project')
- * @throws GSDError with Validation classification on invalid name
+ * @throws GTDError with Validation classification on invalid name
  */
 function validateWorkspaceName(name: string, kind: string): void {
   if (!name || name.trim() === '') {
-    throw new GSDError(
+    throw new GTDError(
       `${kind} name must not be empty`,
       ErrorClassification.Validation,
     );
   }
   if (name.includes('/') || name.includes('\\')) {
-    throw new GSDError(
+    throw new GTDError(
       `${kind} name must not contain path separators: ${name}`,
       ErrorClassification.Validation,
     );
   }
   if (name.includes('..')) {
-    throw new GSDError(
+    throw new GTDError(
       `${kind} name must not contain '..' (path traversal): ${name}`,
       ErrorClassification.Validation,
     );
@@ -86,7 +86,7 @@ function validateWorkspaceName(name: string, kind: string): void {
 // ─── resolveWorkspaceContext ───────────────────────────────────────────────
 
 /**
- * Read GSD_WORKSTREAM and GSD_PROJECT environment variables.
+ * Read GTD_WORKSTREAM and GTD_PROJECT environment variables.
  *
  * Returns a WorkspaceContext with null values when the env vars are not set.
  *
@@ -94,8 +94,8 @@ function validateWorkspaceName(name: string, kind: string): void {
  */
 export function resolveWorkspaceContext(): WorkspaceContext {
   return {
-    workstream: process.env['GSD_WORKSTREAM'] || null,
-    project: process.env['GSD_PROJECT'] || null,
+    workstream: process.env['GTD_WORKSTREAM'] || null,
+    project: process.env['GTD_PROJECT'] || null,
   };
 }
 
@@ -113,7 +113,7 @@ export function resolveWorkspaceContext(): WorkspaceContext {
  * @param projectDir - Absolute project root path
  * @param context - Optional workspace context (defaults to no scoping)
  * @returns PlanningPaths scoped to the active workspace
- * @throws GSDError if workspace/project name fails validation
+ * @throws GTDError if workspace/project name fails validation
  */
 export function workspacePlanningPaths(
   projectDir: string,

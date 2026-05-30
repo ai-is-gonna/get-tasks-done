@@ -25,6 +25,10 @@ export const NON_FAMILY_COMMAND_MANIFEST: readonly NonFamilyCommandManifestEntry
   { canonical: 'check-commit', aliases: [], mutation: true, outputMode: 'json' },
   { canonical: 'commit-to-subrepo', aliases: [], mutation: true, outputMode: 'json' },
 
+  { canonical: 'export-phase-issues', aliases: [], mutation: true, outputMode: 'json' },
+  { canonical: 'work-task-issue', aliases: [], mutation: true, outputMode: 'json' },
+  { canonical: 'orchestrate-tasks', aliases: [], mutation: true, outputMode: 'json' },
+
   { canonical: 'template.fill', aliases: [], mutation: true, outputMode: 'json' },
   { canonical: 'template.select', aliases: ['template select'], mutation: true, outputMode: 'json' },
 

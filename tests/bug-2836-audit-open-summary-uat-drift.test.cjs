@@ -6,7 +6,7 @@
  *      mandates `${quick_id}-SUMMARY.md`. Result: every documented quick task
  *      reported as `status: missing`.
  *   2. UAT terminal-status enum only accepted `complete`, but
- *      workflows/execute-phase.md uses `resolved` post-gap-closure.
+ *      workflows/work-task-issue.md uses `resolved` post-gap-closure.
  *      Result: gap-closed UATs reported as open.
  *
  * Tests structurally invoke auditOpenArtifacts() against real fixtures on disk
@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const auditModule = require('../get-shit-done/bin/lib/audit.cjs');
+const auditModule = require('../get-tasks-done/bin/lib/audit.cjs');
 const { auditOpenArtifacts } = auditModule;
 
 function mkTmp() {
@@ -33,17 +33,17 @@ function rmTmp(dir) {
 }
 
 describe('bug #2836: audit-open quick-task summary filename + UAT terminal status', () => {
-  // Ensure GSD env vars do not redirect planningDir() away from our fixture.
+  // Ensure GTD env vars do not redirect planningDir() away from our fixture.
   let prevProject, prevWorkstream;
   before(() => {
-    prevProject = process.env.GSD_PROJECT;
-    prevWorkstream = process.env.GSD_WORKSTREAM;
-    delete process.env.GSD_PROJECT;
-    delete process.env.GSD_WORKSTREAM;
+    prevProject = process.env.GTD_PROJECT;
+    prevWorkstream = process.env.GTD_WORKSTREAM;
+    delete process.env.GTD_PROJECT;
+    delete process.env.GTD_WORKSTREAM;
   });
   after(() => {
-    if (prevProject !== undefined) process.env.GSD_PROJECT = prevProject;
-    if (prevWorkstream !== undefined) process.env.GSD_WORKSTREAM = prevWorkstream;
+    if (prevProject !== undefined) process.env.GTD_PROJECT = prevProject;
+    if (prevWorkstream !== undefined) process.env.GTD_WORKSTREAM = prevWorkstream;
   });
 
   test('quick task with ${quick_id}-SUMMARY.md is recognized as complete (not missing)', () => {
@@ -81,7 +81,7 @@ describe('bug #2836: audit-open quick-task summary filename + UAT terminal statu
       fs.mkdirSync(phaseDir, { recursive: true });
       fs.writeFileSync(
         path.join(phaseDir, '01-UAT.md'),
-        '---\nstatus: resolved\n---\nUAT body — gap closed via execute-phase flow.\n',
+        '---\nstatus: resolved\n---\nUAT body — gap closed via task orchestration flow.\n',
         'utf-8'
       );
 
@@ -162,7 +162,7 @@ describe('bug #2836: workflows/help.md one-liner reconciliation', () => {
   test('help.md quick-task one-liner uses ${quick_id}-SUMMARY.md pattern', () => {
     // After #3039, help content moved into help/modes/full.md.
     const helpPath = path.resolve(
-      __dirname, '..', 'get-shit-done', 'workflows', 'help', 'modes', 'full.md'
+      __dirname, '..', 'get-tasks-done', 'workflows', 'help', 'modes', 'full.md'
     );
     const content = fs.readFileSync(helpPath, 'utf-8');
 

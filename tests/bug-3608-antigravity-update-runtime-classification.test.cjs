@@ -1,18 +1,18 @@
 // allow-test-rule: source-text-is-the-product
-// update.md is loaded verbatim by the runtime as the /gsd-update workflow.
+// update.md is loaded verbatim by the runtime as the /gtd-update workflow.
 // The bash blocks inside it ARE the deployed program — the agent runs them.
 // Asserting on the structural shape of those bash arrays is asserting on the
 // deployed contract, identical to asserting on a workflow's instructions.
 
 /**
- * Bug #3608: get-shit-done/workflows/update.md does not model Antigravity as
- * a first-class runtime, so /gsd-update invoked from an Antigravity install
+ * Bug #3608: get-tasks-done/workflows/update.md does not model Antigravity as
+ * a first-class runtime, so /gtd-update invoked from an Antigravity install
  * (~/.gemini/antigravity) classifies the runtime as base Gemini.
  *
  * The installer (bin/install.js) and SDK already treat Antigravity as a
  * distinct runtime with its own config dir (~/.gemini/antigravity), env var
  * (ANTIGRAVITY_CONFIG_DIR), and CLI flag (--antigravity). update.md must
- * agree, or /gsd-update routes Antigravity installs through the base Gemini
+ * agree, or /gtd-update routes Antigravity installs through the base Gemini
  * path.
  *
  * Order matters: every bash array / env-var ladder / scan list that contains
@@ -26,7 +26,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const UPDATE_MD = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'update.md');
+const UPDATE_MD = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'update.md');
 
 function readUpdateMd() {
   return fs.readFileSync(UPDATE_MD, 'utf-8');

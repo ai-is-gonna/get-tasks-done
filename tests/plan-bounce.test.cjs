@@ -15,17 +15,17 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-const GSD_ROOT = path.join(__dirname, '..', 'get-shit-done');
-const CONFIG_TEMPLATE_PATH = path.join(GSD_ROOT, 'templates', 'config.json');
-const PLAN_PHASE_PATH = path.join(GSD_ROOT, 'workflows', 'plan-phase.md');
+const GTD_ROOT = path.join(__dirname, '..', 'get-tasks-done');
+const CONFIG_TEMPLATE_PATH = path.join(GTD_ROOT, 'templates', 'config.json');
+const PLAN_PHASE_PATH = path.join(GTD_ROOT, 'workflows', 'plan-phase.md');
 
 describe('Plan Bounce: config keys', () => {
   test('config-set accepts workflow.plan_bounce', () => {
     const tmpDir = createTempProject();
     try {
-      const result = runGsdTools('config-set workflow.plan_bounce true', tmpDir);
+      const result = runGtdTools('config-set workflow.plan_bounce true', tmpDir);
       assert.ok(result.success, `config-set should accept workflow.plan_bounce: ${result.error}`);
     } finally {
       cleanup(tmpDir);
@@ -35,7 +35,7 @@ describe('Plan Bounce: config keys', () => {
   test('config-set accepts workflow.plan_bounce_script', () => {
     const tmpDir = createTempProject();
     try {
-      const result = runGsdTools('config-set workflow.plan_bounce_script ./bounce.sh', tmpDir);
+      const result = runGtdTools('config-set workflow.plan_bounce_script ./bounce.sh', tmpDir);
       assert.ok(result.success, `config-set should accept workflow.plan_bounce_script: ${result.error}`);
     } finally {
       cleanup(tmpDir);
@@ -45,7 +45,7 @@ describe('Plan Bounce: config keys', () => {
   test('config-set accepts workflow.plan_bounce_passes', () => {
     const tmpDir = createTempProject();
     try {
-      const result = runGsdTools('config-set workflow.plan_bounce_passes 2', tmpDir);
+      const result = runGtdTools('config-set workflow.plan_bounce_passes 2', tmpDir);
       assert.ok(result.success, `config-set should accept workflow.plan_bounce_passes: ${result.error}`);
     } finally {
       cleanup(tmpDir);

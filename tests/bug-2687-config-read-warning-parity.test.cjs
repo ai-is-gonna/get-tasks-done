@@ -25,7 +25,7 @@ const { spawnSync } = require('node:child_process');
 const { createTempProject, cleanup, TOOLS_PATH } = require('./helpers.cjs');
 
 const TEST_ENV_BASE = {
-  GSD_SESSION_KEY: '',
+  GTD_SESSION_KEY: '',
   CODEX_THREAD_ID: '',
   CLAUDE_SESSION_ID: '',
   CLAUDE_CODE_SSE_PORT: '',
@@ -42,8 +42,8 @@ const TEST_ENV_BASE = {
 };
 
 /**
- * Run gsd-tools and return { stdout, stderr, status }.
- * Captures stderr even when the process exits 0 (unlike runGsdTools which only
+ * Run gtd-tools and return { stdout, stderr, status }.
+ * Captures stderr even when the process exits 0 (unlike runGtdTools which only
  * surfaces stderr via result.error on non-zero exit).
  */
 function runWithStderr(args, cwd) {
@@ -68,7 +68,7 @@ describe('bug-2687 — no warning for dynamic-pattern containers in loadConfig',
   });
 
   test('review — loadConfig emits no warning when config.json contains review key', () => {
-    tmpDir = createTempProject('gsd-2687-review-');
+    tmpDir = createTempProject('gtd-2687-review-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -87,7 +87,7 @@ describe('bug-2687 — no warning for dynamic-pattern containers in loadConfig',
   });
 
   test('model_profile_overrides — loadConfig emits no warning when config.json contains model_profile_overrides key', () => {
-    tmpDir = createTempProject('gsd-2687-mpo-');
+    tmpDir = createTempProject('gtd-2687-mpo-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,
@@ -106,7 +106,7 @@ describe('bug-2687 — no warning for dynamic-pattern containers in loadConfig',
   });
 
   test('claude_md_assembly — loadConfig emits no warning when config.json contains claude_md_assembly key', () => {
-    tmpDir = createTempProject('gsd-2687-cma-');
+    tmpDir = createTempProject('gtd-2687-cma-');
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(
       configPath,

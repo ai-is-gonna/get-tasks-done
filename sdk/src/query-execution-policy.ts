@@ -1,6 +1,6 @@
-import { resolveTransportPolicy } from './gsd-transport-policy.js';
-import type { GSDTransport, TransportDecision } from './gsd-transport.js';
-import type { TransportMode } from './gsd-transport-policy.js';
+import { resolveTransportPolicy } from './gtd-transport-policy.js';
+import type { GTDTransport, TransportDecision } from './gtd-transport.js';
+import type { TransportMode } from './gtd-transport-policy.js';
 
 export interface QueryExecutionRequest {
   legacyCommand: string;
@@ -20,7 +20,7 @@ export interface QueryExecutionRequest {
  * Owns routing decision inputs for native/subprocess dispatch.
  */
 export class QueryExecutionPolicy {
-  constructor(private readonly transport: GSDTransport) {}
+  constructor(private readonly transport: GTDTransport) {}
 
   async execute(request: QueryExecutionRequest): Promise<unknown> {
     const policy = resolveTransportPolicy(request.registryCommand);

@@ -8,19 +8,19 @@ describe('loadConfig', () => {
   let tmpDir: string;
   let fakeHome: string;
   let prevHome: string | undefined;
-  let prevGsdHome: string | undefined;
+  let prevGtdHome: string | undefined;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-config-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gtd-config-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
-    // Isolate ~/.gsd/defaults.json by pointing HOME at an empty tmp dir.
-    fakeHome = join(tmpdir(), `gsd-home-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    // Isolate ~/.gtd/defaults.json by pointing HOME at an empty tmp dir.
+    fakeHome = join(tmpdir(), `gtd-home-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(fakeHome, { recursive: true });
     prevHome = process.env.HOME;
     process.env.HOME = fakeHome;
-    // Also isolate GSD_HOME (loadUserDefaults prefers it over HOME).
-    prevGsdHome = process.env.GSD_HOME;
-    delete process.env.GSD_HOME;
+    // Also isolate GTD_HOME (loadUserDefaults prefers it over HOME).
+    prevGtdHome = process.env.GTD_HOME;
+    delete process.env.GTD_HOME;
   });
 
   afterEach(async () => {
@@ -28,13 +28,13 @@ describe('loadConfig', () => {
     await rm(fakeHome, { recursive: true, force: true });
     if (prevHome === undefined) delete process.env.HOME;
     else process.env.HOME = prevHome;
-    if (prevGsdHome === undefined) delete process.env.GSD_HOME;
-    else process.env.GSD_HOME = prevGsdHome;
+    if (prevGtdHome === undefined) delete process.env.GTD_HOME;
+    else process.env.GTD_HOME = prevGtdHome;
   });
 
   async function writeUserDefaults(defaults: unknown) {
-    await mkdir(join(fakeHome, '.gsd'), { recursive: true });
-    await writeFile(join(fakeHome, '.gsd', 'defaults.json'), JSON.stringify(defaults));
+    await mkdir(join(fakeHome, '.gtd'), { recursive: true });
+    await writeFile(join(fakeHome, '.gtd', 'defaults.json'), JSON.stringify(defaults));
   }
 
   it('returns all defaults when config file is missing', async () => {
@@ -86,7 +86,7 @@ describe('loadConfig', () => {
 
     expect(config.git.branching_strategy).toBe('milestone');
     // Other git defaults preserved
-    expect(config.git.phase_branch_template).toBe('gsd/phase-{phase}-{slug}');
+    expect(config.git.phase_branch_template).toBe('gtd/phase-{phase}-{slug}');
     expect(config.hooks.context_warnings).toBe(false);
   });
 
@@ -175,18 +175,18 @@ describe('loadConfig', () => {
     expect(config.parallelization).toBe(0);
   });
 
-  // ─── User-level defaults (~/.gsd/defaults.json) ─────────────────────────
+  // ─── User-level defaults (~/.gtd/defaults.json) ─────────────────────────
   // Regression: issue #2652 — SDK loadConfig ignored user-level defaults
   // for pre-project Codex installs, so init.quick still emitted Claude
   // model aliases from MODEL_PROFILES via resolveModel even when the user
-  // had `resolve_model_ids: "omit"` in ~/.gsd/defaults.json.
+  // had `resolve_model_ids: "omit"` in ~/.gtd/defaults.json.
   //
   // Mirrors current CJS parity expectations for SDK loadConfig + resolveModel:
-  // in pre-project context, loadConfig ignores ~/.gsd/defaults.json so
+  // in pre-project context, loadConfig ignores ~/.gtd/defaults.json so
   // resolveModel/MODEL_PROFILES do not emit aliases when resolve_model_ids
   // is "omit". Once a project is initialized, config.json is authoritative,
   // because buildNewProjectConfig bakes user defaults into project config
-  // at /gsd-new-project time.
+  // at /gtd-new-project time.
 
   it('pre-project: ignores user defaults and uses built-in defaults', async () => {
     await writeUserDefaults({ resolve_model_ids: 'omit' });
@@ -194,7 +194,7 @@ describe('loadConfig', () => {
     // BEHAVIOR CHANGE (Cycle 3, #3536): CONFIG_DEFAULTS now sourced from
     // sdk/shared/config-defaults.manifest.json which includes resolve_model_ids: false.
     // The key is NOT undefined — it has the manifest default (false), not the user
-    // default ('omit'), confirming that user-level ~/.gsd/defaults.json is still ignored.
+    // default ('omit'), confirming that user-level ~/.gtd/defaults.json is still ignored.
     expect((config as Record<string, unknown>).resolve_model_ids).toBe(false);
     expect(config.model_profile).toBe('balanced');
     expect(config.workflow.plan_check).toBe(true);
@@ -208,14 +208,14 @@ describe('loadConfig', () => {
 
     const config = await loadConfig(tmpDir);
     expect(config.git.branching_strategy).toBe('none');
-    expect(config.git.phase_branch_template).toBe('gsd/phase-{phase}-{slug}');
+    expect(config.git.phase_branch_template).toBe('gtd/phase-{phase}-{slug}');
     expect(config.agent_skills).toEqual({});
   });
 
   it('project config is authoritative over user defaults (CJS parity)', async () => {
     // User defaults set resolve_model_ids: "omit", but project config omits it.
     // Per CJS core.cjs loadConfig (#1683): once .planning/config.json exists,
-    // ~/.gsd/defaults.json is ignored — buildNewProjectConfig already baked
+    // ~/.gtd/defaults.json is ignored — buildNewProjectConfig already baked
     // the user defaults in at project creation time.
     await writeUserDefaults({
       resolve_model_ids: 'omit',
@@ -234,9 +234,9 @@ describe('loadConfig', () => {
     expect((config as Record<string, unknown>).resolve_model_ids).toBe(false);
   });
 
-  it('ignores malformed ~/.gsd/defaults.json', async () => {
-    await mkdir(join(fakeHome, '.gsd'), { recursive: true });
-    await writeFile(join(fakeHome, '.gsd', 'defaults.json'), '{not json');
+  it('ignores malformed ~/.gtd/defaults.json', async () => {
+    await mkdir(join(fakeHome, '.gtd'), { recursive: true });
+    await writeFile(join(fakeHome, '.gtd', 'defaults.json'), '{not json');
 
     const config = await loadConfig(tmpDir);
     // Falls back to built-in defaults

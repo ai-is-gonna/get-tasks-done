@@ -40,7 +40,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -51,17 +51,17 @@ const os = require('node:os');
 const {
   resolveModelInternal,
   resolveModelForTier,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../get-tasks-done/bin/lib/core.cjs');
 const {
   AGENT_DEFAULT_TIERS,
   VALID_AGENT_TIERS,
   MODEL_PROFILES,
   nextTier,
-} = require('../get-shit-done/bin/lib/model-profiles.cjs');
-const { isValidConfigKey } = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/model-profiles.cjs');
+const { isValidConfigKey } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 function makeTmp(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `gsd-3024-${prefix}-`));
+  return fs.mkdtempSync(path.join(os.tmpdir(), `gtd-3024-${prefix}-`));
 }
 function writeConfig(dir, config) {
   const planningDir = path.join(dir, '.planning');
@@ -130,8 +130,8 @@ describe('#3024 resolveModelForTier: disabled mode is a no-op (acceptance criter
   test('with no dynamic_routing block, falls back to resolveModelInternal', () => {
     writeConfig(projectDir, { model_profile: 'balanced' });
     // resolveModelForTier with attempt=0 must match resolveModelInternal.
-    const baseline = resolveModelInternal(projectDir, 'gsd-phase-researcher');
-    assert.equal(resolveModelForTier(projectDir, 'gsd-phase-researcher', 0), baseline);
+    const baseline = resolveModelInternal(projectDir, 'gtd-phase-researcher');
+    assert.equal(resolveModelForTier(projectDir, 'gtd-phase-researcher', 0), baseline);
   });
 
   test('with dynamic_routing.enabled=false, attempt argument is ignored — same as resolveModelInternal', () => {
@@ -142,10 +142,10 @@ describe('#3024 resolveModelForTier: disabled mode is a no-op (acceptance criter
         tier_models: { light: 'haiku', standard: 'sonnet', heavy: 'opus' },
       },
     });
-    const baseline = resolveModelInternal(projectDir, 'gsd-phase-researcher');
+    const baseline = resolveModelInternal(projectDir, 'gtd-phase-researcher');
     // attempt=0 and attempt=1 both ignored when disabled
-    assert.equal(resolveModelForTier(projectDir, 'gsd-phase-researcher', 0), baseline);
-    assert.equal(resolveModelForTier(projectDir, 'gsd-phase-researcher', 1), baseline);
+    assert.equal(resolveModelForTier(projectDir, 'gtd-phase-researcher', 0), baseline);
+    assert.equal(resolveModelForTier(projectDir, 'gtd-phase-researcher', 1), baseline);
   });
 });
 
@@ -164,16 +164,16 @@ describe('#3024 resolveModelForTier: enabled mode picks tier_models[default_tier
         tier_models: { light: 'haiku', standard: 'sonnet', heavy: 'opus' },
       },
     });
-    // gsd-codebase-mapper has light default tier per AGENT_DEFAULT_TIERS.
+    // gtd-codebase-mapper has light default tier per AGENT_DEFAULT_TIERS.
     // CR nitpick (#3031): assert preconditions explicitly so a tier
     // re-mapping in AGENT_DEFAULT_TIERS surfaces as a test failure
     // instead of a silent skip.
-    assert.equal(AGENT_DEFAULT_TIERS['gsd-codebase-mapper'], 'light',
-      'gsd-codebase-mapper expected to be light tier');
-    assert.equal(resolveModelForTier(projectDir, 'gsd-codebase-mapper', 0), 'haiku');
-    assert.equal(AGENT_DEFAULT_TIERS['gsd-planner'], 'heavy',
-      'gsd-planner expected to be heavy tier');
-    assert.equal(resolveModelForTier(projectDir, 'gsd-planner', 0), 'opus');
+    assert.equal(AGENT_DEFAULT_TIERS['gtd-codebase-mapper'], 'light',
+      'gtd-codebase-mapper expected to be light tier');
+    assert.equal(resolveModelForTier(projectDir, 'gtd-codebase-mapper', 0), 'haiku');
+    assert.equal(AGENT_DEFAULT_TIERS['gtd-planner'], 'heavy',
+      'gtd-planner expected to be heavy tier');
+    assert.equal(resolveModelForTier(projectDir, 'gtd-planner', 0), 'opus');
   });
 
   test('attempt=1 escalates to next tier up (acceptance criterion 3)', () => {
@@ -304,15 +304,15 @@ describe('#3024 precedence: per-agent override > dynamic_routing > models > prof
   test('per-agent model_overrides beats dynamic_routing (acceptance criterion: override wins)', () => {
     writeConfig(projectDir, {
       model_profile: 'balanced',
-      model_overrides: { 'gsd-codebase-mapper': 'openai/gpt-5' },
+      model_overrides: { 'gtd-codebase-mapper': 'openai/gpt-5' },
       dynamic_routing: {
         enabled: true,
         tier_models: { light: 'haiku', standard: 'sonnet', heavy: 'opus' },
       },
     });
     // Per-agent override always wins, even at escalated attempt.
-    assert.equal(resolveModelForTier(projectDir, 'gsd-codebase-mapper', 0), 'openai/gpt-5');
-    assert.equal(resolveModelForTier(projectDir, 'gsd-codebase-mapper', 1), 'openai/gpt-5');
+    assert.equal(resolveModelForTier(projectDir, 'gtd-codebase-mapper', 0), 'openai/gpt-5');
+    assert.equal(resolveModelForTier(projectDir, 'gtd-codebase-mapper', 1), 'openai/gpt-5');
   });
 
   test('dynamic_routing beats phase-type models (#3023)', () => {
@@ -324,10 +324,10 @@ describe('#3024 precedence: per-agent override > dynamic_routing > models > prof
         tier_models: { light: 'haiku', standard: 'sonnet', heavy: 'opus' },
       },
     });
-    // gsd-codebase-mapper is research phase-type; phase-type would give 'opus',
+    // gtd-codebase-mapper is research phase-type; phase-type would give 'opus',
     // but dynamic routing (light default → haiku) wins.
-    if (AGENT_DEFAULT_TIERS['gsd-codebase-mapper'] === 'light') {
-      assert.equal(resolveModelForTier(projectDir, 'gsd-codebase-mapper', 0), 'haiku');
+    if (AGENT_DEFAULT_TIERS['gtd-codebase-mapper'] === 'light') {
+      assert.equal(resolveModelForTier(projectDir, 'gtd-codebase-mapper', 0), 'haiku');
     }
   });
 });

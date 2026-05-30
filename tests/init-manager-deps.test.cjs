@@ -10,7 +10,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('init manager — cross-milestone dependency satisfaction', () => {
   let tmpDir;
@@ -70,7 +70,7 @@ describe('init manager — cross-milestone dependency satisfaction', () => {
     writeRoadmapWithShippedMilestone(tmpDir);
     writeStateWithMilestone(tmpDir, 'v2.0');
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -104,7 +104,7 @@ describe('init manager — cross-milestone dependency satisfaction', () => {
     ].join('\n');
     fs.writeFileSync(roadmapPath, withExtra);
 
-    const result = runGsdTools('init manager', tmpDir);
+    const result = runGtdTools('init manager', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);

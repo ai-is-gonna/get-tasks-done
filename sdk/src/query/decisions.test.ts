@@ -188,7 +188,7 @@ import { tmpdir } from 'node:os';
 describe('decisionsParse handler (review F14 — accepts relative path via projectDir)', () => {
   let tmp: string;
   beforeEach(async () => {
-    tmp = await mkdtemp(join(tmpdir(), 'gsd-decparse-'));
+    tmp = await mkdtemp(join(tmpdir(), 'gtd-decparse-'));
   });
   afterEach(async () => {
     await rm(tmp, { recursive: true, force: true });

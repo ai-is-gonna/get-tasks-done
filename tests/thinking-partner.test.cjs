@@ -6,14 +6,14 @@ const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-const GSD_ROOT = path.join(__dirname, '..', 'get-shit-done');
+const GTD_ROOT = path.join(__dirname, '..', 'get-tasks-done');
 
 describe('Thinking Partner Integration (#1726)', () => {
   // Reference doc tests
   describe('Reference document', () => {
-    const refPath = path.join(GSD_ROOT, 'references', 'thinking-partner.md');
+    const refPath = path.join(GTD_ROOT, 'references', 'thinking-partner.md');
 
     test('thinking-partner.md exists', () => {
       assert.ok(fs.existsSync(refPath), 'references/thinking-partner.md should exist');
@@ -76,7 +76,7 @@ describe('Thinking Partner Integration (#1726)', () => {
       // Replaces two source-grep tests that read config-schema.cjs and core.cjs (see #2691).
       const tmpDir = createTempProject();
       try {
-        const setResult = runGsdTools('config-set features.thinking_partner true', tmpDir);
+        const setResult = runGtdTools('config-set features.thinking_partner true', tmpDir);
         assert.ok(setResult.success, `config-set should accept features.thinking_partner: ${setResult.error}`);
         const configPath = path.join(tmpDir, '.planning', 'config.json');
         assert.ok(fs.existsSync(configPath), 'config-set should create .planning/config.json');
@@ -99,9 +99,9 @@ describe('Thinking Partner Integration (#1726)', () => {
   describe('Discuss-phase integration', () => {
     function readDiscussFamily() {
       const candidates = [
-        path.join(GSD_ROOT, 'workflows', 'discuss-phase.md'),
-        path.join(GSD_ROOT, 'workflows', 'discuss-phase', 'modes', 'default.md'),
-        path.join(GSD_ROOT, 'workflows', 'discuss-phase', 'modes', 'advisor.md'),
+        path.join(GTD_ROOT, 'workflows', 'discuss-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'discuss-phase', 'modes', 'default.md'),
+        path.join(GTD_ROOT, 'workflows', 'discuss-phase', 'modes', 'advisor.md'),
       ];
       return candidates
         .filter(p => fs.existsSync(p))
@@ -145,7 +145,7 @@ describe('Thinking Partner Integration (#1726)', () => {
   describe('Plan-phase integration', () => {
     test('plan-phase.md contains thinking partner conditional block', () => {
       const content = fs.readFileSync(
-        path.join(GSD_ROOT, 'workflows', 'plan-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'plan-phase.md'),
         'utf-8'
       );
       assert.ok(
@@ -156,7 +156,7 @@ describe('Thinking Partner Integration (#1726)', () => {
 
     test('plan-phase references features.thinking_partner config', () => {
       const content = fs.readFileSync(
-        path.join(GSD_ROOT, 'workflows', 'plan-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'plan-phase.md'),
         'utf-8'
       );
       assert.ok(
@@ -167,7 +167,7 @@ describe('Thinking Partner Integration (#1726)', () => {
 
     test('plan-phase scans for architectural tradeoff keywords', () => {
       const content = fs.readFileSync(
-        path.join(GSD_ROOT, 'workflows', 'plan-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'plan-phase.md'),
         'utf-8'
       );
       assert.ok(
@@ -186,7 +186,7 @@ describe('Thinking Partner Integration (#1726)', () => {
 
     test('plan-phase offers skip option', () => {
       const content = fs.readFileSync(
-        path.join(GSD_ROOT, 'workflows', 'plan-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'plan-phase.md'),
         'utf-8'
       );
       assert.ok(
@@ -197,7 +197,7 @@ describe('Thinking Partner Integration (#1726)', () => {
 
     test('plan-phase block is between step 11 and step 12', () => {
       const content = fs.readFileSync(
-        path.join(GSD_ROOT, 'workflows', 'plan-phase.md'),
+        path.join(GTD_ROOT, 'workflows', 'plan-phase.md'),
         'utf-8'
       );
       const step11Idx = content.indexOf('## 11. Handle Checker Return');

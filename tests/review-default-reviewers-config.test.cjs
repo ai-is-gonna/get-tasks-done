@@ -4,17 +4,17 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 const {
   VALID_CONFIG_KEYS,
-} = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 describe('review.default_reviewers config key (#3079)', () => {
   let tmpDir;
 
   beforeEach(() => {
     tmpDir = createTempProject();
-    runGsdTools('config-ensure-section', tmpDir, { HOME: tmpDir, USERPROFILE: tmpDir });
+    runGtdTools('config-ensure-section', tmpDir, { HOME: tmpDir, USERPROFILE: tmpDir });
   });
 
   afterEach(() => {
@@ -29,14 +29,14 @@ describe('review.default_reviewers config key (#3079)', () => {
   });
 
   test('round-trip set/get supports string array and normalizes to lowercase unique slugs', () => {
-    const setResult = runGsdTools(
+    const setResult = runGtdTools(
       ['config-set', 'review.default_reviewers', '["Gemini","CODEX","codex"]'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
     );
     assert.ok(setResult.success, `config-set failed: ${setResult.error}`);
 
-    const getResult = runGsdTools(
+    const getResult = runGtdTools(
       ['config-get', 'review.default_reviewers'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -46,7 +46,7 @@ describe('review.default_reviewers config key (#3079)', () => {
   });
 
   test('empty array is rejected with schema error', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.default_reviewers', '[]'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -59,7 +59,7 @@ describe('review.default_reviewers config key (#3079)', () => {
   });
 
   test('non-array value is rejected', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.default_reviewers', 'gemini'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -72,7 +72,7 @@ describe('review.default_reviewers config key (#3079)', () => {
   });
 
   test('invalid slug is rejected', () => {
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'review.default_reviewers', '["gemini","bad/slug"]'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }
@@ -85,7 +85,7 @@ describe('review.default_reviewers config key (#3079)', () => {
   });
 
   test('value is persisted in nested review object', () => {
-    const setResult = runGsdTools(
+    const setResult = runGtdTools(
       ['config-set', 'review.default_reviewers', '["gemini","codex"]'],
       tmpDir,
       { HOME: tmpDir, USERPROFILE: tmpDir }

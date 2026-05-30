@@ -14,7 +14,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 describe('extractCurrentMilestone — fenced code block boundary (#2787)', () => {
   let tmpDir;
@@ -70,10 +70,10 @@ describe('extractCurrentMilestone — fenced code block boundary (#2787)', () =>
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), roadmap);
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
-      '---\nmilestone: v1.1\n---\n\n# GSD State\n'
+      '---\nmilestone: v1.1\n---\n\n# GTD State\n'
     );
 
-    const result = runGsdTools('roadmap analyze', tmpDir);
+    const result = runGtdTools('roadmap analyze', tmpDir);
     assert.ok(result.success, `roadmap analyze should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -107,10 +107,10 @@ describe('extractCurrentMilestone — fenced code block boundary (#2787)', () =>
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), roadmap);
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
-      '---\nmilestone: v2.0\n---\n\n# GSD State\n'
+      '---\nmilestone: v2.0\n---\n\n# GTD State\n'
     );
 
-    const result = runGsdTools('roadmap analyze', tmpDir);
+    const result = runGtdTools('roadmap analyze', tmpDir);
     assert.ok(result.success, `roadmap analyze should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -149,10 +149,10 @@ describe('extractCurrentMilestone — fenced code block boundary (#2787)', () =>
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), roadmap);
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
-      '---\nmilestone: v3.0\n---\n\n# GSD State\n'
+      '---\nmilestone: v3.0\n---\n\n# GTD State\n'
     );
 
-    const result = runGsdTools('roadmap analyze', tmpDir);
+    const result = runGtdTools('roadmap analyze', tmpDir);
     assert.ok(result.success, `roadmap analyze should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -184,10 +184,10 @@ describe('extractCurrentMilestone — fenced code block boundary (#2787)', () =>
     fs.writeFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), roadmap);
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
-      '---\nmilestone: v1.1\n---\n\n# GSD State\n'
+      '---\nmilestone: v1.1\n---\n\n# GTD State\n'
     );
 
-    const result = runGsdTools('roadmap get-phase 2', tmpDir);
+    const result = runGtdTools('roadmap get-phase 2', tmpDir);
     assert.ok(result.success, `roadmap get-phase should succeed: ${result.error}`);
 
     const output = JSON.parse(result.output);

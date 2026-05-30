@@ -1,10 +1,10 @@
 /**
  * Regression test for #3317 — SDK detect-custom-files omits `skills/` from
- * GSD_MANAGED_DIRS. Mirrors the CJS-side coverage in
+ * GTD_MANAGED_DIRS. Mirrors the CJS-side coverage in
  * `tests/bug-2942-detect-custom-skills.test.cjs`.
  *
  * Without the fix, user-added skills under `<config-dir>/skills/<name>/`
- * are not detected and get silently wiped on `/gsd-update`.
+ * are not detected and get silently wiped on `/gtd-update`.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -32,7 +32,7 @@ async function writeManifest(configDir: string, files: Record<string, string>): 
     manifest.files[relPath] = sha256(content);
   }
   await writeFile(
-    join(configDir, 'gsd-file-manifest.json'),
+    join(configDir, 'gtd-file-manifest.json'),
     JSON.stringify(manifest, null, 2),
   );
 }
@@ -53,7 +53,7 @@ describe('detectCustomFiles — skills/ parity with CJS port (#3317)', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-3317-skills-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-3317-skills-'));
   });
 
   afterEach(async () => {
@@ -62,7 +62,7 @@ describe('detectCustomFiles — skills/ parity with CJS port (#3317)', () => {
 
   it('detects custom skill at skills/<name>/SKILL.md', async () => {
     await writeManifest(tmpDir, {
-      'skills/gsd-planner/SKILL.md': '# GSD Planner Skill\n',
+      'skills/gtd-planner/SKILL.md': '# GTD Planner Skill\n',
     });
     await writeCustomFile(tmpDir, 'skills/test-custom/SKILL.md', '# My Custom Skill\n');
 
@@ -74,33 +74,33 @@ describe('detectCustomFiles — skills/ parity with CJS port (#3317)', () => {
     expect(result.custom_count).toBeGreaterThanOrEqual(1);
   });
 
-  it('does not flag GSD-owned skill listed in manifest', async () => {
+  it('does not flag GTD-owned skill listed in manifest', async () => {
     await writeManifest(tmpDir, {
-      'skills/gsd-planner/SKILL.md': '# GSD Planner Skill\n',
+      'skills/gtd-planner/SKILL.md': '# GTD Planner Skill\n',
     });
 
     const { data } = await detectCustomFiles(['--config-dir', tmpDir], tmpDir);
     const result = data as DetectResult;
 
-    expect(result.custom_files).not.toContain('skills/gsd-planner/SKILL.md');
+    expect(result.custom_files).not.toContain('skills/gtd-planner/SKILL.md');
   });
 
-  it('still detects custom files in get-shit-done/workflows/ (regression guard)', async () => {
+  it('still detects custom files in get-tasks-done/workflows/ (regression guard)', async () => {
     await writeManifest(tmpDir, {
-      'get-shit-done/workflows/plan-phase.md': '# Plan Phase\n',
-      'skills/gsd-planner/SKILL.md': '# GSD Planner Skill\n',
+      'get-tasks-done/workflows/plan-phase.md': '# Plan Phase\n',
+      'skills/gtd-planner/SKILL.md': '# GTD Planner Skill\n',
     });
-    await writeCustomFile(tmpDir, 'get-shit-done/workflows/custom-workflow.md', '# Custom\n');
+    await writeCustomFile(tmpDir, 'get-tasks-done/workflows/custom-workflow.md', '# Custom\n');
 
     const { data } = await detectCustomFiles(['--config-dir', tmpDir], tmpDir);
     const result = data as DetectResult;
 
-    expect(result.custom_files).toContain('get-shit-done/workflows/custom-workflow.md');
+    expect(result.custom_files).toContain('get-tasks-done/workflows/custom-workflow.md');
   });
 
   it('custom_count matches custom_files.length across multiple skills', async () => {
     await writeManifest(tmpDir, {
-      'skills/gsd-planner/SKILL.md': '# GSD Planner Skill\n',
+      'skills/gtd-planner/SKILL.md': '# GTD Planner Skill\n',
     });
     await writeCustomFile(tmpDir, 'skills/test-custom/SKILL.md', '# Custom One\n');
     await writeCustomFile(tmpDir, 'skills/another-custom/SKILL.md', '# Custom Two\n');

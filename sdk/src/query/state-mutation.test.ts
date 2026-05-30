@@ -12,7 +12,7 @@ import { existsSync } from 'node:fs';
 
 /** Minimal STATE.md for testing. */
 const MINIMAL_STATE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -164,7 +164,7 @@ describe('acquireStateLock / releaseStateLock', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-lock-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-lock-'));
   });
 
   afterEach(async () => {
@@ -213,7 +213,7 @@ describe('stateUpdate', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-update-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-update-'));
     await setupTestProject(tmpDir);
   });
 
@@ -246,7 +246,7 @@ describe('stateUpdate', () => {
 
   it('preserves curated progress frontmatter during body-only updates', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -288,7 +288,7 @@ Progress: [█████░░░░░] 50%
 
   it('resyncs progress frontmatter when updating the Progress body field', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -382,7 +382,7 @@ describe('statePatch', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-patch-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-patch-'));
     await setupTestProject(tmpDir);
   });
 
@@ -405,7 +405,7 @@ describe('statePatch', () => {
 
   it('preserves curated progress frontmatter when patching body-only fields', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -449,7 +449,7 @@ describe('stateBeginPhase', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-begin-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-begin-'));
     await setupTestProject(tmpDir);
   });
 
@@ -473,7 +473,7 @@ describe('stateBeginPhase', () => {
   it('bug-2420: parses --phase/--name/--plans flag-form args correctly', async () => {
     const { stateBeginPhase } = await import('./state-mutation.js');
 
-    // This is how execute-phase.md calls it: flag form
+    // This is how work-task-issue.md calls it: flag form
     const result = await stateBeginPhase(
       ['--phase', '99', '--name', 'probe-test', '--plans', '1'],
       tmpDir
@@ -556,7 +556,7 @@ describe('stateAdvancePlan', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-advance-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-advance-'));
     await setupTestProject(tmpDir);
   });
 
@@ -597,7 +597,7 @@ describe('stateAddDecision', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-decision-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-decision-'));
     await setupTestProject(tmpDir);
   });
 
@@ -630,7 +630,7 @@ describe('stateAddRoadmapEvolution', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-evo-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-evo-'));
   });
 
   afterEach(async () => {
@@ -662,7 +662,7 @@ describe('stateAddRoadmapEvolution', () => {
 
   it('appends to an existing Roadmap Evolution subsection preserving prior entries', async () => {
     const stateWithEvo = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -744,42 +744,42 @@ Last session: 2026-04-07T10:00:00.000Z
     expect(matches.length).toBe(1);
   });
 
-  it('throws GSDError(Validation) when phase is missing', async () => {
+  it('throws GTDError(Validation) when phase is missing', async () => {
     await setupTestProject(tmpDir);
     const { stateAddRoadmapEvolution } = await import('./state-mutation.js');
-    const { GSDError, ErrorClassification } = await import('../errors.js');
+    const { GTDError, ErrorClassification } = await import('../errors.js');
 
     await expect(stateAddRoadmapEvolution(
       ['--action', 'inserted'],
       tmpDir,
     )).rejects.toSatisfy((err: unknown) => {
-      return err instanceof GSDError && err.classification === ErrorClassification.Validation;
+      return err instanceof GTDError && err.classification === ErrorClassification.Validation;
     });
   });
 
-  it('throws GSDError(Validation) when action is missing', async () => {
+  it('throws GTDError(Validation) when action is missing', async () => {
     await setupTestProject(tmpDir);
     const { stateAddRoadmapEvolution } = await import('./state-mutation.js');
-    const { GSDError, ErrorClassification } = await import('../errors.js');
+    const { GTDError, ErrorClassification } = await import('../errors.js');
 
     await expect(stateAddRoadmapEvolution(
       ['--phase', '72.1'],
       tmpDir,
     )).rejects.toSatisfy((err: unknown) => {
-      return err instanceof GSDError && err.classification === ErrorClassification.Validation;
+      return err instanceof GTDError && err.classification === ErrorClassification.Validation;
     });
   });
 
-  it('throws GSDError(Validation) on invalid action', async () => {
+  it('throws GTDError(Validation) on invalid action', async () => {
     await setupTestProject(tmpDir);
     const { stateAddRoadmapEvolution } = await import('./state-mutation.js');
-    const { GSDError, ErrorClassification } = await import('../errors.js');
+    const { GTDError, ErrorClassification } = await import('../errors.js');
 
     await expect(stateAddRoadmapEvolution(
       ['--phase', '72.1', '--action', 'frobnicated'],
       tmpDir,
     )).rejects.toSatisfy((err: unknown) => {
-      return err instanceof GSDError && err.classification === ErrorClassification.Validation;
+      return err instanceof GTDError && err.classification === ErrorClassification.Validation;
     });
   });
 });
@@ -790,7 +790,7 @@ describe('stateRecordSession', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-session-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-session-'));
     await setupTestProject(tmpDir);
   });
 
@@ -819,7 +819,7 @@ describe('Bug #2613: STATE.md frontmatter preservation through mutations', () =>
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-2613-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-2613-'));
   });
 
   afterEach(async () => {
@@ -831,7 +831,7 @@ describe('Bug #2613: STATE.md frontmatter preservation through mutations', () =>
     // current is v11.0 / Research-Depth. Before the fix, re-derivation pulled
     // v11.0 / Research-Depth into STATE.md's frontmatter on every mutation.
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v12.0
 milestone_name: Focus
 status: shipped
@@ -883,7 +883,7 @@ Resume file: None
     // Before the fix, derived status defaulted to 'unknown' and the frontmatter
     // value was lost because existingFm was {} at the preservation branch.
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v12.0
 milestone_name: Focus
 status: shipped
@@ -920,7 +920,7 @@ Resume file: None
     // returns total_plans=0. Existing frontmatter has authoritative counts
     // (5/5, 12/12, 100%). Before the fix, disk scan stomped the counts to 0/0.
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v12.0
 milestone_name: Focus
 status: shipped
@@ -980,7 +980,7 @@ Resume file: None
     // Mid-milestone: disk has real phase directories with plans + summaries.
     // Disk is the ground truth — frontmatter progress must not override it.
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -1037,7 +1037,7 @@ describe('stateMilestoneSwitch', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-milestone-switch-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-milestone-switch-'));
   });
 
   afterEach(async () => {
@@ -1051,7 +1051,7 @@ describe('stateMilestoneSwitch', () => {
     // frontmatter, a milestone switch must stomp the frontmatter with the new
     // version/name and reset progress counters.
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v1.0
 milestone_name: Foundation
 status: completed
@@ -1140,7 +1140,7 @@ describe('statePrune current phase extraction (#3471)', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-stateprune-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sdk-stateprune-'));
   });
 
   afterEach(async () => {
@@ -1149,7 +1149,7 @@ describe('statePrune current phase extraction (#3471)', () => {
 
   it('uses frontmatter progress.completed_phases when body Current Phase field is absent', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v1.1
 status: executing
 progress:
@@ -1179,7 +1179,7 @@ Phase 12 execution in progress.
 
   it('returns a targeted reason when no current phase source can be parsed', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v1.1
 status: executing
 ---

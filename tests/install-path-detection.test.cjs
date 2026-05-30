@@ -20,20 +20,20 @@ const INSTALL_PATH = path.join(__dirname, '..', 'bin', 'install.js');
 const PROJECTION_PATH = path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'shell-command-projection.cjs',
 );
 
 function loadInstaller() {
-  process.env.GSD_TEST_MODE = '1';
+  process.env.GTD_TEST_MODE = '1';
   delete require.cache[require.resolve(INSTALL_PATH)];
   return require(INSTALL_PATH);
 }
 
 function createTempHome() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-home-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-home-'));
 }
 
 function cleanup(dir) {

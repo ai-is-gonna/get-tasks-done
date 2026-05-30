@@ -12,7 +12,7 @@ describe('checkGates', () => {
   let projectDir: string;
 
   beforeEach(async () => {
-    projectDir = join(tmpdir(), `gsd-check-gates-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    projectDir = join(tmpdir(), `gtd-check-gates-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(join(projectDir, '.planning', 'phases'), { recursive: true });
     // Write a clean STATE.md
     await writeFile(
@@ -31,7 +31,7 @@ describe('checkGates', () => {
   });
 
   it('returns passed true when no blockers exist', async () => {
-    const { data } = await checkGates(['execute-phase'], projectDir);
+    const { data } = await checkGates(['work-task-issue'], projectDir);
     const d = data as Record<string, unknown>;
     expect(d.passed).toBe(true);
     expect(d.blockers).toEqual([]);
@@ -40,7 +40,7 @@ describe('checkGates', () => {
   it('returns blocker when .continue-here.md is present in root', async () => {
     await writeFile(join(projectDir, '.continue-here.md'), '# Continue here', 'utf-8');
 
-    const { data } = await checkGates(['execute-phase'], projectDir);
+    const { data } = await checkGates(['work-task-issue'], projectDir);
     const d = data as Record<string, unknown>;
     expect(d.passed).toBe(false);
     const blockers = d.blockers as Array<Record<string, unknown>>;
@@ -56,7 +56,7 @@ describe('checkGates', () => {
       'utf-8',
     );
 
-    const { data } = await checkGates(['execute-phase'], projectDir);
+    const { data } = await checkGates(['work-task-issue'], projectDir);
     const d = data as Record<string, unknown>;
     expect(d.passed).toBe(false);
     const blockers = d.blockers as Array<Record<string, unknown>>;
@@ -71,7 +71,7 @@ describe('checkGates', () => {
       'utf-8',
     );
 
-    const { data } = await checkGates(['execute-phase'], projectDir);
+    const { data } = await checkGates(['work-task-issue'], projectDir);
     const d = data as Record<string, unknown>;
     expect(d.passed).toBe(false);
     const blockers = d.blockers as Array<Record<string, unknown>>;
@@ -80,7 +80,7 @@ describe('checkGates', () => {
   });
 
   it('includes warnings shape in result', async () => {
-    const { data } = await checkGates(['execute-phase'], projectDir);
+    const { data } = await checkGates(['work-task-issue'], projectDir);
     const d = data as Record<string, unknown>;
     expect(Array.isArray(d.warnings)).toBe(true);
   });
@@ -94,7 +94,7 @@ describe('checkGates', () => {
       'utf-8',
     );
 
-    const { data } = await checkGates(['execute-phase', '--phase', '1'], projectDir);
+    const { data } = await checkGates(['work-task-issue', '--phase', '1'], projectDir);
     const d = data as Record<string, unknown>;
     const warnings = d.warnings as Array<Record<string, unknown>>;
     const debtWarning = warnings.find(w => w.gate === 'verification-debt');

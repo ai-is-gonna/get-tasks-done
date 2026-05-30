@@ -108,7 +108,7 @@ describe('parseCliArgs', () => {
     expect(() => parseCliArgs(['run', 'hello', '--not-a-real-option'])).toThrow();
   });
 
-  it('parses query permissively (keeps gsd-tools flags like --pick, --json)', () => {
+  it('parses query permissively (keeps gtd-tools flags like --pick, --json)', () => {
     const result = parseCliArgs([
       'query', 'state.load', '--pick', 'data', '--project-dir', 'C:\\tmp\\proj',
     ]);
@@ -129,11 +129,11 @@ describe('parseCliArgs', () => {
   // ─── #3019: --help inside `query <subcommand>` reaches the handler ────
 
   it('forwards --help to queryArgv when a subcommand precedes it (#3019)', () => {
-    // gsd-sdk query phase add --help
+    // gtd-sdk query phase add --help
     // Previously: --help was harvested as global, queryArgv = ['phase', 'add'],
     // help: true → main() short-circuits to top-level USAGE, never dispatching.
     // Now: --help travels with the rest of queryArgv so the registry handler
-    // (or the gsd-tools.cjs fallback) can render contextual subcommand help.
+    // (or the gtd-tools.cjs fallback) can render contextual subcommand help.
     const result = parseCliArgs(['query', 'phase', 'add', '--help']);
     expect(result.command).toBe('query');
     expect(result.queryArgv).toEqual(['phase', 'add', '--help']);
@@ -149,7 +149,7 @@ describe('parseCliArgs', () => {
   });
 
   it('treats bare `query --help` as a top-level help request (no subcommand to dispatch to)', () => {
-    // gsd-sdk query --help
+    // gtd-sdk query --help
     // No subcommand follows, so the only useful response is the top-level
     // USAGE. Preserve existing behavior: help: true.
     const result = parseCliArgs(['query', '--help']);
@@ -161,7 +161,7 @@ describe('parseCliArgs', () => {
   });
 
   it('preserves --help position when intermixed with other query flags (#3019)', () => {
-    // gsd-sdk query phase --help --pick name
+    // gtd-sdk query phase --help --pick name
     // The handler/fallback should see --help in argv so it can render help
     // even when other flags are present.
     const result = parseCliArgs(['query', 'phase', '--help', '--pick', 'name']);

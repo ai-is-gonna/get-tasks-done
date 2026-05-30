@@ -1,4 +1,4 @@
-import { GSDToolsError } from './gsd-tools-error.js';
+import { GTDToolsError } from './gtd-tools-error.js';
 
 export interface QueryFailureSignal {
   kind: 'timeout' | 'failure';
@@ -22,11 +22,11 @@ function isTimeoutMessage(message: string): boolean {
 }
 
 export function timeoutMessage(command: string, args: string[], timeoutMs: number): string {
-  return `gsd-tools timed out after ${timeoutMs}ms: ${command} ${args.join(' ')}`;
+  return `gtd-tools timed out after ${timeoutMs}ms: ${command} ${args.join(' ')}`;
 }
 
 export function toFailureSignal(error: unknown): QueryFailureSignal {
-  if (error instanceof GSDToolsError && error.classification) {
+  if (error instanceof GTDToolsError && error.classification) {
     return {
       kind: error.classification.kind,
       message: error.message,

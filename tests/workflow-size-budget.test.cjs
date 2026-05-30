@@ -5,24 +5,24 @@
 /**
  * Workflow size budget.
  *
- * Workflow definitions in `get-shit-done/workflows/*.md` are loaded verbatim
- * into Claude's context every time the corresponding `/gsd:*` command is
+ * Workflow definitions in `get-tasks-done/workflows/*.md` are loaded verbatim
+ * into Claude's context every time the corresponding `/gtd:*` command is
  * invoked. Unbounded growth is paid on every invocation across every session.
  *
  * Tiered the same way as agent budgets (#2361):
- *   - XL       : top-level orchestrators (e.g., execute-phase, autonomous)
+ *   - XL       : top-level orchestrators (e.g., work-task-issue, autonomous)
  *   - LARGE    : multi-step planners
  *   - DEFAULT  : focused single-purpose workflows (target tier)
  *
  * Raising a budget is a deliberate choice — adjust the constant, write a
  * rationale in the PR, and confirm the bloat is not duplicated content
- * that belongs in `get-shit-done/references/` or a per-mode subdirectory
+ * that belongs in `get-tasks-done/references/` or a per-mode subdirectory
  * (see `workflows/discuss-phase/modes/` for the progressive-disclosure
  * pattern introduced by #2551).
  *
  * See:
- *   - https://github.com/gsd-build/get-shit-done/issues/2551 (this test)
- *   - https://github.com/gsd-build/get-shit-done/issues/2361 (agent budget)
+ *   - https://github.com/ai-is-gonna/get-tasks-done/issues/2551 (this test)
+ *   - https://github.com/ai-is-gonna/get-tasks-done/issues/2361 (agent budget)
  */
 
 const { test, describe } = require('node:test');
@@ -30,10 +30,10 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-shit-done', 'workflows');
+const WORKFLOWS_DIR = path.join(__dirname, '..', 'get-tasks-done', 'workflows');
 
 // Bumped from 1700 → 1800 in #3181 to absorb MVP-mode verb-call additions
-// in execute-phase.md (1727 → ) and plan-phase.md (1714 → ) from #3178.
+// in work-task-issue.md (1727 → ) and plan-phase.md (1714 → ) from #3178.
 // Follow-up #3182 (TBD): extract MVP-mode bodies to `<workflow>/modes/mvp.md`
 // per the discuss-phase/modes/ precedent and revert this back to 1700.
 const XL_BUDGET = 1800;
@@ -44,7 +44,7 @@ const DEFAULT_BUDGET = 1000;
 // Grandfathered at current sizes — see PR #2551 for #2551 progressive-disclosure
 // pattern that future shrinks should follow.
 const XL_WORKFLOWS = new Set([
-  'execute-phase',  // 1727 (post-MVP-verb-integration; was 1622)
+  'work-task-issue',  // task issue selection, reconciliation, and finalization
   'plan-phase',     // 1714 (post-MVP-verb-integration; was 1493)
   'new-project',    // 1391
 ]);
@@ -92,7 +92,7 @@ describe('SIZE: workflow line-count budget', () => {
         `${workflow}.md has ${lines} lines — exceeds ${tier} budget of ${limit}. ` +
         `Extract per-mode bodies to a workflows/${workflow}/modes/ subdirectory, ` +
         `templates to workflows/${workflow}/templates/, or shared references ` +
-        `to get-shit-done/references/. See workflows/discuss-phase/ for the pattern.`
+        `to get-tasks-done/references/. See workflows/discuss-phase/ for the pattern.`
       );
     });
   }
@@ -124,7 +124,7 @@ describe('SIZE: discuss-phase progressive disclosure (issue #2551)', () => {
       assert.ok(
         fs.existsSync(p),
         `Expected mode file ${path.relative(WORKFLOWS_DIR, p)} — missing. ` +
-        `Each --flag in commands/gsd/discuss-phase.md must have a matching mode file.`
+        `Each --flag in commands/gtd/discuss-phase.md must have a matching mode file.`
       );
     }
   });

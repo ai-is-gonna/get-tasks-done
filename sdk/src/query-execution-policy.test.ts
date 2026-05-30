@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { QueryExecutionPolicy } from './query-execution-policy.js';
-import { setTransportPolicy, clearTransportPolicy } from './gsd-transport-policy.js';
+import { setTransportPolicy, clearTransportPolicy } from './gtd-transport-policy.js';
 
 describe('QueryExecutionPolicy', () => {
   afterEach(() => {

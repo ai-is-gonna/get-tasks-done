@@ -6,10 +6,10 @@
  * Asserts that:
  *   - default (flag absent) output does NOT include "last:" text
  *   - with statusline.show_last_command=true AND a transcript containing
- *     <command-name>/gsd-plan-phase</command-name>, output includes "last: /gsd-plan-phase"
+ *     <command-name>/gtd-plan-phase</command-name>, output includes "last: /gtd-plan-phase"
  *   - a missing transcript_path does not throw and produces no "last:" suffix
  *   - an existing transcript with no slash commands produces no "last:" suffix
- *   - the config key is registered in the schema so /gsd-settings can surface it
+ *   - the config key is registered in the schema so /gtd-settings can surface it
  */
 
 const { test } = require('node:test');
@@ -18,8 +18,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const statusline = require('../hooks/gsd-statusline.js');
-const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
+const statusline = require('../hooks/gtd-statusline.js');
+const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 function makeProject({ flag, transcript }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'enh-2538-'));
@@ -56,7 +56,7 @@ test('config schema registers statusline.show_last_command', () => {
 
 test('default (flag absent) output has no "last:" suffix', () => {
   const transcript =
-    JSON.stringify({ type: 'user', message: { content: '<command-name>/gsd-plan-phase</command-name>' } }) + '\n';
+    JSON.stringify({ type: 'user', message: { content: '<command-name>/gtd-plan-phase</command-name>' } }) + '\n';
   const { dir, transcriptPath, cleanup } = makeProject({ transcript });
   try {
     const out = statusline.renderStatusline(buildInput(dir, transcriptPath));
@@ -68,12 +68,12 @@ test('default (flag absent) output has no "last:" suffix', () => {
 
 test('flag=true with recorded command yields "last: /<cmd>"', () => {
   const transcript =
-    JSON.stringify({ type: 'user', message: { content: '<command-name>/gsd-plan-phase</command-name>' } }) + '\n' +
+    JSON.stringify({ type: 'user', message: { content: '<command-name>/gtd-plan-phase</command-name>' } }) + '\n' +
     JSON.stringify({ type: 'assistant', message: { content: 'ok' } }) + '\n';
   const { dir, transcriptPath, cleanup } = makeProject({ flag: true, transcript });
   try {
     const out = statusline.renderStatusline(buildInput(dir, transcriptPath));
-    assert.ok(out.includes('last: /gsd-plan-phase'), `expected "last: /gsd-plan-phase" in output; got: ${out}`);
+    assert.ok(out.includes('last: /gtd-plan-phase'), `expected "last: /gtd-plan-phase" in output; got: ${out}`);
   } finally {
     cleanup();
   }
@@ -81,14 +81,14 @@ test('flag=true with recorded command yields "last: /<cmd>"', () => {
 
 test('flag=true picks the MOST RECENT command when multiple are present', () => {
   const transcript =
-    JSON.stringify({ type: 'user', message: { content: '<command-name>/gsd-discuss-phase</command-name>' } }) + '\n' +
-    JSON.stringify({ type: 'user', message: { content: '<command-name>/gsd-plan-phase</command-name>' } }) + '\n' +
-    JSON.stringify({ type: 'user', message: { content: '<command-name>/gsd-execute-phase</command-name>' } }) + '\n';
+    JSON.stringify({ type: 'user', message: { content: '<command-name>/gtd-discuss-phase</command-name>' } }) + '\n' +
+    JSON.stringify({ type: 'user', message: { content: '<command-name>/gtd-plan-phase</command-name>' } }) + '\n' +
+    JSON.stringify({ type: 'user', message: { content: '<command-name>/gtd-work-task-issue</command-name>' } }) + '\n';
   const { dir, transcriptPath, cleanup } = makeProject({ flag: true, transcript });
   try {
     const out = statusline.renderStatusline(buildInput(dir, transcriptPath));
-    assert.ok(out.includes('last: /gsd-execute-phase'), `expected most-recent "gsd-execute-phase"; got: ${out}`);
-    assert.ok(!out.includes('last: /gsd-discuss-phase'), `should not show stale command; got: ${out}`);
+    assert.ok(out.includes('last: /gtd-work-task-issue'), `expected most-recent "gtd-work-task-issue"; got: ${out}`);
+    assert.ok(!out.includes('last: /gtd-discuss-phase'), `should not show stale command; got: ${out}`);
   } finally {
     cleanup();
   }

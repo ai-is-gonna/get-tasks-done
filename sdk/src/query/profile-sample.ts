@@ -1,11 +1,11 @@
 /**
- * `profile-sample` — parity with `get-shit-done/bin/lib/profile-pipeline.cjs` `cmdProfileSample`.
+ * `profile-sample` — parity with `get-tasks-done/bin/lib/profile-pipeline.cjs` `cmdProfileSample`.
  */
 import { appendFileSync, mkdtempSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { getScanSessionsRoot, scanProjectDir, readSessionIndex, getProjectName } from './profile-scan-sessions.js';
 import { isGenuineUserMessage, streamExtractMessages, truncateContent } from './profile-extract-messages.js';
 
@@ -20,7 +20,7 @@ export type ProfileSampleResult = {
 };
 
 /**
- * Port of `cmdProfileSample` — same JSON + JSONL file shape as `gsd-tools profile-sample`.
+ * Port of `cmdProfileSample` — same JSON + JSONL file shape as `gtd-tools profile-sample`.
  */
 export async function runProfileSample(
   overridePath: string | null,
@@ -29,7 +29,7 @@ export async function runProfileSample(
   const sessionsDir = getScanSessionsRoot(overridePath);
   if (!sessionsDir) {
     const searchedPath = overridePath || '~/.claude/projects';
-    throw new GSDError(
+    throw new GTDError(
       `No Claude Code sessions found at ${searchedPath}.${overridePath ? '' : ' Is Claude Code installed?'}`,
       ErrorClassification.Validation,
     );
@@ -51,11 +51,11 @@ export async function runProfileSample(
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new GSDError(`Cannot read sessions directory: ${msg}`, ErrorClassification.Validation);
+    throw new GTDError(`Cannot read sessions directory: ${msg}`, ErrorClassification.Validation);
   }
 
   if (projectDirs.length === 0) {
-    throw new GSDError('No project directories found in sessions directory.', ErrorClassification.Validation);
+    throw new GTDError('No project directories found in sessions directory.', ErrorClassification.Validation);
   }
 
   const projectMeta: Array<{
@@ -80,7 +80,7 @@ export async function runProfileSample(
 
   const projectCount = projectMeta.length;
   if (projectCount === 0) {
-    throw new GSDError('No projects with sessions found.', ErrorClassification.Validation);
+    throw new GTDError('No projects with sessions found.', ErrorClassification.Validation);
   }
 
   const perProjectCap = maxPerProject || Math.max(5, Math.floor(limit / projectCount));
@@ -166,7 +166,7 @@ export async function runProfileSample(
     }
   }
 
-  const tmpDir = mkdtempSync(join(tmpdir(), 'gsd-profile-'));
+  const tmpDir = mkdtempSync(join(tmpdir(), 'gtd-profile-'));
   const outputPath = join(tmpDir, 'profile-sample.jsonl');
   for (const msg of allMessages) {
     appendFileSync(outputPath, JSON.stringify(msg) + '\n');

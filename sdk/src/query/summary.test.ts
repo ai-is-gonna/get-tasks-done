@@ -13,7 +13,7 @@ describe('summaryExtract', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sum-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-sum-'));
     await mkdir(join(tmpDir, '.planning', 'phases', '01-x'), { recursive: true });
   });
 
@@ -77,7 +77,7 @@ describe('historyDigest', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-hist-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gtd-hist-'));
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
   });
 

@@ -3,7 +3,7 @@ import { commandsList } from './commands-list.js';
 
 // Regression test for bug #3121.
 // The `commands` verb was missing from the SDK native registry.
-// `gsd-sdk query commands` fell back to gsd-tools.cjs which threw
+// `gtd-sdk query commands` fell back to gtd-tools.cjs which threw
 // "Unknown command: commands".
 describe('commands-list handler (#3121)', () => {
   it('returns a non-empty sorted JSON array of command strings', async () => {

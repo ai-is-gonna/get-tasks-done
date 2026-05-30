@@ -3,7 +3,7 @@ import { classifyFallbackOutput } from './query-fallback-output-classifier.js';
 
 export interface FallbackBridgeRunInput {
   projectDir: string;
-  gsdToolsPath: string;
+  gtdToolsPath: string;
   normCmd: string;
   normArgs: string[];
   ws?: string;
@@ -23,7 +23,7 @@ function dottedCommandToCjsArgv(normCmd: string, normArgs: string[]): string[] {
 function execBridge(input: FallbackBridgeRunInput): Promise<{ stdout: string; stderr: string }> {
   const cjsArgv = dottedCommandToCjsArgv(input.normCmd, input.normArgs);
   const wsSuffix = input.ws ? ['--ws', input.ws] : [];
-  const fullArgv = [input.gsdToolsPath, ...cjsArgv, ...wsSuffix];
+  const fullArgv = [input.gtdToolsPath, ...cjsArgv, ...wsSuffix];
 
   return new Promise((resolve, reject) => {
     execFile(

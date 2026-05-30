@@ -34,7 +34,7 @@ const {
   shouldInstallSkill,
   stageSkillsForMode,
   cleanupStagedSkills,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
 describe('install-profiles: MINIMAL_SKILL_ALLOWLIST', () => {
   test('contains exactly the main-loop core (no drift without test update)', () => {
@@ -42,12 +42,14 @@ describe('install-profiles: MINIMAL_SKILL_ALLOWLIST', () => {
       [...MINIMAL_SKILL_ALLOWLIST].sort(),
       [
         'discuss-phase',
-        'execute-phase',
+        'export-phase-issues',
         'help',
         'new-project',
+        'orchestrate-tasks',
         'phase',
         'plan-phase',
         'update',
+        'work-task-issue',
       ],
     );
   });
@@ -56,8 +58,8 @@ describe('install-profiles: MINIMAL_SKILL_ALLOWLIST', () => {
     assert.ok(Object.isFrozen(MINIMAL_SKILL_ALLOWLIST));
   });
 
-  test('every allowlisted skill exists in commands/gsd/', () => {
-    const commandsDir = path.join(__dirname, '..', 'commands', 'gsd');
+  test('every allowlisted skill exists in commands/gtd/', () => {
+    const commandsDir = path.join(__dirname, '..', 'commands', 'gtd');
     for (const name of MINIMAL_SKILL_ALLOWLIST) {
       const file = path.join(commandsDir, `${name}.md`);
       assert.ok(
@@ -102,9 +104,11 @@ describe('install-profiles: shouldInstallSkill', () => {
 
 describe('install-profiles: stageSkillsForMode', () => {
   function createFixtureSkillsDir() {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-fixture-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-fixture-'));
     fs.writeFileSync(path.join(tmp, 'plan-phase.md'), '# plan-phase\n');
-    fs.writeFileSync(path.join(tmp, 'execute-phase.md'), '# execute-phase\n');
+    fs.writeFileSync(path.join(tmp, 'export-phase-issues.md'), '# export-phase-issues\n');
+    fs.writeFileSync(path.join(tmp, 'work-task-issue.md'), '# work-task-issue\n');
+    fs.writeFileSync(path.join(tmp, 'orchestrate-tasks.md'), '# orchestrate-tasks\n');
     fs.writeFileSync(path.join(tmp, 'autonomous.md'), '# autonomous\n');
     fs.writeFileSync(path.join(tmp, 'do.md'), '# do\n');
     fs.writeFileSync(path.join(tmp, 'help.md'), '# help\n');
@@ -135,12 +139,14 @@ describe('install-profiles: stageSkillsForMode', () => {
       const stagedFiles = fs.readdirSync(staged).sort();
       assert.deepStrictEqual(stagedFiles, [
         'discuss-phase.md',
-        'execute-phase.md',
+        'export-phase-issues.md',
         'help.md',
         'new-project.md',
+        'orchestrate-tasks.md',
         'phase.md',
         'plan-phase.md',
         'update.md',
+        'work-task-issue.md',
       ]);
     } finally {
       fs.rmSync(src, { recursive: true, force: true });
@@ -163,13 +169,13 @@ describe('install-profiles: stageSkillsForMode', () => {
   });
 
   test('minimal mode against non-existent source returns the source path (caller handles missing)', () => {
-    const ghost = path.join(os.tmpdir(), 'gsd-stage-does-not-exist-' + Date.now());
+    const ghost = path.join(os.tmpdir(), 'gtd-stage-does-not-exist-' + Date.now());
     const result = stageSkillsForMode(ghost, 'minimal');
     assert.strictEqual(result, ghost);
   });
 
   test('minimal mode skips non-md files and subdirectories', () => {
-    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-mixed-'));
+    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-mixed-'));
     let staged;
     try {
       fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\n');
@@ -188,7 +194,7 @@ describe('install-profiles: stageSkillsForMode', () => {
 
 describe('install-profiles: cleanupStagedSkills', () => {
   test('removes every staged dir created during this process', () => {
-    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-cleanup-'));
+    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-cleanup-'));
     fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\n');
     try {
       const a = stageSkillsForMode(src, 'minimal');
@@ -211,12 +217,12 @@ describe('install-profiles: cleanupStagedSkills', () => {
 
   test('full mode does not register a staged dir (no leak source for default install)', () => {
     cleanupStagedSkills();
-    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-fullmode-'));
+    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-fullmode-'));
     fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\n');
     const realMkdtemp = fs.mkdtempSync;
     let minimalStageDirCreated = false;
     fs.mkdtempSync = (prefix, ...rest) => {
-      if (typeof prefix === 'string' && prefix.endsWith('gsd-minimal-skills-')) {
+      if (typeof prefix === 'string' && prefix.endsWith('gtd-minimal-skills-')) {
         minimalStageDirCreated = true;
       }
       return realMkdtemp(prefix, ...rest);
@@ -228,7 +234,7 @@ describe('install-profiles: cleanupStagedSkills', () => {
       assert.equal(
         minimalStageDirCreated,
         false,
-        'full mode should not create a gsd-minimal-skills stage dir',
+        'full mode should not create a gtd-minimal-skills stage dir',
       );
     } finally {
       fs.mkdtempSync = realMkdtemp;
@@ -238,7 +244,7 @@ describe('install-profiles: cleanupStagedSkills', () => {
 
   test('exit handler registers exactly once across many stageSkillsForMode calls', () => {
     cleanupStagedSkills();
-    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-exit-handler-'));
+    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-exit-handler-'));
     fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\n');
     try {
       const before = process.listenerCount('exit');
@@ -266,12 +272,12 @@ describe('install-profiles: cleanupStagedSkills', () => {
     const { spawnSync } = require('child_process');
     const probe = `
       const { stageSkillsForMode } = require(${JSON.stringify(
-        path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'install-profiles.cjs'),
+        path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'install-profiles.cjs'),
       )});
       const fs = require('fs');
       const path = require('path');
       const os = require('os');
-      const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-sig-src-'));
+      const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-sig-src-'));
       fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\\n');
       const staged = stageSkillsForMode(src, 'minimal');
       // Print the staged path so the parent knows what to look for, then
@@ -322,7 +328,7 @@ describe('install-profiles: cleanupStagedSkills', () => {
     // before and after the throw. That assertion was unsound under
     // `--test-concurrency=4` (scripts/run-tests.cjs:24): a parallel test
     // process (notably install-minimal-all-runtimes.test.cjs, which also
-    // calls stageSkillsForMode) creates and removes `gsd-minimal-skills-*`
+    // calls stageSkillsForMode) creates and removes `gtd-minimal-skills-*`
     // dirs in the shared os.tmpdir() between our two snapshots, so
     // deepStrictEqual failed deterministically when the parallel process
     // happened to have a live stage dir during our snapshot window.
@@ -332,18 +338,18 @@ describe('install-profiles: cleanupStagedSkills', () => {
     // exact path no longer exists. No global tmpdir scan, no race with
     // parallel processes.
     cleanupStagedSkills();
-    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-stage-fail-'));
+    const src = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-stage-fail-'));
     fs.writeFileSync(path.join(src, 'plan-phase.md'), '# plan\n');
-    fs.writeFileSync(path.join(src, 'execute-phase.md'), '# x\n');
+    fs.writeFileSync(path.join(src, 'work-task-issue.md'), '# x\n');
     const realCopy = fs.copyFileSync;
     const realMkdtemp = fs.mkdtempSync;
     let stagedDir = null;
     fs.mkdtempSync = (prefix, ...rest) => {
       const out = realMkdtemp(prefix, ...rest);
       // Only track the stage dir created by stageSkillsForMode (its
-      // `gsd-minimal-skills-` prefix). Don't capture our own
-      // `gsd-stage-fail-` parent dir created above.
-      if (typeof prefix === 'string' && prefix.endsWith('gsd-minimal-skills-')) {
+      // `gtd-minimal-skills-` prefix). Don't capture our own
+      // `gtd-stage-fail-` parent dir created above.
+      if (typeof prefix === 'string' && prefix.endsWith('gtd-minimal-skills-')) {
         stagedDir = out;
       }
       return out;
@@ -375,7 +381,7 @@ function listTmpStageDirs() {
   try {
     return fs
       .readdirSync(os.tmpdir())
-      .filter((n) => n.startsWith('gsd-minimal-skills-'))
+      .filter((n) => n.startsWith('gtd-minimal-skills-'))
       .sort();
   } catch {
     return [];
@@ -385,9 +391,9 @@ function listTmpStageDirs() {
 // ─── End-to-end install regression: full → minimal Codex downgrade ─────────
 //
 // CodeRabbit (#2764) flagged that switching from full to minimal on Codex
-// would leave stale `agents/gsd-*.toml` files plus `[agents.gsd-*]`
+// would leave stale `agents/gtd-*.toml` files plus `[agents.gtd-*]`
 // sections in `config.toml`. This test simulates a previous full Codex
-// install (a few stale agent files + an existing GSD-marked config.toml)
+// install (a few stale agent files + an existing GTD-marked config.toml)
 // and confirms that `--minimal` cleans them up.
 describe('install: Codex full → minimal downgrade cleans stale agent state', () => {
   const { spawnSync } = require('child_process');
@@ -397,32 +403,32 @@ describe('install: Codex full → minimal downgrade cleans stale agent state', (
     const agentsDir = path.join(targetDir, 'agents');
     fs.mkdirSync(agentsDir, { recursive: true });
     // Pretend a previous full install left these behind:
-    fs.writeFileSync(path.join(agentsDir, 'gsd-executor.md'), 'stale\n');
-    fs.writeFileSync(path.join(agentsDir, 'gsd-planner.md'), 'stale\n');
-    fs.writeFileSync(path.join(agentsDir, 'gsd-executor.toml'), 'name = "gsd-executor"\n');
-    fs.writeFileSync(path.join(agentsDir, 'gsd-planner.toml'), 'name = "gsd-planner"\n');
+    fs.writeFileSync(path.join(agentsDir, 'gtd-task-executor.md'), 'stale\n');
+    fs.writeFileSync(path.join(agentsDir, 'gtd-planner.md'), 'stale\n');
+    fs.writeFileSync(path.join(agentsDir, 'gtd-task-executor.toml'), 'name = "gtd-task-executor"\n');
+    fs.writeFileSync(path.join(agentsDir, 'gtd-planner.toml'), 'name = "gtd-planner"\n');
     // Also drop an unrelated user agent to confirm we don't touch it:
     fs.writeFileSync(path.join(agentsDir, 'my-custom-agent.md'), 'user owns this\n');
 
-    // A previously-written codex config.toml with both GSD and user content,
+    // A previously-written codex config.toml with both GTD and user content,
     // matching the marker format produced by installCodexConfig.
     const codexConfig = [
       '# user-owned setting',
       'model = "gpt-5"',
       '',
-      '# GSD Agent Configuration — managed by get-shit-done installer',
-      '[agents.gsd-executor]',
+      '# GTD Agent Configuration — managed by get-tasks-done installer',
+      '[agents.gtd-task-executor]',
       'cmd = "stale"',
       '',
-      '[agents.gsd-planner]',
+      '[agents.gtd-planner]',
       'cmd = "stale"',
       '',
     ].join('\n');
     fs.writeFileSync(path.join(targetDir, 'config.toml'), codexConfig);
   }
 
-  test('--minimal removes stale .toml agents and strips [agents.gsd-*] from config.toml', () => {
-    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-codex-downgrade-'));
+  test('--minimal removes stale .toml agents and strips [agents.gtd-*] from config.toml', () => {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-codex-downgrade-'));
     try {
       makeStaleCodexInstall(targetDir);
 
@@ -439,24 +445,24 @@ describe('install: Codex full → minimal downgrade cleans stale agent state', (
       const agentsDir = path.join(targetDir, 'agents');
       const remaining = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir) : [];
 
-      // Stale gsd-* files (.md AND .toml) must be gone:
-      assert.ok(!remaining.includes('gsd-executor.md'), 'stale gsd-executor.md should be removed');
-      assert.ok(!remaining.includes('gsd-planner.md'), 'stale gsd-planner.md should be removed');
-      assert.ok(!remaining.includes('gsd-executor.toml'), 'stale gsd-executor.toml should be removed');
-      assert.ok(!remaining.includes('gsd-planner.toml'), 'stale gsd-planner.toml should be removed');
+      // Stale gtd-* files (.md AND .toml) must be gone:
+      assert.ok(!remaining.includes('gtd-task-executor.md'), 'stale gtd-task-executor.md should be removed');
+      assert.ok(!remaining.includes('gtd-planner.md'), 'stale gtd-planner.md should be removed');
+      assert.ok(!remaining.includes('gtd-task-executor.toml'), 'stale gtd-task-executor.toml should be removed');
+      assert.ok(!remaining.includes('gtd-planner.toml'), 'stale gtd-planner.toml should be removed');
 
       // User-owned agent must survive:
       assert.ok(remaining.includes('my-custom-agent.md'), 'user agent should be preserved');
 
-      // config.toml: GSD section gone, user content preserved
+      // config.toml: GTD section gone, user content preserved
       const configPath = path.join(targetDir, 'config.toml');
       if (fs.existsSync(configPath)) {
         const config = fs.readFileSync(configPath, 'utf8');
-        assert.ok(!config.includes('[agents.gsd-executor]'), 'gsd-executor section stripped');
-        assert.ok(!config.includes('[agents.gsd-planner]'), 'gsd-planner section stripped');
+        assert.ok(!config.includes('[agents.gtd-task-executor]'), 'gtd-task-executor section stripped');
+        assert.ok(!config.includes('[agents.gtd-planner]'), 'gtd-planner section stripped');
         assert.ok(config.includes('model = "gpt-5"'), 'user setting preserved');
       }
-      // (If config.toml was GSD-only it'd be removed entirely, which is also acceptable —
+      // (If config.toml was GTD-only it'd be removed entirely, which is also acceptable —
       //  in this fixture there's user content so the file should still exist.)
       assert.ok(fs.existsSync(configPath), 'config.toml with user content should remain');
     } finally {
@@ -474,14 +480,14 @@ describe('install: Claude full → minimal downgrade removes stale agents', () =
   const { spawnSync } = require('child_process');
   const installScript = path.join(__dirname, '..', 'bin', 'install.js');
 
-  test('--minimal removes stale gsd-*.md agents but preserves user-owned agents', () => {
-    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-claude-downgrade-'));
+  test('--minimal removes stale gtd-*.md agents but preserves user-owned agents', () => {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-claude-downgrade-'));
     try {
       const agentsDir = path.join(targetDir, 'agents');
       fs.mkdirSync(agentsDir, { recursive: true });
       // Fake a previous full install + a user-owned agent:
-      fs.writeFileSync(path.join(agentsDir, 'gsd-executor.md'), 'stale\n');
-      fs.writeFileSync(path.join(agentsDir, 'gsd-planner.md'), 'stale\n');
+      fs.writeFileSync(path.join(agentsDir, 'gtd-task-executor.md'), 'stale\n');
+      fs.writeFileSync(path.join(agentsDir, 'gtd-planner.md'), 'stale\n');
       fs.writeFileSync(path.join(agentsDir, 'my-custom-agent.md'), 'user owns this\n');
 
       spawnSync(
@@ -491,13 +497,13 @@ describe('install: Claude full → minimal downgrade removes stale agents', () =
       );
 
       const remaining = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir) : [];
-      assert.ok(!remaining.includes('gsd-executor.md'), 'stale gsd-executor.md removed');
-      assert.ok(!remaining.includes('gsd-planner.md'), 'stale gsd-planner.md removed');
+      assert.ok(!remaining.includes('gtd-task-executor.md'), 'stale gtd-task-executor.md removed');
+      assert.ok(!remaining.includes('gtd-planner.md'), 'stale gtd-planner.md removed');
       assert.ok(remaining.includes('my-custom-agent.md'), 'user agent preserved');
 
-      // No `gsd-*` files at all should remain:
-      const stragglers = remaining.filter((f) => f.startsWith('gsd-'));
-      assert.deepStrictEqual(stragglers, [], 'no gsd-* files should remain in agents/');
+      // No `gtd-*` files at all should remain:
+      const stragglers = remaining.filter((f) => f.startsWith('gtd-'));
+      assert.deepStrictEqual(stragglers, [], 'no gtd-* files should remain in agents/');
     } finally {
       fs.rmSync(targetDir, { recursive: true, force: true });
     }
@@ -515,14 +521,14 @@ describe('install: manifest records mode for both profiles', () => {
   const installScript = path.join(__dirname, '..', 'bin', 'install.js');
 
   function manifestModeAfterInstall(extraArgs) {
-    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-manifest-mode-'));
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-manifest-mode-'));
     try {
       spawnSync(
         process.execPath,
         [installScript, '--claude', '--global', '--config-dir', targetDir, ...extraArgs],
         { encoding: 'utf8' },
       );
-      const manifestPath = path.join(targetDir, 'gsd-file-manifest.json');
+      const manifestPath = path.join(targetDir, 'gtd-file-manifest.json');
       if (!fs.existsSync(manifestPath)) {
         return { mode: '<no manifest>', skillCount: 0, agentCount: 0 };
       }
@@ -546,17 +552,17 @@ describe('install: manifest records mode for both profiles', () => {
     assert.ok(r.agentCount > 0, `full install should have agents, got ${r.agentCount}`);
   });
 
-  test('--minimal records mode: "minimal" with exactly 7 skills and 0 agents', () => {
+  test('--minimal records mode: "minimal" with core task-flow skills and 0 agents', () => {
     const r = manifestModeAfterInstall(['--minimal']);
     assert.strictEqual(r.mode, 'minimal');
-    assert.strictEqual(r.skillCount, 7);
+    assert.strictEqual(r.skillCount, MINIMAL_SKILL_ALLOWLIST.length);
     assert.strictEqual(r.agentCount, 0);
   });
 
   test('--core-only is an alias for --minimal', () => {
     const r = manifestModeAfterInstall(['--core-only']);
     assert.strictEqual(r.mode, 'minimal');
-    assert.strictEqual(r.skillCount, 7);
+    assert.strictEqual(r.skillCount, MINIMAL_SKILL_ALLOWLIST.length);
     assert.strictEqual(r.agentCount, 0);
   });
 });
@@ -569,7 +575,7 @@ describe('install: manifest records mode for both profiles', () => {
 // mode is clear ("autonomous shouldn't be in core") rather than just a diff.
 describe('install-profiles: allowlist scope guards', () => {
   test('every main-loop command is in the allowlist', () => {
-    for (const required of ['new-project', 'discuss-phase', 'plan-phase', 'execute-phase']) {
+    for (const required of ['new-project', 'discuss-phase', 'plan-phase', 'export-phase-issues', 'work-task-issue', 'orchestrate-tasks']) {
       assert.ok(
         shouldInstallSkill(required, 'minimal'),
         `main-loop command "${required}" must be in MINIMAL_SKILL_ALLOWLIST`,
@@ -578,12 +584,11 @@ describe('install-profiles: allowlist scope guards', () => {
   });
 
   test('off-loop convenience commands are NOT in the allowlist', () => {
-    // These exist in commands/gsd/ and are valid skills, but they're not part
+    // These exist in commands/gtd/ and are valid skills, but they're not part
     // of the core main loop. If any of these slip into the allowlist the
     // floor erodes.
     for (const offLoop of [
       'autonomous',
-      'ship',
       'do',
       'progress',
       'next',

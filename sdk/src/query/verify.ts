@@ -1,7 +1,7 @@
 /**
  * Verification query handlers — plan structure, phase completeness, artifact checks.
  *
- * Ported from get-shit-done/bin/lib/verify.cjs.
+ * Ported from get-tasks-done/bin/lib/verify.cjs.
  * Provides plan validation, phase completeness checking, and artifact verification
  * as native TypeScript query handlers registered in the SDK query registry.
  *
@@ -17,7 +17,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter, parseMustHavesBlock } from './frontmatter.js';
 import {
   comparePhaseNum,
@@ -26,9 +26,22 @@ import {
   planningPaths,
 } from './helpers.js';
 import type { QueryHandler } from './utils.js';
-import { resolveGsdToolsPath } from '../sdk-package-compatibility.js';
+import { resolveGtdToolsPath } from '../sdk-package-compatibility.js';
+import { parseTasks } from '../plan-parser.js';
+import { validateTaskAtomicity } from '../plan-atomicity.js';
 
 // ─── verifyPlanStructure ───────────────────────────────────────────────────
+
+const EXECUTABLE_TASK_TYPES = new Set(['auto', 'tdd']);
+
+function extractTaskType(attrs: string): string {
+  const match = attrs.match(/type\s*=\s*["']([^"']+)["']/i);
+  return match ? match[1].trim() : 'auto';
+}
+
+function isExecutableTaskType(type: string): boolean {
+  return EXECUTABLE_TASK_TYPES.has(type.toLowerCase());
+}
 
 /**
  * Validate plan structure against required schema.
@@ -39,18 +52,18 @@ import { resolveGsdToolsPath } from '../sdk-package-compatibility.js';
  *
  * @param args - args[0]: file path (required)
  * @param projectDir - Project root directory
- * @returns QueryResult with { valid, errors, warnings, task_count, tasks, frontmatter_fields }
- * @throws GSDError with Validation classification if file path missing
+ * @returns QueryResult with { valid, errors, warnings, task_count, tasks, atomicity, frontmatter_fields }
+ * @throws GTDError with Validation classification if file path missing
  */
 export const verifyPlanStructure: QueryHandler = async (args, projectDir) => {
   const filePath = args[0];
   if (!filePath) {
-    throw new GSDError('file path required', ErrorClassification.Validation);
+    throw new GTDError('file path required', ErrorClassification.Validation);
   }
 
   // T-12-01: Null byte rejection on file paths
   if (filePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   const fullPath = isAbsolute(filePath) ? filePath : join(projectDir, filePath);
@@ -74,28 +87,33 @@ export const verifyPlanStructure: QueryHandler = async (args, projectDir) => {
 
   // Parse and check task elements
   // T-12-03: Use non-greedy [\s\S]*? to avoid catastrophic backtracking
-  const taskPattern = /<task[^>]*>([\s\S]*?)<\/task>/g;
-  const tasks: Array<{ name: string; hasFiles: boolean; hasAction: boolean; hasVerify: boolean; hasDone: boolean }> = [];
+  const taskPattern = /<task\b([^>]*)>([\s\S]*?)<\/task>/g;
+  const tasks: Array<{ name: string; hasFiles: boolean; hasAction: boolean; hasVerify: boolean; hasDone: boolean; hasBoundaries: boolean }> = [];
   let taskMatch: RegExpExecArray | null;
   while ((taskMatch = taskPattern.exec(content)) !== null) {
-    const taskContent = taskMatch[1];
+    const taskAttrs = taskMatch[1] ?? '';
+    const taskContent = taskMatch[2] ?? '';
+    const taskType = extractTaskType(taskAttrs);
     const nameMatch = taskContent.match(/<name>([\s\S]*?)<\/name>/);
     const taskName = nameMatch ? nameMatch[1].trim() : 'unnamed';
     const hasFiles = /<files>/.test(taskContent);
     const hasAction = /<action>/.test(taskContent);
     const hasVerify = /<verify>/.test(taskContent);
     const hasDone = /<done>/.test(taskContent);
+    const hasBoundaries = /<boundaries>/.test(taskContent);
+    const executable = isExecutableTaskType(taskType);
 
     if (!nameMatch) errors.push('Task missing <name> element');
-    if (!hasAction) errors.push(`Task '${taskName}' missing <action>`);
-    if (!hasVerify) warnings.push(`Task '${taskName}' missing <verify>`);
-    if (!hasDone) warnings.push(`Task '${taskName}' missing <done>`);
-    if (!hasFiles) warnings.push(`Task '${taskName}' missing <files>`);
+    if (executable && !hasAction) errors.push(`Task '${taskName}' missing <action>`);
+    if (executable && !hasVerify) warnings.push(`Task '${taskName}' missing <verify>`);
+    if (executable && !hasDone) warnings.push(`Task '${taskName}' missing <done>`);
+    if (executable && !hasFiles) warnings.push(`Task '${taskName}' missing <files>`);
 
-    tasks.push({ name: taskName, hasFiles, hasAction, hasVerify, hasDone });
+    tasks.push({ name: taskName, hasFiles, hasAction, hasVerify, hasDone, hasBoundaries });
   }
 
   if (tasks.length === 0) warnings.push('No <task> elements found');
+  const atomicity = validateTaskAtomicity(parseTasks(content));
 
   // Wave/depends_on consistency
   if (fm.wave && parseInt(String(fm.wave), 10) > 1 && (!fm.depends_on || (Array.isArray(fm.depends_on) && fm.depends_on.length === 0))) {
@@ -115,6 +133,7 @@ export const verifyPlanStructure: QueryHandler = async (args, projectDir) => {
       warnings,
       task_count: tasks.length,
       tasks,
+      atomicity,
       frontmatter_fields: Object.keys(fm),
     },
   };
@@ -132,12 +151,12 @@ export const verifyPlanStructure: QueryHandler = async (args, projectDir) => {
  * @param args - args[0]: phase number (required)
  * @param projectDir - Project root directory
  * @returns QueryResult with { complete, phase, plan_count, summary_count, incomplete_plans, orphan_summaries, errors, warnings }
- * @throws GSDError with Validation classification if phase number missing
+ * @throws GTDError with Validation classification if phase number missing
  */
 export const verifyPhaseCompleteness: QueryHandler = async (args, projectDir, workstream) => {
   const phase = args[0];
   if (!phase) {
-    throw new GSDError('phase required', ErrorClassification.Validation);
+    throw new GTDError('phase required', ErrorClassification.Validation);
   }
 
   const phasesDir = planningPaths(projectDir, workstream).phases;
@@ -221,17 +240,17 @@ export const verifyPhaseCompleteness: QueryHandler = async (args, projectDir, wo
  * @param args - args[0]: plan file path (required)
  * @param projectDir - Project root directory
  * @returns QueryResult with { all_passed, passed, total, artifacts }
- * @throws GSDError with Validation classification if file path missing
+ * @throws GTDError with Validation classification if file path missing
  */
 export const verifyArtifacts: QueryHandler = async (args, projectDir) => {
   const planFilePath = args[0];
   if (!planFilePath) {
-    throw new GSDError('plan file path required', ErrorClassification.Validation);
+    throw new GTDError('plan file path required', ErrorClassification.Validation);
   }
 
   // T-12-01: Null byte rejection on file paths
   if (planFilePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   const fullPath = isAbsolute(planFilePath) ? planFilePath : join(projectDir, planFilePath);
@@ -316,7 +335,7 @@ export const verifyArtifacts: QueryHandler = async (args, projectDir) => {
  * Verify that commit hashes referenced in SUMMARY.md files actually exist.
  *
  * Port of `cmdVerifyCommits` from `verify.cjs` lines 262-282.
- * Used by gsd-verifier agent to confirm commits mentioned in summaries
+ * Used by gtd-verifier agent to confirm commits mentioned in summaries
  * are real commits in the git history.
  *
  * @param args - One or more commit hashes
@@ -325,7 +344,7 @@ export const verifyArtifacts: QueryHandler = async (args, projectDir) => {
  */
 export const verifyCommits: QueryHandler = async (args, projectDir) => {
   if (args.length === 0) {
-    throw new GSDError('At least one commit hash required', ErrorClassification.Validation);
+    throw new GTDError('At least one commit hash required', ErrorClassification.Validation);
   }
 
   const { execGit } = await import('./commit.js');
@@ -365,7 +384,7 @@ export const verifyCommits: QueryHandler = async (args, projectDir) => {
 export const verifyReferences: QueryHandler = async (args, projectDir) => {
   const filePath = args[0];
   if (!filePath) {
-    throw new GSDError('file path required', ErrorClassification.Validation);
+    throw new GTDError('file path required', ErrorClassification.Validation);
   }
 
   const fullPath = isAbsolute(filePath) ? filePath : join(projectDir, filePath);
@@ -428,7 +447,7 @@ export const verifyReferences: QueryHandler = async (args, projectDir) => {
 export const verifySummary: QueryHandler = async (args, projectDir) => {
   const summaryPath = args[0];
   if (!summaryPath) {
-    throw new GSDError('summary-path required', ErrorClassification.Validation);
+    throw new GTDError('summary-path required', ErrorClassification.Validation);
   }
 
   const checkCountIdx = args.indexOf('--check-count');
@@ -533,10 +552,10 @@ export const verifySummary: QueryHandler = async (args, projectDir) => {
 export const verifyPathExists: QueryHandler = async (args, projectDir) => {
   const targetPath = args[0];
   if (!targetPath) {
-    throw new GSDError('path required for verification', ErrorClassification.Validation);
+    throw new GTDError('path required for verification', ErrorClassification.Validation);
   }
   if (targetPath.includes('\0')) {
-    throw new GSDError('path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('path contains null bytes', ErrorClassification.Validation);
   }
 
   const fullPath = isAbsolute(targetPath) ? targetPath : join(projectDir, targetPath);
@@ -560,7 +579,7 @@ export const verifySchemaDrift: QueryHandler = async (args, projectDir, workstre
   const skipFlag = args.includes('--skip');
 
   if (!phaseArg) {
-    throw new GSDError('Usage: verify schema-drift <phase> [--skip]', ErrorClassification.Validation);
+    throw new GTDError('Usage: verify schema-drift <phase> [--skip]', ErrorClassification.Validation);
   }
 
   const { checkSchemaDrift } = await import('./schema-detect.js');
@@ -650,7 +669,7 @@ export const verifySchemaDrift: QueryHandler = async (args, projectDir, workstre
  *
  * Non-blocking by contract: every failure mode returns a successful response
  * with `{ skipped: true, reason }`. The post-execute drift gate in
- * `/gsd-execute-phase` relies on this guarantee.
+ * `/gtd-work-task-issue` relies on this guarantee.
  *
  * Delegates to the Node-side implementation in `bin/lib/drift.cjs` and
  * `bin/lib/verify.cjs` via a child process so the drift logic stays in one
@@ -659,7 +678,7 @@ export const verifySchemaDrift: QueryHandler = async (args, projectDir, workstre
 export const verifyCodebaseDrift: QueryHandler = async (_args, projectDir) => {
   try {
     const { execFileSync } = await import('node:child_process');
-    const toolsPath = resolveGsdToolsPath(projectDir);
+    const toolsPath = resolveGtdToolsPath(projectDir);
     const out = execFileSync(process.execPath, [toolsPath, 'verify', 'codebase-drift'], {
       cwd: projectDir,
       encoding: 'utf-8',

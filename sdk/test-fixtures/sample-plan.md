@@ -25,7 +25,7 @@ Create a simple output file to prove the SDK can execute a plan end-to-end.
 <task type="auto">
 <name>Create output file</name>
 <files>output.txt</files>
-<action>Create output.txt with content 'hello from gsd-sdk'</action>
+<action>Create output.txt with content 'hello from gtd-sdk'</action>
 <verify>test -f output.txt</verify>
 <done>output.txt exists with expected content</done>
 </task>

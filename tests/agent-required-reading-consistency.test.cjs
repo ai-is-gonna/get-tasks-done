@@ -3,12 +3,12 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * GSD Agent Required Reading Consistency Tests
+ * GTD Agent Required Reading Consistency Tests
  *
  * Validates that all agent .md files use the standardized <required_reading>
  * pattern and that no legacy <files_to_read> blocks remain.
  *
- * See: https://github.com/gsd-build/get-shit-done/issues/2168
+ * See: https://github.com/ai-is-gonna/get-tasks-done/issues/2168
  */
 
 const { test, describe } = require('node:test');
@@ -19,7 +19,7 @@ const path = require('path');
 const AGENTS_DIR = path.join(__dirname, '..', 'agents');
 
 const ALL_AGENTS = fs.readdirSync(AGENTS_DIR)
-  .filter(f => f.startsWith('gsd-') && f.endsWith('.md'))
+  .filter(f => f.startsWith('gtd-') && f.endsWith('.md'))
   .map(f => f.replace('.md', ''));
 
 // ─── No Legacy files_to_read Blocks ────────────────────────────────────────

@@ -6,7 +6,7 @@ const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 describe('claude_md_path config key', () => {
   let tmpDir;
@@ -20,12 +20,12 @@ describe('claude_md_path config key', () => {
   });
 
   test('claude_md_path is in VALID_CONFIG_KEYS', () => {
-    const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config.cjs');
+    const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config.cjs');
     assert.ok(VALID_CONFIG_KEYS.has('claude_md_path'));
   });
 
   test('config template includes claude_md_path', () => {
-    const templatePath = path.join(__dirname, '..', 'get-shit-done', 'templates', 'config.json');
+    const templatePath = path.join(__dirname, '..', 'get-tasks-done', 'templates', 'config.json');
     const template = JSON.parse(fs.readFileSync(templatePath, 'utf-8'));
     assert.strictEqual(template.claude_md_path, './CLAUDE.md');
   });
@@ -35,7 +35,7 @@ describe('claude_md_path config key', () => {
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({ mode: 'interactive' }), 'utf-8');
 
-    const result = runGsdTools('config-get claude_md_path --default ./CLAUDE.md', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('config-get claude_md_path --default ./CLAUDE.md', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
     assert.strictEqual(JSON.parse(result.output), './CLAUDE.md');
   });
@@ -44,17 +44,17 @@ describe('claude_md_path config key', () => {
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({ mode: 'interactive' }), 'utf-8');
 
-    const setResult = runGsdTools('config-set claude_md_path .claude/CLAUDE.md', tmpDir, { HOME: tmpDir });
+    const setResult = runGtdTools('config-set claude_md_path .claude/CLAUDE.md', tmpDir, { HOME: tmpDir });
     assert.ok(setResult.success, `Expected success but got error: ${setResult.error}`);
 
-    const getResult = runGsdTools('config-get claude_md_path', tmpDir, { HOME: tmpDir });
+    const getResult = runGtdTools('config-get claude_md_path', tmpDir, { HOME: tmpDir });
     assert.ok(getResult.success, `Expected success but got error: ${getResult.error}`);
     assert.strictEqual(JSON.parse(getResult.output), '.claude/CLAUDE.md');
   });
 
   test('buildNewProjectConfig includes claude_md_path default', () => {
     // Use config-new-project which calls buildNewProjectConfig
-    const result = runGsdTools('config-new-project', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('config-new-project', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
 
     const configPath = path.join(tmpDir, '.planning', 'config.json');
@@ -93,7 +93,7 @@ describe('cmdGenerateClaudeProfile reads claude_md_path from config', () => {
     };
     fs.writeFileSync(analysisPath, JSON.stringify(analysis), 'utf-8');
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['generate-claude-profile', '--analysis', analysisPath],
       tmpDir,
       { HOME: tmpDir }
@@ -123,7 +123,7 @@ describe('cmdGenerateClaudeProfile reads claude_md_path from config', () => {
     fs.writeFileSync(analysisPath, JSON.stringify(analysis), 'utf-8');
 
     const outputFile = 'custom-output.md';
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['generate-claude-profile', '--analysis', analysisPath, '--output', outputFile],
       tmpDir,
       { HOME: tmpDir }
@@ -162,7 +162,7 @@ describe('cmdGenerateClaudeMd reads claude_md_path from config', () => {
     // Create the target directory
     fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
 
-    const result = runGsdTools('generate-claude-md', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('generate-claude-md', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -178,7 +178,7 @@ describe('cmdGenerateClaudeMd reads claude_md_path from config', () => {
     fs.writeFileSync(configPath, JSON.stringify({ claude_md_path: '.claude/CLAUDE.md' }), 'utf-8');
 
     const outputFile = 'my-custom.md';
-    const result = runGsdTools(['generate-claude-md', '--output', outputFile], tmpDir, { HOME: tmpDir });
+    const result = runGtdTools(['generate-claude-md', '--output', outputFile], tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
 
     const parsed = JSON.parse(result.output);
@@ -191,7 +191,7 @@ describe('cmdGenerateClaudeMd reads claude_md_path from config', () => {
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     fs.writeFileSync(configPath, JSON.stringify({ mode: 'interactive' }), 'utf-8');
 
-    const result = runGsdTools('generate-claude-md', tmpDir, { HOME: tmpDir });
+    const result = runGtdTools('generate-claude-md', tmpDir, { HOME: tmpDir });
     assert.ok(result.success, `Expected success but got error: ${result.error}`);
 
     const parsed = JSON.parse(result.output);

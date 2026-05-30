@@ -4,10 +4,10 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * /gsd-ultraplan-phase [BETA] Tests
+ * /gtd-ultraplan-phase [BETA] Tests
  *
  * Structural assertions for the ultraplan-phase command and workflow files.
- * This command offloads GSD plan phase to Claude Code's ultraplan cloud infrastructure.
+ * This command offloads GTD plan phase to Claude Code's ultraplan cloud infrastructure.
  */
 
 'use strict';
@@ -17,18 +17,18 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const CMD_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'ultraplan-phase.md');
-const WF_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'ultraplan-phase.md');
+const CMD_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'ultraplan-phase.md');
+const WF_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'ultraplan-phase.md');
 
 // ─── File Existence ────────────────────────────────────────────────────────────
 
 describe('ultraplan-phase file existence', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(CMD_PATH), 'commands/gsd/ultraplan-phase.md should exist');
+    assert.ok(fs.existsSync(CMD_PATH), 'commands/gtd/ultraplan-phase.md should exist');
   });
 
   test('workflow file exists', () => {
-    assert.ok(fs.existsSync(WF_PATH), 'get-shit-done/workflows/ultraplan-phase.md should exist');
+    assert.ok(fs.existsSync(WF_PATH), 'get-tasks-done/workflows/ultraplan-phase.md should exist');
   });
 });
 
@@ -38,7 +38,7 @@ describe('ultraplan-phase command frontmatter', () => {
   const content = fs.readFileSync(CMD_PATH, 'utf-8');
 
   test('has correct name field', () => {
-    assert.match(content, /^name:\s*gsd:ultraplan-phase$/m);
+    assert.match(content, /^name:\s*gtd:ultraplan-phase$/m);
   });
 
   test('description marks feature as BETA', () => {
@@ -57,7 +57,7 @@ describe('ultraplan-phase command references', () => {
 
   test('references the ultraplan-phase workflow', () => {
     assert.ok(
-      content.includes('@~/.claude/get-shit-done/workflows/ultraplan-phase.md'),
+      content.includes('@~/.claude/get-tasks-done/workflows/ultraplan-phase.md'),
       'command should reference ultraplan-phase workflow'
     );
   });
@@ -97,10 +97,10 @@ describe('ultraplan-phase workflow runtime gate', () => {
     );
   });
 
-  test('error message references /gsd-plan-phase as local alternative', () => {
+  test('error message references /gtd-plan-phase as local alternative', () => {
     assert.ok(
-      content.includes('gsd:plan-phase') || content.includes('gsd-plan-phase'),
-      'error message should direct users to /gsd-plan-phase as the local alternative'
+      content.includes('gtd:plan-phase') || content.includes('gtd-plan-phase'),
+      'error message should direct users to /gtd-plan-phase as the local alternative'
     );
   });
 });
@@ -110,14 +110,14 @@ describe('ultraplan-phase workflow runtime gate', () => {
 describe('ultraplan-phase workflow initialization', () => {
   const content = fs.readFileSync(WF_PATH, 'utf-8');
 
-  test('loads GSD phase context via gsd-sdk query init.plan-phase', () => {
-    assert.ok(content.includes('gsd-sdk query init.plan-phase'), 'workflow must load phase context via gsd-sdk query init.plan-phase');
+  test('loads GTD phase context via gtd-sdk query init.plan-phase', () => {
+    assert.ok(content.includes('gtd-sdk query init.plan-phase'), 'workflow must load phase context via gtd-sdk query init.plan-phase');
   });
 
   test('handles missing .planning directory', () => {
     assert.ok(
-      content.includes('gsd-new-project') || content.includes('/gsd-new-project') || content.includes('gsd:new-project'),
-      'workflow should direct user to /gsd-new-project when .planning is missing'
+      content.includes('gtd-new-project') || content.includes('/gtd-new-project') || content.includes('gtd:new-project'),
+      'workflow should direct user to /gtd-new-project when .planning is missing'
     );
   });
 });
@@ -165,20 +165,20 @@ describe('ultraplan-phase workflow return path', () => {
     assert.ok(content.includes('Cancel'), 'workflow must instruct user to choose Cancel to save the plan to a file');
   });
 
-  test('directs user to run /gsd-import --from after ultraplan completes', () => {
-    assert.ok(content.includes('gsd-import') || content.includes('gsd:import'), 'workflow must direct user to run /gsd:import --from with the saved file path');
+  test('directs user to run /gtd-import --from after ultraplan completes', () => {
+    assert.ok(content.includes('gtd-import') || content.includes('gtd:import'), 'workflow must direct user to run /gtd:import --from with the saved file path');
   });
 
-  test('mentions the --from flag for gsd-import', () => {
-    assert.ok(content.includes('--from'), 'workflow should reference /gsd-import --from <file-path>');
+  test('mentions the --from flag for gtd-import', () => {
+    assert.ok(content.includes('--from'), 'workflow should reference /gtd-import --from <file-path>');
   });
 
   test('return-path instructions appear before the /ultraplan trigger', () => {
     const ultraplanTriggerIndex = content.indexOf('/ultraplan');
-    const importIndex = content.indexOf('gsd-import');
+    const importIndex = content.indexOf('gtd-import');
     assert.ok(
       importIndex < ultraplanTriggerIndex,
-      'return-path instructions (gsd-import) must appear before /ultraplan trigger so they are visible in scroll-back'
+      'return-path instructions (gtd-import) must appear before /ultraplan trigger so they are visible in scroll-back'
     );
   });
 });
@@ -191,7 +191,7 @@ describe('ultraplan-phase workflow isolation', () => {
   test('does NOT directly write PLAN.md files', () => {
     assert.ok(
       !content.includes('write PLAN.md') && !content.includes('Write(\'.planning'),
-      'workflow must NOT directly write PLAN.md — delegates to /gsd-import --from'
+      'workflow must NOT directly write PLAN.md — delegates to /gtd-import --from'
     );
   });
 

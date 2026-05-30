@@ -1,5 +1,5 @@
 /**
- * Golden test helpers — run `gsd-tools.cjs` as a subprocess and capture JSON or raw stdout.
+ * Golden test helpers — run `gtd-tools.cjs` as a subprocess and capture JSON or raw stdout.
  *
  * Used by `golden.integration.test.ts` and `read-only-parity.integration.test.ts` to assert
  * SDK `createRegistry()` output matches the legacy CJS CLI.
@@ -9,17 +9,17 @@ import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 
-import { resolveGsdToolsPath } from '../gsd-tools.js';
+import { resolveGtdToolsPath } from '../gtd-tools.js';
 
 const CAPTURE_TIMEOUT_MS = 120_000;
 const MAX_BUFFER = 10 * 1024 * 1024;
 
-function execGsdTools(
+function execGtdTools(
   projectDir: string,
   command: string,
   args: string[],
 ): Promise<{ stdout: string; stderr: string }> {
-  const script = resolveGsdToolsPath(projectDir);
+  const script = resolveGtdToolsPath(projectDir);
   const fullArgs = [script, command, ...args];
   return new Promise((resolve, reject) => {
     execFile(
@@ -37,7 +37,7 @@ function execGsdTools(
           const stderrStr = stderr?.toString() ?? '';
           reject(
             new Error(
-              `gsd-tools failed (exit ${code}): ${stderrStr || (err instanceof Error ? err.message : String(err))}`,
+              `gtd-tools failed (exit ${code}): ${stderrStr || (err instanceof Error ? err.message : String(err))}`,
             ),
           );
           return;
@@ -48,8 +48,8 @@ function execGsdTools(
   });
 }
 
-/** Same `@file:` indirection handling as {@link GSDTools} private parseOutput (cwd = projectDir). */
-async function parseGsdToolsJson(raw: string, projectDir: string): Promise<unknown> {
+/** Same `@file:` indirection handling as {@link GTDTools} private parseOutput (cwd = projectDir). */
+async function parseGtdToolsJson(raw: string, projectDir: string): Promise<unknown> {
   const trimmed = raw.trim();
   if (trimmed === '') {
     return null;
@@ -63,7 +63,7 @@ async function parseGsdToolsJson(raw: string, projectDir: string): Promise<unkno
       jsonStr = await readFile(filePath, 'utf-8');
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to read gsd-tools @file: indirection at "${filePath}": ${reason}`);
+      throw new Error(`Failed to read gtd-tools @file: indirection at "${filePath}": ${reason}`);
     }
   }
 
@@ -71,25 +71,25 @@ async function parseGsdToolsJson(raw: string, projectDir: string): Promise<unkno
 }
 
 /**
- * Run `node gsd-tools.cjs <command> [...args]` in `projectDir` and parse stdout as JSON.
+ * Run `node gtd-tools.cjs <command> [...args]` in `projectDir` and parse stdout as JSON.
  */
-export async function captureGsdToolsOutput(
+export async function captureGtdToolsOutput(
   command: string,
   args: string[],
   projectDir: string,
 ): Promise<unknown> {
-  const { stdout } = await execGsdTools(projectDir, command, args);
-  return parseGsdToolsJson(stdout, projectDir);
+  const { stdout } = await execGtdTools(projectDir, command, args);
+  return parseGtdToolsJson(stdout, projectDir);
 }
 
 /**
- * Run `node gsd-tools.cjs <command> [...args]` and return raw stdout (no JSON parse).
+ * Run `node gtd-tools.cjs <command> [...args]` and return raw stdout (no JSON parse).
  */
-export async function captureGsdToolsStdout(
+export async function captureGtdToolsStdout(
   command: string,
   args: string[],
   projectDir: string,
 ): Promise<string> {
-  const { stdout } = await execGsdTools(projectDir, command, args);
+  const { stdout } = await execGtdTools(projectDir, command, args);
   return stdout;
 }

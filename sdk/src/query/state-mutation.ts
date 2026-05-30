@@ -1,7 +1,7 @@
 /**
  * STATE.md mutation handlers — write operations with lockfile atomicity.
  *
- * Ported from get-shit-done/bin/lib/state.cjs.
+ * Ported from get-tasks-done/bin/lib/state.cjs.
  * Provides STATE.md mutation commands: update, patch, begin-phase,
  * advance-plan, record-metric, update-progress, add-decision, add-blocker,
  * resolve-blocker, record-session, validate, sync, prune, signal-waiting, signal-resume.
@@ -23,7 +23,7 @@ import {
   constants, unlinkSync, existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync,
 } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter, stripFrontmatter } from './frontmatter.js';
 import { reconstructFrontmatter, spliceFrontmatter } from './frontmatter-mutation.js';
 import {
@@ -304,7 +304,7 @@ export const stateUpdate: QueryHandler = async (args, projectDir, workstream) =>
   const value = args[1];
 
   if (!field || value === undefined) {
-    throw new GSDError('field and value required for state update', ErrorClassification.Validation);
+    throw new GTDError('field and value required for state update', ErrorClassification.Validation);
   }
 
   let updated = false;
@@ -329,7 +329,7 @@ export const stateUpdate: QueryHandler = async (args, projectDir, workstream) =>
  *
  * Replaces multiple fields atomically in one lock cycle.
  *
- * @param args - Either `--field value` pairs (CLI / gsd-tools) or a single JSON object string (SDK).
+ * @param args - Either `--field value` pairs (CLI / gtd-tools) or a single JSON object string (SDK).
  * @param projectDir - Project root directory
  * @returns QueryResult with `{ updated, failed }` matching `cmdStatePatch` in `state.cjs`
  */
@@ -346,12 +346,12 @@ export const statePatch: QueryHandler = async (args, projectDir, workstream) => 
   } else {
     const jsonString = args[0];
     if (!jsonString) {
-      throw new GSDError('JSON patches required', ErrorClassification.Validation);
+      throw new GTDError('JSON patches required', ErrorClassification.Validation);
     }
     try {
       patches = JSON.parse(jsonString) as Record<string, string>;
     } catch {
-      throw new GSDError('Invalid JSON for patches', ErrorClassification.Validation);
+      throw new GTDError('Invalid JSON for patches', ErrorClassification.Validation);
     }
   }
 
@@ -383,7 +383,7 @@ export const statePatch: QueryHandler = async (args, projectDir, workstream) => 
  * Sets phase, plan, status, progress, and current focus fields.
  * Rewrites the Current Position section.
  *
- * Accepts gsd-tools-style argv: `--phase N [--name S] [--plans C]` or positional
+ * Accepts gtd-tools-style argv: `--phase N [--name S] [--plans C]` or positional
  * `[phase, name?, planCount?]` (tests and direct handler calls).
  *
  * @param args - Named or positional phase / name / plan count
@@ -413,7 +413,7 @@ export const stateBeginPhase: QueryHandler = async (args, projectDir, workstream
       : null;
 
   if (!phaseNumber) {
-    throw new GSDError('phase number required', ErrorClassification.Validation);
+    throw new GTDError('phase number required', ErrorClassification.Validation);
   }
 
   const today = new Date().toISOString().split('T')[0];
@@ -615,7 +615,7 @@ export const stateAdvancePlan: QueryHandler = async (_args, projectDir, workstre
  *
  * Appends a row to the Performance Metrics table.
  *
- * @param args - gsd-tools argv: `--phase`, `--plan`, `--duration`, `--tasks`, `--files`
+ * @param args - gtd-tools argv: `--phase`, `--plan`, `--duration`, `--tasks`, `--files`
  * @param projectDir - Project root directory
  * @returns QueryResult with { recorded: true/false }
  */
@@ -718,7 +718,7 @@ export const stateUpdateProgress: QueryHandler = async (_args, projectDir, works
  * Query handler for state.add-decision command.
  *
  * Appends a decision to the Decisions section. Removes placeholder text.
- * argv matches `gsd-tools.cjs`: `--phase`, `--summary`, `--rationale`, etc.
+ * argv matches `gtd-tools.cjs`: `--phase`, `--summary`, `--rationale`, etc.
  */
 export const stateAddDecision: QueryHandler = async (args, projectDir, workstream) => {
   const parsed = parseNamedArgs(args, ['phase', 'summary', 'summary-file', 'rationale', 'rationale-file']);
@@ -773,7 +773,7 @@ export const stateAddDecision: QueryHandler = async (args, projectDir, workstrea
 
 /**
  * Query handler for state.add-blocker command.
- * argv: `--text`, `--text-file` (see `gsd-tools.cjs`).
+ * argv: `--text`, `--text-file` (see `gtd-tools.cjs`).
  */
 export const stateAddBlocker: QueryHandler = async (args, projectDir, workstream) => {
   const parsed = parseNamedArgs(args, ['text', 'text-file']);
@@ -820,7 +820,7 @@ export const stateAddBlocker: QueryHandler = async (args, projectDir, workstream
 
 /**
  * Query handler for state.resolve-blocker command.
- * argv: `--text` (see `gsd-tools.cjs`).
+ * argv: `--text` (see `gtd-tools.cjs`).
  */
 export const stateResolveBlocker: QueryHandler = async (args, projectDir, workstream) => {
   const parsed = parseNamedArgs(args, ['text']);
@@ -929,7 +929,7 @@ function formatRoadmapEvolutionEntry(opts: {
  * `{ added: false, reason: 'duplicate', entry }` when an identical line
  * already exists.
  *
- * Throws `GSDError` with `ErrorClassification.Validation` when required
+ * Throws `GTDError` with `ErrorClassification.Validation` when required
  * inputs are missing or `--action` is not in the allowed set.
  *
  * Atomicity: goes through `readModifyWriteStateMd` which holds a lockfile
@@ -944,13 +944,13 @@ export const stateAddRoadmapEvolution: QueryHandler = async (args, projectDir, w
   const urgent = Boolean(parsed.urgent);
 
   if (!phase) {
-    throw new GSDError('phase required for state.add-roadmap-evolution', ErrorClassification.Validation);
+    throw new GTDError('phase required for state.add-roadmap-evolution', ErrorClassification.Validation);
   }
   if (!action) {
-    throw new GSDError('action required for state.add-roadmap-evolution', ErrorClassification.Validation);
+    throw new GTDError('action required for state.add-roadmap-evolution', ErrorClassification.Validation);
   }
   if (!VALID_ROADMAP_EVOLUTION_ACTIONS.has(action)) {
-    throw new GSDError(
+    throw new GTDError(
       `invalid action "${action}" (expected one of: ${Array.from(VALID_ROADMAP_EVOLUTION_ACTIONS).join(', ')})`,
       ErrorClassification.Validation,
     );
@@ -1112,7 +1112,7 @@ export const statePlannedPhase: QueryHandler = async (args, projectDir, workstre
  * Query handler for `state.milestone-switch` — resets STATE.md for a new
  * milestone cycle (bug #2630 regression guard).
  *
- * The `/gsd-new-milestone` workflow only rewrote STATE.md's body (Current
+ * The `/gtd-new-milestone` workflow only rewrote STATE.md's body (Current
  * Position section). The YAML frontmatter (`milestone`, `milestone_name`,
  * `status`, `progress.*`) was never touched on a mid-flight switch, so queries
  * that read frontmatter (`state.json`, `getMilestoneInfo`, every handler that
@@ -1129,17 +1129,17 @@ export const statePlannedPhase: QueryHandler = async (args, projectDir, workstre
  * - Preserves Accumulated Context (decisions, todos, blockers) — symmetric
  *   with `milestone.complete` which also keeps history.
  *
- * Args (named, matches gsd-tools style):
+ * Args (named, matches gtd-tools style):
  * - `--version <vX.Y>` (required)
  * - `--name <milestone name>` (optional; defaults to 'milestone')
  *
  * Sibling CJS parity: `cmdInitNewMilestone` in `init.cjs` is read-only (like
  * the TS `initNewMilestone`). The workflow-level fix is to call
- * `state.milestone-switch` from `/gsd-new-milestone` Step 5 in place of the
+ * `state.milestone-switch` from `/gtd-new-milestone` Step 5 in place of the
  * manual body rewrite.
  */
 export const stateMilestoneSwitch: QueryHandler = async (args, projectDir, workstream) => {
-  // NOTE: the CLI flag is `--milestone` (not `--version`). gsd-tools reserves
+  // NOTE: the CLI flag is `--milestone` (not `--version`). gtd-tools reserves
   // `--version` as a globally-invalid help flag, so the workflow invokes this
   // handler with `--milestone vX.Y`. The internal variable is still `version`
   // because the value is a milestone version string.
@@ -1187,7 +1187,7 @@ export const stateMilestoneSwitch: QueryHandler = async (args, projectDir, works
     // bug #2630: any sync-based approach races against the very file it is
     // about to rewrite.
     const fm: Record<string, unknown> = {
-      gsd_state_version: '1.0',
+      gtd_state_version: '1.0',
       milestone: version,
       milestone_name: name,
       status: 'planning',
@@ -1203,8 +1203,8 @@ export const stateMilestoneSwitch: QueryHandler = async (args, projectDir, works
     };
     // Preserve frontmatter-only fields the caller may still care about
     // (paused_at cleared deliberately — a new milestone is a fresh start).
-    if (existingFm.gsd_state_version) {
-      fm.gsd_state_version = existingFm.gsd_state_version;
+    if (existingFm.gtd_state_version) {
+      fm.gtd_state_version = existingFm.gtd_state_version;
     }
 
     const yamlStr = reconstructFrontmatter(fm);
@@ -1224,7 +1224,7 @@ export const stateMilestoneSwitch: QueryHandler = async (args, projectDir, works
   }
 };
 
-// ─── parseNamedArgs (matches gsd-tools.cjs) ───────────────────────────────
+// ─── parseNamedArgs (matches gtd-tools.cjs) ───────────────────────────────
 
 function parseNamedArgs(
   args: string[],
@@ -1240,7 +1240,7 @@ function parseNamedArgs(
     }
     const value = args[idx + 1];
     if (value === undefined || value.startsWith('--')) {
-      throw new GSDError(`missing value for --${flag}`, ErrorClassification.Validation);
+      throw new GTDError(`missing value for --${flag}`, ErrorClassification.Validation);
     }
     result[flag] = value;
   }
@@ -1256,7 +1256,7 @@ function parseNamedArgs(
  * Port of `cmdSignalWaiting` from state.cjs.
  * Args: `--type`, `--question`, `--options` (pipe-separated), `--phase`.
  *
- * Writes `WAITING.json` under both `.gsd/` and `.planning/` so readers that only
+ * Writes `WAITING.json` under both `.gtd/` and `.planning/` so readers that only
  * watch one location (e.g. init workflows) still observe the signal.
  */
 export const stateSignalWaiting: QueryHandler = async (args, projectDir, _workstream) => {
@@ -1267,7 +1267,7 @@ export const stateSignalWaiting: QueryHandler = async (args, projectDir, _workst
   const phase = (parsed.phase as string | null) || null;
 
   const waitingPaths = [
-    join(projectDir, '.gsd', 'WAITING.json'),
+    join(projectDir, '.gtd', 'WAITING.json'),
     join(projectDir, '.planning', 'WAITING.json'),
   ];
 
@@ -1282,7 +1282,7 @@ export const stateSignalWaiting: QueryHandler = async (args, projectDir, _workst
 
   try {
     const payload = JSON.stringify(signal, null, 2);
-    mkdirSync(join(projectDir, '.gsd'), { recursive: true });
+    mkdirSync(join(projectDir, '.gtd'), { recursive: true });
     mkdirSync(join(projectDir, '.planning'), { recursive: true });
     for (const p of waitingPaths) {
       writeFileSync(p, payload, 'utf-8');
@@ -1299,7 +1299,7 @@ export const stateSignalWaiting: QueryHandler = async (args, projectDir, _workst
  */
 export const stateSignalResume: QueryHandler = async (_args, projectDir, _workstream) => {
   const paths = [
-    join(projectDir, '.gsd', 'WAITING.json'),
+    join(projectDir, '.gtd', 'WAITING.json'),
     join(projectDir, '.planning', 'WAITING.json'),
   ];
   let removed = false;

@@ -43,7 +43,7 @@ const {
   NON_FAMILY_COMMAND_MANIFEST,
 } = await import('../dist/query/command-manifest.non-family.js');
 
-const cjsAliases = require(resolve(here, '..', '..', 'get-shit-done', 'bin', 'lib', 'command-aliases.generated.cjs'));
+const cjsAliases = require(resolve(here, '..', '..', 'get-tasks-done', 'bin', 'lib', 'command-aliases.generated.cjs'));
 
 function toAliasEntries(manifest, family) {
   const prefix = `${family}.`;

@@ -12,32 +12,32 @@
  * Default-off discipline (issue #3347 acceptance criteria):
  *   - `graphify.auto_update` defaults to `false` so existing users see no
  *     behavior change after upgrade.
- *   - Opt-in via /gsd:settings or `gsd-tools config-set graphify.auto_update true`.
+ *   - Opt-in via /gtd:settings or `gtd-tools config-set graphify.auto_update true`.
  */
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createTempProject, cleanup, runGsdTools } = require('./helpers.cjs');
+const { createTempProject, cleanup, runGtdTools } = require('./helpers.cjs');
 
 const {
   VALID_CONFIG_KEYS,
   isValidConfigKey,
-} = require('../get-shit-done/bin/lib/config-schema.cjs');
+} = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
 const {
   CONFIG_DEFAULTS: CANONICAL_CONFIG_DEFAULTS,
-} = require('../get-shit-done/bin/lib/configuration.generated.cjs');
+} = require('../get-tasks-done/bin/lib/configuration.generated.cjs');
 
 const fsx = require('node:fs');
 const pathx = require('node:path');
 const cpx = require('node:child_process');
 const osx = require('node:os');
-const { graphifyStatus } = require('../get-shit-done/bin/lib/graphify.cjs');
+const { graphifyStatus } = require('../get-tasks-done/bin/lib/graphify.cjs');
 
 function makeStatusProject(autoUpdate) {
-  const tmpDir = fsx.mkdtempSync(pathx.join(osx.tmpdir(), 'gsd-3347-status-'));
+  const tmpDir = fsx.mkdtempSync(pathx.join(osx.tmpdir(), 'gtd-3347-status-'));
   cpx.execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: tmpDir });
   cpx.execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: tmpDir });
   cpx.execFileSync('git', ['config', 'user.name', 'Test'], { cwd: tmpDir });
@@ -106,7 +106,7 @@ describe('#3347 — config-set graphify.auto_update round-trips', () => {
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    const result = runGsdTools(
+    const result = runGtdTools(
       ['config-set', 'graphify.auto_update', 'true'],
       tmpDir,
     );
@@ -125,7 +125,7 @@ describe('#3347 — config-set graphify.auto_update round-trips', () => {
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    runGsdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
+    runGtdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
 
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     assert.ok(
@@ -148,8 +148,8 @@ describe('#3347 — config-set graphify.auto_update round-trips', () => {
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    runGsdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
-    runGsdTools(['config-set', 'graphify.auto_update', 'false'], tmpDir);
+    runGtdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
+    runGtdTools(['config-set', 'graphify.auto_update', 'false'], tmpDir);
 
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -219,8 +219,8 @@ describe('#3347 — config-set graphify.auto_update round-trips', () => {
     const tmpDir = createTempProject();
     t.after(() => cleanup(tmpDir));
 
-    runGsdTools(['config-set', 'graphify.enabled', 'true'], tmpDir);
-    runGsdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
+    runGtdTools(['config-set', 'graphify.enabled', 'true'], tmpDir);
+    runGtdTools(['config-set', 'graphify.auto_update', 'true'], tmpDir);
 
     const configPath = path.join(tmpDir, '.planning', 'config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));

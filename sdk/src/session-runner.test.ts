@@ -9,7 +9,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PhaseStepType } from './types.js';
 import { CONFIG_DEFAULTS } from './config.js';
-import type { GSDConfig } from './config.js';
+import type { GTDConfig } from './config.js';
 
 // ─── Mock the Agent SDK ───────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ import { runPhaseStepSession } from './session-runner.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeConfig(overrides: Partial<GSDConfig> = {}): GSDConfig {
+function makeConfig(overrides: Partial<GTDConfig> = {}): GTDConfig {
   return { ...CONFIG_DEFAULTS, ...overrides };
 }
 
@@ -107,7 +107,7 @@ describe('runPhaseStepSession', () => {
       await runPhaseStepSession(
         'prompt',
         PhaseStepType.Execute,
-        makeConfig({ runtime: 'codex', model_profile: 'balanced' } as Partial<GSDConfig>),
+        makeConfig({ runtime: 'codex', model_profile: 'balanced' } as Partial<GTDConfig>),
       );
       const opts = mockQueryCalls[0].options as { model?: string };
       expect(opts.model).toBeUndefined();
@@ -117,7 +117,7 @@ describe('runPhaseStepSession', () => {
       await runPhaseStepSession(
         'prompt',
         PhaseStepType.Execute,
-        makeConfig({ resolve_model_ids: 'omit', model_profile: 'balanced' } as Partial<GSDConfig>),
+        makeConfig({ resolve_model_ids: 'omit', model_profile: 'balanced' } as Partial<GTDConfig>),
       );
       const opts = mockQueryCalls[0].options as { model?: string };
       expect(opts.model).toBeUndefined();
@@ -127,26 +127,26 @@ describe('runPhaseStepSession', () => {
       await runPhaseStepSession(
         'prompt',
         PhaseStepType.Execute,
-        makeConfig({ runtime: 'claude', model_profile: 'balanced' } as Partial<GSDConfig>),
+        makeConfig({ runtime: 'claude', model_profile: 'balanced' } as Partial<GTDConfig>),
       );
       const opts = mockQueryCalls[0].options as { model?: string };
       expect(opts.model).toBe('claude-sonnet-4-6');
     });
 
-    it('respects GSD_RUNTIME env precedence over config (no Claude id when env=codex)', async () => {
-      const prev = process.env.GSD_RUNTIME;
-      process.env.GSD_RUNTIME = 'codex';
+    it('respects GTD_RUNTIME env precedence over config (no Claude id when env=codex)', async () => {
+      const prev = process.env.GTD_RUNTIME;
+      process.env.GTD_RUNTIME = 'codex';
       try {
         await runPhaseStepSession(
           'prompt',
           PhaseStepType.Execute,
-          makeConfig({ model_profile: 'balanced' } as Partial<GSDConfig>),
+          makeConfig({ model_profile: 'balanced' } as Partial<GTDConfig>),
         );
         const opts = mockQueryCalls[0].options as { model?: string };
         expect(opts.model).toBeUndefined();
       } finally {
-        if (prev === undefined) delete process.env.GSD_RUNTIME;
-        else process.env.GSD_RUNTIME = prev;
+        if (prev === undefined) delete process.env.GTD_RUNTIME;
+        else process.env.GTD_RUNTIME = prev;
       }
     });
 
@@ -154,11 +154,11 @@ describe('runPhaseStepSession', () => {
       await runPhaseStepSession(
         'prompt',
         PhaseStepType.Execute,
-        makeConfig({ runtime: 'codex' } as Partial<GSDConfig>),
-        { model: 'gpt-5.3-codex' },
+        makeConfig({ runtime: 'codex' } as Partial<GTDConfig>),
+        { model: 'gpt-5.4' },
       );
       const opts = mockQueryCalls[0].options as { model?: string };
-      expect(opts.model).toBe('gpt-5.3-codex');
+      expect(opts.model).toBe('gpt-5.4');
     });
   });
 });

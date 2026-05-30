@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Bug #2979: Managed JS hooks fail in GUI/minimal-PATH runtimes because
@@ -9,7 +9,7 @@ process.env.GSD_TEST_MODE = '1';
  * Reporter evidence: in a stripped PATH like /usr/bin:/bin:/usr/sbin:/sbin
  * (the default for Finder-launched/Antigravity-spawned processes on macOS),
  * `node` is not resolvable. Hook commands like
- *   `node "<HOME>/.gemini/hooks/gsd-check-update.js"`
+ *   `node "<HOME>/.gemini/hooks/gtd-check-update.js"`
  * fail with `/bin/sh: node: command not found` (exit 127).
  *
  * Fix: emit the absolute node path (`process.execPath`, the binary
@@ -78,7 +78,7 @@ describe('Bug #2979: resolveNodeRunner returns absolute, quoted, forward-slash n
 
 describe('Bug #2979: buildHookCommand for .js hooks emits absolute node runner', () => {
   test('global install: .js hook uses absolute node path, not bare "node"', () => {
-    const cmd = buildHookCommand('/tmp/.claude', 'gsd-check-update.js');
+    const cmd = buildHookCommand('/tmp/.claude', 'gtd-check-update.js');
     const parsed = parseHookCommand(cmd);
     assert.notEqual(parsed.runner, null, `failed to parse: ${cmd}`);
     assert.notEqual(parsed.runner, 'node', `must not emit bare node (#2979): ${cmd}`);
@@ -88,90 +88,90 @@ describe('Bug #2979: buildHookCommand for .js hooks emits absolute node runner',
   });
 
   test('global install: .js hook command parses with hookPath at expected location', () => {
-    const cmd = buildHookCommand('/tmp/.gemini', 'gsd-statusline.js');
+    const cmd = buildHookCommand('/tmp/.gemini', 'gtd-statusline.js');
     const parsed = parseHookCommand(cmd);
-    assert.equal(parsed.hookPath, '/tmp/.gemini/hooks/gsd-statusline.js');
+    assert.equal(parsed.hookPath, '/tmp/.gemini/hooks/gtd-statusline.js');
   });
 
   test('portableHooks global install: .js hook still uses absolute node (only the path is $HOME-relative)', () => {
     const home = require('node:os').homedir().replace(/\\/g, '/');
     const configDir = home + '/.gemini';
-    const cmd = buildHookCommand(configDir, 'gsd-check-update.js', { portableHooks: true });
+    const cmd = buildHookCommand(configDir, 'gtd-check-update.js', { portableHooks: true });
     const parsed = parseHookCommand(cmd);
     assert.notEqual(parsed.runner, 'node', `portableHooks must also use absolute node (#2979): ${cmd}`);
-    assert.equal(parsed.hookPath, '$HOME/.gemini/hooks/gsd-check-update.js');
+    assert.equal(parsed.hookPath, '$HOME/.gemini/hooks/gtd-check-update.js');
   });
 });
 
 describe('Bug #3362 / #3413: Windows hook commands are runtime-aware', () => {
   test('Gemini global install: .js hook command starts with & so quoted runners execute in PowerShell', () => {
-    const cmd = buildHookCommand('C:/Program Files/Gemini/.gemini', 'gsd-check-update.js', {
+    const cmd = buildHookCommand('C:/Program Files/Gemini/.gemini', 'gtd-check-update.js', {
       platform: 'win32',
       runtime: 'gemini',
     });
     assert.ok(cmd.startsWith('& '), `Gemini PowerShell commands need call operator, got: ${cmd}`);
-    assert.ok(cmd.includes('"C:/Program Files/Gemini/.gemini/hooks/gsd-check-update.js"'));
+    assert.ok(cmd.includes('"C:/Program Files/Gemini/.gemini/hooks/gtd-check-update.js"'));
   });
 
   test('Gemini portable install: .js hook command also uses & on Windows PowerShell', () => {
     const home = require('node:os').homedir().replace(/\\/g, '/');
-    const cmd = buildHookCommand(`${home}/.gemini`, 'gsd-check-update.js', {
+    const cmd = buildHookCommand(`${home}/.gemini`, 'gtd-check-update.js', {
       portableHooks: true,
       platform: 'win32',
       runtime: 'gemini',
     });
     assert.ok(cmd.startsWith('& '), `Gemini PowerShell commands need call operator, got: ${cmd}`);
-    assert.equal(parseHookCommand(cmd.slice(2)).hookPath, '$HOME/.gemini/hooks/gsd-check-update.js');
+    assert.equal(parseHookCommand(cmd.slice(2)).hookPath, '$HOME/.gemini/hooks/gtd-check-update.js');
   });
 
   test('Claude global install: .js hook command stays shell-neutral on Windows Git Bash', () => {
-    const cmd = buildHookCommand('C:/Users/me/.claude', 'gsd-check-update.js', {
+    const cmd = buildHookCommand('C:/Users/me/.claude', 'gtd-check-update.js', {
       platform: 'win32',
       runtime: 'claude',
     });
     assert.ok(!cmd.startsWith('& '), `Claude hook command must not use PowerShell call operator: ${cmd}`);
-    assert.equal(parseHookCommand(cmd).hookPath, 'C:/Users/me/.claude/hooks/gsd-check-update.js');
+    assert.equal(parseHookCommand(cmd).hookPath, 'C:/Users/me/.claude/hooks/gtd-check-update.js');
   });
 
   test('Windows .js hook with no runtime stays shell-neutral', () => {
-    const cmd = buildHookCommand('C:/Users/me/.claude', 'gsd-check-update.js', {
+    const cmd = buildHookCommand('C:/Users/me/.claude', 'gtd-check-update.js', {
       platform: 'win32',
     });
     assert.ok(!cmd.startsWith('& '), `Missing runtime must not imply PowerShell syntax: ${cmd}`);
-    assert.equal(parseHookCommand(cmd).hookPath, 'C:/Users/me/.claude/hooks/gsd-check-update.js');
+    assert.equal(parseHookCommand(cmd).hookPath, 'C:/Users/me/.claude/hooks/gtd-check-update.js');
   });
 
   test('Gemini runtime on non-Windows platform does not get PowerShell syntax', () => {
-    const cmd = buildHookCommand('/home/me/.claude', 'gsd-check-update.js', {
+    const cmd = buildHookCommand('/home/me/.claude', 'gtd-check-update.js', {
       platform: 'linux',
       runtime: 'gemini',
     });
     assert.ok(!cmd.startsWith('& '), `Non-Windows Gemini hook must stay shell-neutral: ${cmd}`);
-    assert.equal(parseHookCommand(cmd).hookPath, '/home/me/.claude/hooks/gsd-check-update.js');
+    assert.equal(parseHookCommand(cmd).hookPath, '/home/me/.claude/hooks/gtd-check-update.js');
   });
 });
 
 describe('Bug #2979: buildHookCommand for .sh hooks still uses bare "bash" (POSIX std PATH always has /bin)', () => {
   test('.sh hook runner is exactly "bash" — bash is in /usr/bin:/bin and resolves under minimal PATH', () => {
-    const cmd = buildHookCommand('/tmp/.claude', 'gsd-session-state.sh');
+    const cmd = buildHookCommand('/tmp/.claude', 'gtd-session-state.sh');
     const parsed = parseHookCommand(cmd);
     assert.equal(parsed.runner, 'bash');
   });
 
   test('Windows .sh hook uses resolved Git Bash path instead of bare bash (#3393)', () => {
-    const cmd = buildHookCommand('C:/Users/me/.codex', 'gsd-validate-commit.sh', {
+    const cmd = buildHookCommand('C:/Users/me/.codex', 'gtd-validate-commit.sh', {
       platform: 'win32',
       env: { ProgramFiles: 'C:\\Program Files' },
       existsSync: (candidate) => candidate === 'C:\\Program Files\\Git\\bin\\bash.exe',
     });
     assert.equal(
       cmd,
-      '"C:/Program Files/Git/bin/bash.exe" "C:/Users/me/.codex/hooks/gsd-validate-commit.sh"',
+      '"C:/Program Files/Git/bin/bash.exe" "C:/Users/me/.codex/hooks/gtd-validate-commit.sh"',
     );
   });
 
   test('Windows .sh hook returns null when no supported Bash runner is found (#3393)', () => {
-    const cmd = buildHookCommand('C:/Users/me/.codex', 'gsd-phase-boundary.sh', {
+    const cmd = buildHookCommand('C:/Users/me/.codex', 'gtd-phase-boundary.sh', {
       platform: 'win32',
       env: {},
       existsSync: () => false,
@@ -194,7 +194,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
       hooks: {
         SessionStart: [{
           hooks: [
-            { type: 'command', command: 'node "/Users/x/.gemini/hooks/gsd-check-update.js"' },
+            { type: 'command', command: 'node "/Users/x/.gemini/hooks/gtd-check-update.js"' },
           ],
         }],
       },
@@ -204,7 +204,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gsd-check-update.js"',
+      '"/usr/local/bin/node" "/Users/x/.gemini/hooks/gtd-check-update.js"',
     );
   });
 
@@ -212,7 +212,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '"/usr/local/bin/node" "/x/hooks/gsd-statusline.js"' }],
+          hooks: [{ type: 'command', command: '"/usr/local/bin/node" "/x/hooks/gtd-statusline.js"' }],
         }],
       },
     };
@@ -227,7 +227,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '"/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: '"/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -236,7 +236,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '& "/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gsd-check-update.js"',
+      '& "/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gtd-check-update.js"',
     );
   });
 
@@ -244,7 +244,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Program Files/Gemini/.gemini/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -259,7 +259,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '& node "C:/Users/me/.gemini/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: '& node "C:/Users/me/.gemini/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -268,7 +268,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '& "/usr/local/bin/node" "C:/Users/me/.gemini/hooks/gsd-check-update.js"',
+      '& "/usr/local/bin/node" "C:/Users/me/.gemini/hooks/gtd-check-update.js"',
     );
   });
 
@@ -276,7 +276,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Users/me/.claude/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: '& "/usr/local/bin/node" "C:/Users/me/.claude/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -285,7 +285,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" "C:/Users/me/.claude/hooks/gsd-check-update.js"',
+      '"/usr/local/bin/node" "C:/Users/me/.claude/hooks/gtd-check-update.js"',
     );
   });
 
@@ -308,7 +308,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: 'bash "/x/hooks/gsd-session-state.sh"' }],
+          hooks: [{ type: 'command', command: 'bash "/x/hooks/gtd-session-state.sh"' }],
         }],
       },
     };
@@ -321,7 +321,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: 'node "/x/hooks/gsd-check-update.js"' }],
+          hooks: [{ type: 'command', command: 'node "/x/hooks/gtd-check-update.js"' }],
         }],
       },
     };
@@ -333,7 +333,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
 
   // #3002 CR: substring containment was a false-positive vector.
   // User-authored hooks whose path happened to CONTAIN a managed filename
-  // as a substring would get unconditionally rewritten with the GSD runner.
+  // as a substring would get unconditionally rewritten with the GTD runner.
   // The fix matches by basename equality.
   test('does NOT rewrite a user hook whose path contains a managed filename as a substring', () => {
     const settings = {
@@ -341,9 +341,9 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
         SessionStart: [{
           hooks: [{
             type: 'command',
-            // Path contains gsd-check-update.js as substring of a longer
+            // Path contains gtd-check-update.js as substring of a longer
             // filename, but is NOT actually that file.
-            command: 'node /home/me/scripts/wraps-gsd-check-update.js-helper.js',
+            command: 'node /home/me/scripts/wraps-gtd-check-update.js-helper.js',
           }],
         }],
       },
@@ -359,7 +359,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: "node '/x/hooks/gsd-statusline.js'" }],
+          hooks: [{ type: 'command', command: "node '/x/hooks/gtd-statusline.js'" }],
         }],
       },
     };
@@ -368,7 +368,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      `"/usr/local/bin/node" '/x/hooks/gsd-statusline.js'`,
+      `"/usr/local/bin/node" '/x/hooks/gtd-statusline.js'`,
     );
   });
 
@@ -376,7 +376,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: 'node /x/hooks/gsd-context-monitor.js' }],
+          hooks: [{ type: 'command', command: 'node /x/hooks/gtd-context-monitor.js' }],
         }],
       },
     };
@@ -385,7 +385,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.SessionStart[0].hooks[0].command,
-      '"/usr/local/bin/node" /x/hooks/gsd-context-monitor.js',
+      '"/usr/local/bin/node" /x/hooks/gtd-context-monitor.js',
     );
   });
 
@@ -393,7 +393,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     const settings = {
       hooks: {
         SessionStart: [{
-          hooks: [{ type: 'command', command: 'node "C:\\\\Users\\\\me\\\\.claude\\\\hooks\\\\gsd-prompt-guard.js"' }],
+          hooks: [{ type: 'command', command: 'node "C:\\\\Users\\\\me\\\\.claude\\\\hooks\\\\gtd-prompt-guard.js"' }],
         }],
       },
     };
@@ -408,7 +408,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
         PreToolUse: [{
           hooks: [{
             type: 'command',
-            command: "node 'C:\\Users\\me\\.gemini\\hooks\\gsd-prompt-guard.js'",
+            command: "node 'C:\\Users\\me\\.gemini\\hooks\\gtd-prompt-guard.js'",
           }],
         }],
       },
@@ -418,7 +418,7 @@ describe('Bug #2979 (#3002 CR): rewriteLegacyManagedNodeHookCommands rewrites ba
     assert.equal(changed, true);
     assert.equal(
       settings.hooks.PreToolUse[0].hooks[0].command,
-      '& "C:/nvm4w/nodejs/node.exe" "C:/Users/me/.gemini/hooks/gsd-prompt-guard.js"',
+      '& "C:/nvm4w/nodejs/node.exe" "C:/Users/me/.gemini/hooks/gtd-prompt-guard.js"',
     );
   });
 });
@@ -439,7 +439,7 @@ describe('Bug #2979 (#3002 CR): resolveNodeRunner returns null when execPath una
     const orig = process.execPath;
     try {
       Object.defineProperty(process, 'execPath', { value: '', configurable: true });
-      const cmd = buildHookCommand('/tmp/.claude', 'gsd-statusline.js');
+      const cmd = buildHookCommand('/tmp/.claude', 'gtd-statusline.js');
       assert.equal(cmd, null);
     } finally {
       Object.defineProperty(process, 'execPath', { value: orig, configurable: true });
@@ -475,12 +475,12 @@ describe('Bug #2979 (#3002 CR follow-up): no command:null hook entries survive s
   }
 
   const MANAGED_JS_HOOKS = [
-    { event: 'SessionStart',  matcher: undefined,                                       label: 'gsd-check-update.js' },
-    { event: 'PostToolUse',   matcher: 'Bash|Edit|Write|MultiEdit|Agent|Task',          label: 'gsd-context-monitor.js' },
-    { event: 'PreToolUse',    matcher: 'Write|Edit',                                    label: 'gsd-prompt-guard.js' },
-    { event: 'PreToolUse',    matcher: 'Write|Edit',                                    label: 'gsd-read-guard.js' },
-    { event: 'PostToolUse',   matcher: 'Read',                                          label: 'gsd-read-injection-scanner.js' },
-    { event: 'PreToolUse',    matcher: 'Bash|Edit|Write|MultiEdit',                     label: 'gsd-workflow-guard.js' },
+    { event: 'SessionStart',  matcher: undefined,                                       label: 'gtd-check-update.js' },
+    { event: 'PostToolUse',   matcher: 'Bash|Edit|Write|MultiEdit|Agent|Task',          label: 'gtd-context-monitor.js' },
+    { event: 'PreToolUse',    matcher: 'Write|Edit',                                    label: 'gtd-prompt-guard.js' },
+    { event: 'PreToolUse',    matcher: 'Write|Edit',                                    label: 'gtd-read-guard.js' },
+    { event: 'PostToolUse',   matcher: 'Read',                                          label: 'gtd-read-injection-scanner.js' },
+    { event: 'PreToolUse',    matcher: 'Bash|Edit|Write|MultiEdit',                     label: 'gtd-workflow-guard.js' },
   ];
 
   for (const { event, matcher, label } of MANAGED_JS_HOOKS) {

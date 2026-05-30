@@ -18,14 +18,14 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 
-const gsdTools = path.resolve(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const gtdTools = path.resolve(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 
 describe('bug #1998: phase complete updates overview checkbox', () => {
   let tmpDir;
   let planningDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-1998-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-1998-'));
     planningDir = path.join(tmpDir, '.planning');
     fs.mkdirSync(planningDir, { recursive: true });
 
@@ -76,7 +76,7 @@ describe('bug #1998: phase complete updates overview checkbox', () => {
     ].join('\n'));
 
     try {
-      execFileSync('node', [gsdTools, 'phase', 'complete', '1'], { cwd: tmpDir, timeout: 10000 });
+      execFileSync('node', [gtdTools, 'phase', 'complete', '1'], { cwd: tmpDir, timeout: 10000 });
     } catch {
       // Command may exit non-zero if STATE.md update fails, but ROADMAP.md update happens first
     }
@@ -125,7 +125,7 @@ describe('bug #1998: phase complete updates overview checkbox', () => {
     ].join('\n'));
 
     try {
-      execFileSync('node', [gsdTools, 'phase', 'complete', '1'], { cwd: tmpDir, timeout: 10000 });
+      execFileSync('node', [gtdTools, 'phase', 'complete', '1'], { cwd: tmpDir, timeout: 10000 });
     } catch {
       // May exit non-zero
     }

@@ -3,7 +3,7 @@ import { canUseCjsFallback, describeFallbackDisabledPolicy } from './query-fallb
 
 describe('query-fallback-policy', () => {
   it('describes disabled fallback policy', () => {
-    expect(describeFallbackDisabledPolicy()).toContain('GSD_QUERY_FALLBACK=registered');
+    expect(describeFallbackDisabledPolicy()).toContain('GTD_QUERY_FALLBACK=registered');
   });
 
   it('reports fallback capability', () => {

@@ -1,20 +1,20 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
- * Bug #2998: gsd-pristine/ snapshot is documented but never populated by
+ * Bug #2998: gtd-pristine/ snapshot is documented but never populated by
  * the installer. saveLocalPatches declared a pristineDir variable and
- * promised "saves pristine copies (from manifest) to gsd-pristine/ to
+ * promised "saves pristine copies (from manifest) to gtd-pristine/ to
  * enable three-way merge during reapply-patches" -- but no code ever
- * wrote to that directory. Effect: the /gsd-reapply-patches Step 5
+ * wrote to that directory. Effect: the /gtd-reapply-patches Step 5
  * verifier (#2972) silently degrades to its over-broad fallback heuristic
  * ("every significant backup line"), exactly the silent-success-on-lost-
  * content failure mode #2969 was designed to prevent.
  *
  * Fix: new populatePristineDir({...}) helper runs the install transform
  * pipeline (copyWithPathReplacement) into a tmp staging dir, then copies
- * out the modified-file paths into gsd-pristine/. saveLocalPatches now
+ * out the modified-file paths into gtd-pristine/. saveLocalPatches now
  * accepts a pristineCtx and calls the helper when local patches are
  * detected.
  */
@@ -40,11 +40,11 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
   });
 
   test('returns 0 when no files are modified (no-op)', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-'));
     try {
       const written = INSTALL.populatePristineDir({
         packageSrc: ROOT,
-        pristineDir: path.join(tmp, 'gsd-pristine'),
+        pristineDir: path.join(tmp, 'gtd-pristine'),
         modified: [],
         runtime: 'claude',
         pathPrefix: '$HOME/.claude/',
@@ -57,14 +57,14 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
   });
 
   test('writes one pristine file per modified path that exists in source', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-'));
-    const pristineDir = path.join(tmp, 'gsd-pristine');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-'));
+    const pristineDir = path.join(tmp, 'gtd-pristine');
     try {
       // Pick a real installed-side relPath from the package source. The
-      // install transforms map source `get-shit-done/<rel>` to installed
-      // `get-shit-done/<rel>` for skills-aware runtimes (like claude),
+      // install transforms map source `get-tasks-done/<rel>` to installed
+      // `get-tasks-done/<rel>` for skills-aware runtimes (like claude),
       // so the relPath is the same on both sides.
-      const candidate = path.join('get-shit-done', 'workflows', 'reapply-patches.md');
+      const candidate = path.join('get-tasks-done', 'workflows', 'reapply-patches.md');
       const sourcePath = path.join(ROOT, candidate);
       assert.equal(fs.existsSync(sourcePath), true,
         `precondition: source file exists at ${candidate}`);
@@ -92,19 +92,19 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
   });
 
   test('skips paths not present in source (does not corrupt pristine with stale data)', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-'));
-    const pristineDir = path.join(tmp, 'gsd-pristine');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-'));
+    const pristineDir = path.join(tmp, 'gtd-pristine');
     try {
       const written = INSTALL.populatePristineDir({
         packageSrc: ROOT,
         pristineDir,
-        modified: ['get-shit-done/this-path-does-not-exist.md'],
+        modified: ['get-tasks-done/this-path-does-not-exist.md'],
         runtime: 'claude',
         pathPrefix: '$HOME/.claude/',
         isGlobal: true,
       });
       assert.equal(written, 0, 'expected zero pristine files for non-existent source paths');
-      const out = path.join(pristineDir, 'get-shit-done/this-path-does-not-exist.md');
+      const out = path.join(pristineDir, 'get-tasks-done/this-path-does-not-exist.md');
       assert.equal(fs.existsSync(out), false, 'pristine should not contain ghost paths');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -115,10 +115,10 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
     // Determinism is what makes the verifier's hash check meaningful:
     // backup-meta.json records pristine_hashes computed at this same step,
     // so re-running with the same inputs must yield byte-identical files.
-    const tmp1 = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-d1-'));
-    const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-d2-'));
+    const tmp1 = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-d1-'));
+    const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-d2-'));
     try {
-      const candidate = path.join('get-shit-done', 'workflows', 'reapply-patches.md');
+      const candidate = path.join('get-tasks-done', 'workflows', 'reapply-patches.md');
       const ctx = {
         packageSrc: ROOT,
         modified: [candidate],
@@ -126,10 +126,10 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
         pathPrefix: '$HOME/.claude/',
         isGlobal: true,
       };
-      INSTALL.populatePristineDir(Object.assign({ pristineDir: path.join(tmp1, 'gsd-pristine') }, ctx));
-      INSTALL.populatePristineDir(Object.assign({ pristineDir: path.join(tmp2, 'gsd-pristine') }, ctx));
-      const a = fs.readFileSync(path.join(tmp1, 'gsd-pristine', candidate));
-      const b = fs.readFileSync(path.join(tmp2, 'gsd-pristine', candidate));
+      INSTALL.populatePristineDir(Object.assign({ pristineDir: path.join(tmp1, 'gtd-pristine') }, ctx));
+      INSTALL.populatePristineDir(Object.assign({ pristineDir: path.join(tmp2, 'gtd-pristine') }, ctx));
+      const a = fs.readFileSync(path.join(tmp1, 'gtd-pristine', candidate));
+      const b = fs.readFileSync(path.join(tmp2, 'gtd-pristine', candidate));
       assert.equal(sha256(a), sha256(b), 'two runs of the same inputs must yield identical pristine content');
     } finally {
       fs.rmSync(tmp1, { recursive: true, force: true });
@@ -142,10 +142,10 @@ describe('Bug #2998: populatePristineDir is exported and writes pristine for mod
 
 describe('Bug #2998 (#3004 CR): pristine expansion covers every manifest install root', () => {
   test('paths under agents/ are staged via copyWithPathReplacement, not silently skipped', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-multi-'));
-    const pristineDir = path.join(tmp, 'gsd-pristine');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-multi-'));
+    const pristineDir = path.join(tmp, 'gtd-pristine');
     try {
-      const candidate = path.join('agents', 'gsd-planner.md');
+      const candidate = path.join('agents', 'gtd-planner.md');
       const sourcePath = path.join(ROOT, candidate);
       assert.equal(fs.existsSync(sourcePath), true,
         `precondition: source file exists at ${candidate}`);
@@ -164,12 +164,12 @@ describe('Bug #2998 (#3004 CR): pristine expansion covers every manifest install
     }
   });
 
-  test('a mix of get-shit-done/ and agents/ paths in modified list are all staged', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2998-mix-'));
-    const pristineDir = path.join(tmp, 'gsd-pristine');
+  test('a mix of get-tasks-done/ and agents/ paths in modified list are all staged', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2998-mix-'));
+    const pristineDir = path.join(tmp, 'gtd-pristine');
     try {
-      const a = path.join('get-shit-done', 'workflows', 'reapply-patches.md');
-      const b = path.join('agents', 'gsd-planner.md');
+      const a = path.join('get-tasks-done', 'workflows', 'reapply-patches.md');
+      const b = path.join('agents', 'gtd-planner.md');
       assert.equal(fs.existsSync(path.join(ROOT, a)), true);
       assert.equal(fs.existsSync(path.join(ROOT, b)), true);
       const written = INSTALL.populatePristineDir({

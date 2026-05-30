@@ -4,7 +4,7 @@
  * Contract for the #3170 commit-staleness signal on graphifyStatus().
  *
  * graphify v0.7+ embeds `built_at_commit` (full git HEAD) into graph.json at
- * write time. GSD's status used to be mtime-only, a poor proxy for "does
+ * write time. GTD's status used to be mtime-only, a poor proxy for "does
  * this graph reflect the current code." This suite fences the four new
  * fields surfaced by graphifyStatus():
  *
@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { createTempProject, createTempGitProject, cleanup } = require('./helpers.cjs');
-const { graphifyStatus } = require('../get-shit-done/bin/lib/graphify.cjs');
+const { graphifyStatus } = require('../get-tasks-done/bin/lib/graphify.cjs');
 
 function enableGraphify(planningDir) {
   const cfgPath = path.join(planningDir, 'config.json');
@@ -101,7 +101,7 @@ describe('enh-3170: graphifyStatus surfaces built_at_commit staleness', () => {
     });
 
     test('built_at_commit absent (pre-v0.7 graph): all four new fields null', () => {
-      // No built_at_commit on the graph -- GSD must not fabricate one.
+      // No built_at_commit on the graph -- GTD must not fabricate one.
       writeGraph(planningDir, { nodes: SAMPLE_NODES, edges: [] });
 
       const result = graphifyStatus(tmpDir);

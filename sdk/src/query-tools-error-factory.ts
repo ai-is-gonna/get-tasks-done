@@ -1,5 +1,5 @@
-import { GSDError, exitCodeFor } from './errors.js';
-import { GSDToolsError } from './gsd-tools-error.js';
+import { GTDError, exitCodeFor } from './errors.js';
+import { GTDToolsError } from './gtd-tools-error.js';
 import { errorMessage, toFailureSignal } from './query-failure-classification.js';
 
 export interface QueryTimeoutErrorFactory {
@@ -9,7 +9,7 @@ export interface QueryTimeoutErrorFactory {
     args: string[],
     stderr: string,
     timeoutMs: number,
-  ) => GSDToolsError;
+  ) => GTDToolsError;
 }
 
 export interface QueryFailureErrorFactory {
@@ -19,18 +19,18 @@ export interface QueryFailureErrorFactory {
     args: string[],
     exitCode: number | null,
     stderr: string,
-  ) => GSDToolsError;
+  ) => GTDToolsError;
 }
 
 export type QueryToolsErrorFactory = QueryTimeoutErrorFactory & QueryFailureErrorFactory;
 
 export interface QueryNativeErrorFactory {
-  createNativeTimeoutError: (message: string, command: string, args: string[]) => GSDToolsError;
-  createNativeFailureError: (message: string, command: string, args: string[], cause: unknown) => GSDToolsError;
+  createNativeTimeoutError: (message: string, command: string, args: string[]) => GTDToolsError;
+  createNativeFailureError: (message: string, command: string, args: string[], cause: unknown) => GTDToolsError;
 }
 
-function timeoutToolsError(message: string, command: string, args: string[], stderr = '', timeoutMs?: number): GSDToolsError {
-  return GSDToolsError.timeout(message, command, args, stderr, timeoutMs);
+function timeoutToolsError(message: string, command: string, args: string[], stderr = '', timeoutMs?: number): GTDToolsError {
+  return GTDToolsError.timeout(message, command, args, stderr, timeoutMs);
 }
 
 function failureToolsError(
@@ -40,12 +40,12 @@ function failureToolsError(
   exitCode: number | null,
   stderr = '',
   cause?: unknown,
-): GSDToolsError {
-  return GSDToolsError.failure(message, command, args, exitCode, stderr, cause === undefined ? undefined : { cause });
+): GTDToolsError {
+  return GTDToolsError.failure(message, command, args, exitCode, stderr, cause === undefined ? undefined : { cause });
 }
 
-export function toToolsErrorFromUnknown(command: string, args: string[], err: unknown): GSDToolsError {
-  if (err instanceof GSDError) {
+export function toToolsErrorFromUnknown(command: string, args: string[], err: unknown): GTDToolsError {
+  if (err instanceof GTDError) {
     return failureToolsError(err.message, command, args, exitCodeFor(err.classification), '', err);
   }
 

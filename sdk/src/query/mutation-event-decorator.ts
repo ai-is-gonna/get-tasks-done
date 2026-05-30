@@ -1,12 +1,12 @@
 import type { QueryRegistry } from './registry.js';
-import type { GSDEventStream } from '../event-stream.js';
+import type { GTDEventStream } from '../event-stream.js';
 import type { QueryHandler } from './utils.js';
 import { buildMutationEvent } from './mutation-event-mapper.js';
 
 export function decorateMutationsWithEvents(
   registry: QueryRegistry,
   mutationCommands: Set<string>,
-  eventStream: GSDEventStream,
+  eventStream: GTDEventStream,
   correlationSessionId: string,
 ): void {
   for (const cmd of mutationCommands) {

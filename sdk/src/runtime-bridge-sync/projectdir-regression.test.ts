@@ -28,7 +28,7 @@ import { executeForCjs } from './index.js';
 // ─── Fixture STATE.md with parseable frontmatter ──────────────────────────
 
 const FIXTURE_STATE = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v9.1
 milestone_name: Regression Test Milestone
 status: executing
@@ -53,7 +53,7 @@ let tmpDir: string;
 beforeAll(async () => {
   tmpDir = join(
     tmpdir(),
-    `gsd-projectdir-regression-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    `gtd-projectdir-regression-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   await mkdir(join(tmpDir, '.planning'), { recursive: true });
   await writeFile(join(tmpDir, '.planning', 'STATE.md'), FIXTURE_STATE, 'utf-8');
@@ -105,7 +105,7 @@ describe('executeForCjs projectDir regression (Phase 5.0 bug)', () => {
       legacyCommand: 'state',
       legacyArgs: ['json'],
       mode: 'json',
-      projectDir: '/nonexistent-gsd-project-regression-test-dir',
+      projectDir: '/nonexistent-gtd-project-regression-test-dir',
     });
 
     // The handler returns { data: { error: 'STATE.md not found' } } — ok:true
@@ -118,17 +118,17 @@ describe('executeForCjs projectDir regression (Phase 5.0 bug)', () => {
     expect(String(data.error)).toMatch(/STATE\.md not found/i);
   });
 
-  it('workstream transport contract: GSDTransport forces subprocess for workstream requests (subprocess disabled in worker → ok:false)', () => {
+  it('workstream transport contract: GTDTransport forces subprocess for workstream requests (subprocess disabled in worker → ok:false)', () => {
     // This test documents an architectural constraint, not a bug.
     //
-    // GSDTransport.subprocessReason() returns 'workstream_forced' when
-    // request.workstream is set (gsd-transport.ts line ~72). The worker has
+    // GTDTransport.subprocessReason() returns 'workstream_forced' when
+    // request.workstream is set (gtd-transport.ts line ~72). The worker has
     // subprocess disabled (allowFallbackToSubprocess=false), so a workstream
     // request always surfaces as ok:false / internal_error.
     //
     // This is the expected contract for the sync bridge worker: workstream
     // scoped commands cannot run natively in the worker and must be invoked
-    // via the async bridge or gsd-tools.cjs subprocess fallback instead.
+    // via the async bridge or gtd-tools.cjs subprocess fallback instead.
     //
     // This test is here to document + pin the behavior, not to assert a fix.
     const result = executeForCjs({

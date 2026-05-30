@@ -7,11 +7,11 @@
 
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { SDKMessage, SDKResultMessage, SDKResultSuccess, SDKResultError } from '@anthropic-ai/claude-agent-sdk';
-import type { ParsedPlan, PlanResult, SessionOptions, SessionUsage, GSDCostUpdateEvent, PhaseStepType } from './types.js';
-import { GSDEventType, PhaseType } from './types.js';
-import type { GSDConfig } from './config.js';
+import type { ParsedPlan, PlanResult, SessionOptions, SessionUsage, GTDCostUpdateEvent, PhaseStepType } from './types.js';
+import { GTDEventType, PhaseType } from './types.js';
+import type { GTDConfig } from './config.js';
 import { buildExecutorPrompt, parseAgentTools, DEFAULT_ALLOWED_TOOLS } from './prompt-builder.js';
-import type { GSDEventStream, EventStreamContext } from './event-stream.js';
+import type { GTDEventStream, EventStreamContext } from './event-stream.js';
 import { getToolsForPhase } from './tool-scoping.js';
 import { detectRuntime } from './query/helpers.js';
 import { resolveRuntimeTierDefault } from './model-catalog.js';
@@ -30,7 +30,7 @@ import { resolveRuntimeTierDefault } from './model-catalog.js';
  * In those cases — and whenever `resolve_model_ids: "omit"` is set — leave
  * `model` unset so the runtime falls back to its configured default.
  */
-function resolveModel(options?: SessionOptions, config?: GSDConfig): string | undefined {
+function resolveModel(options?: SessionOptions, config?: GTDConfig): string | undefined {
   if (options?.model) return options.model;
 
   // Honor the explicit "don't resolve model ids" config knob (#2652, #2832).
@@ -40,7 +40,7 @@ function resolveModel(options?: SessionOptions, config?: GSDConfig): string | un
   }
 
   // Profile -> Claude id map. Applies only on the Claude runtime.
-  // Use `detectRuntime` so `GSD_RUNTIME` env precedence is honored — a Codex
+  // Use `detectRuntime` so `GTD_RUNTIME` env precedence is honored — a Codex
   // run with a Claude-shaped config must NOT be silently routed to Claude.
   const runtime = detectRuntime({
     runtime: (config as Record<string, unknown> | undefined)?.runtime,
@@ -74,17 +74,17 @@ function resolveModel(options?: SessionOptions, config?: GSDConfig): string | un
  * the message stream to extract the result.
  *
  * @param plan - Parsed plan structure
- * @param config - GSD project configuration
+ * @param config - GTD project configuration
  * @param options - Session overrides (maxTurns, budget, model, etc.)
  * @param agentDef - Raw agent definition content (optional, for tool/role extraction)
  * @returns Typed PlanResult with cost, duration, success/error status
  */
 export async function runPlanSession(
   plan: ParsedPlan,
-  config: GSDConfig,
+  config: GTDConfig,
   options?: SessionOptions,
   agentDef?: string,
-  eventStream?: GSDEventStream,
+  eventStream?: GTDEventStream,
   streamContext?: EventStreamContext,
   phaseDir?: string,
 ): Promise<PlanResult> {
@@ -194,7 +194,7 @@ function extractResult(msg: SDKResultMessage): PlanResult {
  */
 async function processQueryStream(
   queryStream: AsyncIterable<SDKMessage>,
-  eventStream?: GSDEventStream,
+  eventStream?: GTDEventStream,
   streamContext?: EventStreamContext,
 ): Promise<PlanResult> {
   let resultMessage: SDKResultMessage | undefined;
@@ -243,14 +243,14 @@ async function processQueryStream(
   if (eventStream) {
     const cost = eventStream.getCost();
     eventStream.emitEvent({
-      type: GSDEventType.CostUpdate,
+      type: GTDEventType.CostUpdate,
       timestamp: new Date().toISOString(),
       sessionId: resultMessage.session_id,
       phase: streamContext?.phase,
       planName: streamContext?.planName,
       sessionCostUsd: result.totalCostUsd,
       cumulativeCostUsd: cost.cumulative,
-    } as GSDCostUpdateEvent);
+    } as GTDCostUpdateEvent);
   }
 
   return result;
@@ -283,7 +283,7 @@ function stepTypeToPhaseType(step: PhaseStepType): PhaseType {
  *
  * @param prompt - Raw prompt string to append to the system prompt
  * @param phaseStep - Phase step type (determines tool scoping)
- * @param config - GSD project configuration
+ * @param config - GTD project configuration
  * @param options - Session overrides (maxTurns, budget, model, etc.)
  * @param eventStream - Optional event stream for observability
  * @param streamContext - Optional context for event tagging
@@ -292,9 +292,9 @@ function stepTypeToPhaseType(step: PhaseStepType): PhaseType {
 export async function runPhaseStepSession(
   prompt: string,
   phaseStep: PhaseStepType,
-  config: GSDConfig,
+  config: GTDConfig,
   options?: SessionOptions,
-  eventStream?: GSDEventStream,
+  eventStream?: GTDEventStream,
   streamContext?: EventStreamContext,
 ): Promise<PlanResult> {
   const phaseType = stepTypeToPhaseType(phaseStep);

@@ -6,7 +6,7 @@
 // — a shallow check that only sees a `.git` entry directly in the current
 // directory. Subdirectories of an existing git worktree therefore reported
 // `has_git: false`, causing the workflow's `git init` step to create a nested
-// `.git` inside the outer repo's worktree. Subsequent gsd-sdk commits then
+// `.git` inside the outer repo's worktree. Subsequent gtd-sdk commits then
 // targeted the nested repo instead of the outer one, silently dropping all
 // planning artefacts from the outer repo's history.
 //
@@ -29,12 +29,12 @@ const os = require('node:os');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
 
-const { runGsdTools, cleanup } = require('./helpers.cjs');
+const { runGtdTools, cleanup } = require('./helpers.cjs');
 
 const WORKFLOW_PATH = path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'workflows',
   'new-project.md',
 );
@@ -64,7 +64,7 @@ function createOuterRepoWithSubdir(prefix = 'bug-3491-') {
 test('bug-3491: init new-project reports has_git: true inside parent git worktree', () => {
   const { outer, subdir } = createOuterRepoWithSubdir();
   try {
-    const result = runGsdTools('init new-project', subdir);
+    const result = runGtdTools('init new-project', subdir);
     assert.ok(result.success, `init new-project failed: ${result.error}`);
 
     const payload = JSON.parse(result.output);
@@ -97,7 +97,7 @@ test('bug-3491: init new-project reports has_git: true inside parent git worktre
 test('bug-3491: init new-project reports has_git: true at worktree root with in_nested_subdir: false', () => {
   const { outer } = createOuterRepoWithSubdir();
   try {
-    const result = runGsdTools('init new-project', outer);
+    const result = runGtdTools('init new-project', outer);
     assert.ok(result.success, `init new-project failed: ${result.error}`);
 
     const payload = JSON.parse(result.output);
@@ -116,7 +116,7 @@ test('bug-3491: init new-project reports has_git: true at worktree root with in_
 test('bug-3491: init new-project reports has_git: false outside any git worktree', () => {
   const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'bug-3491-bare-')));
   try {
-    const result = runGsdTools('init new-project', tmp);
+    const result = runGtdTools('init new-project', tmp);
     assert.ok(result.success, `init new-project failed: ${result.error}`);
     const payload = JSON.parse(result.output);
     assert.strictEqual(payload.has_git, false);
@@ -131,7 +131,7 @@ test('bug-3491: init ingest-docs mirrors the same has_git semantics', () => {
   // ingest-docs.md has the same shallow check and the same nested-init risk.
   const { outer, subdir } = createOuterRepoWithSubdir('bug-3491-ingest-');
   try {
-    const result = runGsdTools('init ingest-docs', subdir);
+    const result = runGtdTools('init ingest-docs', subdir);
     assert.ok(result.success, `init ingest-docs failed: ${result.error}`);
     const payload = JSON.parse(result.output);
     assert.strictEqual(

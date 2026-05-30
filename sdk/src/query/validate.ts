@@ -1,7 +1,7 @@
 /**
  * Validation query handlers — key-link verification and consistency checking.
  *
- * Ported from get-shit-done/bin/lib/verify.cjs.
+ * Ported from get-tasks-done/bin/lib/verify.cjs.
  * Provides key-link integration point verification and cross-file consistency
  * detection as native TypeScript query handlers registered in the SDK query registry.
  *
@@ -20,7 +20,7 @@ import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 
 import { MODEL_PROFILES } from './config-query.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { extractFrontmatter, parseMustHavesBlock } from './frontmatter.js';
 import { escapeRegex, normalizePhaseName, planningPaths, resolvePathUnderProject } from './helpers.js';
 import type { QueryHandler } from './utils.js';
@@ -72,24 +72,24 @@ export function regexForKeyLinkPattern(pattern: string): RegExp {
  * @param args - args[0]: plan file path (required)
  * @param projectDir - Project root directory
  * @returns QueryResult with { all_verified, verified, total, links }
- * @throws GSDError with Validation classification if file path missing
+ * @throws GTDError with Validation classification if file path missing
  */
 export const verifyKeyLinks: QueryHandler = async (args, projectDir) => {
   const planFilePath = args[0];
   if (!planFilePath) {
-    throw new GSDError('plan file path required', ErrorClassification.Validation);
+    throw new GTDError('plan file path required', ErrorClassification.Validation);
   }
 
   // T-12-07: Null byte check on plan file path
   if (planFilePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   let fullPath: string;
   try {
     fullPath = await resolvePathUnderProject(projectDir, planFilePath);
   } catch (err) {
-    if (err instanceof GSDError) {
+    if (err instanceof GTDError) {
       return { data: { error: err.message, path: planFilePath } };
     }
     throw err;
@@ -402,7 +402,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
 
   // ─── Check 1: .planning/ exists ───────────────────────────────────────────
   if (!existsSync(planBase)) {
-    addIssue('error', 'E001', '.planning/ directory not found', 'Run /gsd-new-project to initialize');
+    addIssue('error', 'E001', '.planning/ directory not found', 'Run /gtd-new-project to initialize');
     return {
       data: {
         status: 'broken',
@@ -416,7 +416,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
 
   // ─── Check 2: PROJECT.md exists and has required sections ─────────────────
   if (!existsSync(projectPath)) {
-    addIssue('error', 'E002', 'PROJECT.md not found', 'Run /gsd-new-project to create');
+    addIssue('error', 'E002', 'PROJECT.md not found', 'Run /gtd-new-project to create');
   } else {
     try {
       const content = await readFile(projectPath, 'utf-8');
@@ -431,12 +431,12 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
 
   // ─── Check 3: ROADMAP.md exists ───────────────────────────────────────────
   if (!existsSync(roadmapPath)) {
-    addIssue('error', 'E003', 'ROADMAP.md not found', 'Run /gsd-new-milestone to create roadmap');
+    addIssue('error', 'E003', 'ROADMAP.md not found', 'Run /gtd-new-milestone to create roadmap');
   }
 
   // ─── Check 4: STATE.md exists and references valid phases ─────────────────
   if (!existsSync(statePath)) {
-    addIssue('error', 'E004', 'STATE.md not found', 'Run /gsd-health --repair to regenerate', true);
+    addIssue('error', 'E004', 'STATE.md not found', 'Run /gtd-health --repair to regenerate', true);
     repairs.push('regenerateState');
   } else {
     try {
@@ -501,7 +501,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
 
   // ─── Check 5: config.json valid JSON + valid schema ───────────────────────
   if (!existsSync(configPath)) {
-    addIssue('warning', 'W003', 'config.json not found', 'Run /gsd-health --repair to create with defaults', true);
+    addIssue('warning', 'W003', 'config.json not found', 'Run /gtd-health --repair to create with defaults', true);
     repairs.push('createConfig');
   } else {
     try {
@@ -513,7 +513,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      addIssue('error', 'E005', `config.json: JSON parse error - ${msg}`, 'Run /gsd-health --repair to reset to defaults', true);
+      addIssue('error', 'E005', `config.json: JSON parse error - ${msg}`, 'Run /gtd-health --repair to reset to defaults', true);
       repairs.push('resetConfig');
     }
   }
@@ -525,7 +525,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
       const configParsed = JSON.parse(configRaw) as Record<string, unknown>;
       const workflow = configParsed.workflow as Record<string, unknown> | undefined;
       if (workflow && workflow.nyquist_validation === undefined) {
-        addIssue('warning', 'W008', 'config.json: workflow.nyquist_validation absent (defaults to enabled but agents may skip)', 'Run /gsd-health --repair to add key', true);
+        addIssue('warning', 'W008', 'config.json: workflow.nyquist_validation absent (defaults to enabled but agents may skip)', 'Run /gtd-health --repair to add key', true);
         if (!repairs.includes('addNyquistKey')) repairs.push('addNyquistKey');
       }
     } catch { /* intentionally empty */ }
@@ -580,7 +580,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
           try {
             const researchContent = await readFile(join(phasesDir, e.name, researchFile), 'utf-8');
             if (researchContent.includes('## Validation Architecture')) {
-              addIssue('warning', 'W009', `Phase ${e.name}: has Validation Architecture in RESEARCH.md but no VALIDATION.md`, 'Re-run /gsd-plan-phase with --research to regenerate');
+              addIssue('warning', 'W009', `Phase ${e.name}: has Validation Architecture in RESEARCH.md but no VALIDATION.md`, 'Re-run /gtd-plan-phase with --research to regenerate');
             }
           } catch { /* intentionally empty */ }
         }
@@ -685,7 +685,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
           if (statusVal !== 'complete' && statusVal !== 'done') {
             addIssue('warning', 'W011',
               `STATE.md says current phase is ${statePhase} (status: ${statusVal || 'unknown'}) but ROADMAP.md shows it as [x] complete — state files may be out of sync`,
-              'Run /gsd-progress to re-derive current position, or manually update STATE.md');
+              'Run /gtd-progress to re-derive current position, or manually update STATE.md');
           }
         }
       }
@@ -781,7 +781,7 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
             stateContent += `**Current phase:** (determining...)\n`;
             stateContent += `**Status:** Resuming\n\n`;
             stateContent += `## Session Log\n\n`;
-            stateContent += `- ${new Date().toISOString().split('T')[0]}: STATE.md regenerated by /gsd-health --repair\n`;
+            stateContent += `- ${new Date().toISOString().split('T')[0]}: STATE.md regenerated by /gtd-health --repair\n`;
             await writeFile(statePath, stateContent, 'utf-8');
             repairActions.push({ action: repair, success: true, path: 'STATE.md' });
             break;
@@ -841,17 +841,17 @@ export const validateHealth: QueryHandler = async (args, projectDir, workstream)
 // ─── validateAgents ────────────────────────────────────────────────────────
 
 /**
- * Default agents directory — mirrors `getAgentsDir` in `get-shit-done/bin/lib/core.cjs`:
- * `GSD_AGENTS_DIR`, else `../../../agents` relative to this module (`sdk/dist/query` → monorepo
- * root), matching `core.cjs` (`get-shit-done/bin/lib` → same repo `agents/`).
+ * Default agents directory — mirrors `getAgentsDir` in `get-tasks-done/bin/lib/core.cjs`:
+ * `GTD_AGENTS_DIR`, else `../../../agents` relative to this module (`sdk/dist/query` → monorepo
+ * root), matching `core.cjs` (`get-tasks-done/bin/lib` → same repo `agents/`).
  */
 function getAgentsDirForValidateAgents(): string {
-  if (process.env.GSD_AGENTS_DIR) return process.env.GSD_AGENTS_DIR;
+  if (process.env.GTD_AGENTS_DIR) return process.env.GTD_AGENTS_DIR;
   return resolveBundledAgentsDir();
 }
 
 /**
- * Validate GSD agent file installation under the managed agents directory.
+ * Validate GTD agent file installation under the managed agents directory.
  *
  * Port of `cmdValidateAgents` from `verify.cjs` lines 997–1009 (uses `checkAgentsInstalled` from core).
  */
@@ -899,7 +899,7 @@ export const validateAgents: QueryHandler = async (_args, _projectDir) => {
  * Classify the running session's context utilization against the
  * thresholds documented in #2792:
  *   < 60%   healthy
- *   60–70%  warning   → recommend /gsd-thread
+ *   60–70%  warning   → recommend /gtd-thread
  *   ≥ 70%   critical  → reasoning quality may degrade ("fracture point")
  *
  * Args: --tokens-used <int> --context-window <int>
@@ -908,8 +908,8 @@ export const validateAgents: QueryHandler = async (_args, _projectDir) => {
  * to either. Recommendation copy is owned by this handler (the renderer)
  * so it can change without touching the math layer.
  *
- * Mirror of get-shit-done/bin/lib/context-utilization.cjs (the legacy
- * gsd-tools.cjs path uses the CJS module). Keep both in sync.
+ * Mirror of get-tasks-done/bin/lib/context-utilization.cjs (the legacy
+ * gtd-tools.cjs path uses the CJS module). Keep both in sync.
  */
 function parseFlagInt(args: string[], flag: string): number | null {
   const idx = args.indexOf(flag);
@@ -920,21 +920,21 @@ function parseFlagInt(args: string[], flag: string): number | null {
 
 const CONTEXT_RECOMMENDATIONS: Record<string, string | null> = {
   healthy: null,
-  warning: 'Context is approaching the fracture zone — consider /gsd-thread to continue in a fresh window.',
-  critical: 'Reasoning quality may degrade past 70% utilization (fracture point). Run /gsd-thread now to preserve output quality.',
+  warning: 'Context is approaching the fracture zone — consider /gtd-thread to continue in a fresh window.',
+  critical: 'Reasoning quality may degrade past 70% utilization (fracture point). Run /gtd-thread now to preserve output quality.',
 };
 
 export const validateContext: QueryHandler = async (args, _projectDir) => {
   const tokensUsed = parseFlagInt(args, '--tokens-used');
   const contextWindow = parseFlagInt(args, '--context-window');
   if (tokensUsed === null || tokensUsed < 0) {
-    throw new GSDError(
+    throw new GTDError(
       '--tokens-used <non-negative integer> is required for `validate.context`',
       ErrorClassification.Validation,
     );
   }
   if (contextWindow === null || contextWindow <= 0) {
-    throw new GSDError(
+    throw new GTDError(
       '--context-window <positive integer> is required for `validate.context`',
       ErrorClassification.Validation,
     );

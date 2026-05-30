@@ -1,7 +1,7 @@
 /**
- * Detect user-added files under GSD-managed install dirs not listed in the manifest.
+ * Detect user-added files under GTD-managed install dirs not listed in the manifest.
  *
- * Port of `detect-custom-files` from `get-shit-done/bin/gsd-tools.cjs` (lines 1161–1239).
+ * Port of `detect-custom-files` from `get-tasks-done/bin/gtd-tools.cjs` (lines 1161–1239).
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -9,10 +9,10 @@ import { join, relative, resolve } from 'node:path';
 
 import type { QueryHandler } from './utils.js';
 
-const GSD_MANAGED_DIRS = [
-  'get-shit-done',
+const GTD_MANAGED_DIRS = [
+  'get-tasks-done',
   'agents',
-  join('commands', 'gsd'),
+  join('commands', 'gtd'),
   'hooks',
   'skills',
 ];
@@ -47,7 +47,7 @@ export const detectCustomFiles: QueryHandler = async (args) => {
     return { data: { error: `Config directory not found: ${resolvedConfigDir}` } };
   }
 
-  const manifestPath = join(resolvedConfigDir, 'gsd-file-manifest.json');
+  const manifestPath = join(resolvedConfigDir, 'gtd-file-manifest.json');
   if (!existsSync(manifestPath)) {
     return {
       data: {
@@ -75,7 +75,7 @@ export const detectCustomFiles: QueryHandler = async (args) => {
   const manifestKeys = new Set(Object.keys(manifest.files || {}));
 
   const customFiles: string[] = [];
-  for (const managedDir of GSD_MANAGED_DIRS) {
+  for (const managedDir of GTD_MANAGED_DIRS) {
     const absDir = join(resolvedConfigDir, managedDir);
     if (!existsSync(absDir)) continue;
     for (const relPath of walkDir(absDir, resolvedConfigDir)) {

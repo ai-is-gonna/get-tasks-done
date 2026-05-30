@@ -1,7 +1,7 @@
 /**
  * Regression test for bug #2943
  *
- * `gsd-tools.cjs config-get context_window` (and the SDK equivalent) threw
+ * `gtd-tools.cjs config-get context_window` (and the SDK equivalent) threw
  * "Key not found: context_window" when the key was absent from config.json,
  * even though context_window has a documented schema default of 200000.
  *
@@ -13,7 +13,7 @@
 'use strict';
 
 // Migrated to typed-IR (#2974): the previous shape grepped stderr/stdout for
-// "Key not found"; now the test passes `--json-errors` to gsd-tools and
+// "Key not found"; now the test passes `--json-errors` to gtd-tools and
 // asserts on the structured `reason` code (a frozen-enum value from
 // `core.cjs::ERROR_REASON`). Exit code is also a typed signal — together
 // they fully discriminate the failure class.
@@ -25,15 +25,15 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 
-const GSD_TOOLS = path.join(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
-const { ERROR_REASON } = require(path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'core.cjs'));
+const GTD_TOOLS = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
+const { ERROR_REASON } = require(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'core.cjs'));
 
 describe('bug-2943: config-get returns schema default for context_window', () => {
   let tmpDir;
   let planningDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-test-2943-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-test-2943-'));
     planningDir = path.join(tmpDir, '.planning');
     fs.mkdirSync(planningDir, { recursive: true });
   });
@@ -47,7 +47,7 @@ describe('bug-2943: config-get returns schema default for context_window', () =>
    * Uses --raw so we get the plain scalar value, not JSON-wrapped.
    */
   function runConfigGet(keyPath, extraArgs = []) {
-    const args = [GSD_TOOLS, 'config-get', keyPath, '--raw', '--cwd', tmpDir, ...extraArgs];
+    const args = [GTD_TOOLS, 'config-get', keyPath, '--raw', '--cwd', tmpDir, ...extraArgs];
     let stdout = '';
     let stderr = '';
     let exitCode = 0;

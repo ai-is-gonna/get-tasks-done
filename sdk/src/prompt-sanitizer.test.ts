@@ -38,45 +38,45 @@ describe('sanitizePrompt', () => {
         '@file:simple.md',
         '@file:./relative/path.md',
         '@file:/absolute/path/to/file.md',
-        '@file:~/.claude/get-shit-done/workflows/execute-plan.md',
+        '@file:~/.claude/get-tasks-done/workflows/work-task-issue.md',
       ].join('\n');
       expect(sanitizePrompt(input)).toBe('');
     });
   });
 
-  // ─── /gsd- skill commands ────────────────────────────────────────────────
+  // ─── /gtd- skill commands ────────────────────────────────────────────────
 
-  describe('/gsd- skill commands', () => {
-    it('strips lines containing /gsd- commands', () => {
-      const input = 'Before\nRun /gsd-execute-plan to proceed\nAfter';
+  describe('/gtd- skill commands', () => {
+    it('strips lines containing /gtd- commands', () => {
+      const input = 'Before\nRun /gtd-task execution to proceed\nAfter';
       const result = sanitizePrompt(input);
-      expect(result).not.toContain('/gsd-');
+      expect(result).not.toContain('/gtd-');
       expect(result).toContain('Before');
       expect(result).toContain('After');
     });
 
-    it('strips various /gsd- skill formats', () => {
+    it('strips various /gtd- skill formats', () => {
       const input = [
-        'Use /gsd-research-phase',
-        'Then /gsd-plan-phase --auto',
-        'Finally /gsd-verify-phase',
+        'Use /gtd-research-phase',
+        'Then /gtd-plan-phase --auto',
+        'Finally /gtd-verify-phase',
       ].join('\n');
       expect(sanitizePrompt(input)).toBe('');
     });
 
-    it('strips legacy /gsd: slash commands for backward compatibility', () => {
-      const input = 'Before\nRun /gsd:execute-plan to proceed\nAfter';
+    it('strips legacy /gtd: slash commands for backward compatibility', () => {
+      const input = 'Before\nRun /gtd:task execution to proceed\nAfter';
       const result = sanitizePrompt(input);
-      expect(result).not.toContain('/gsd:');
+      expect(result).not.toContain('/gtd:');
       expect(result).toContain('Before');
       expect(result).toContain('After');
     });
 
-    it('strips various legacy /gsd: command formats', () => {
+    it('strips various legacy /gtd: command formats', () => {
       const input = [
-        'Use /gsd:research-phase',
-        'Then /gsd:plan-phase --auto',
-        'Finally /gsd:verify-phase',
+        'Use /gtd:research-phase',
+        'Then /gtd:plan-phase --auto',
+        'Finally /gtd:verify-phase',
       ].join('\n');
       expect(sanitizePrompt(input)).toBe('');
     });
@@ -108,7 +108,7 @@ describe('sanitizePrompt', () => {
 
   describe('SlashCommand() calls', () => {
     it('strips SlashCommand lines', () => {
-      const input = 'Before\nSlashCommand("/gsd:execute")\nAfter';
+      const input = 'Before\nSlashCommand("/gtd:execute")\nAfter';
       const result = sanitizePrompt(input);
       expect(result).not.toContain('SlashCommand');
       expect(result).toContain('Before');
@@ -207,7 +207,7 @@ describe('sanitizePrompt', () => {
         '',
         'Investigate the codebase using @file:context.md for context.',
         '',
-        'When done, run /gsd-plan-phase to proceed.',
+        'When done, run /gtd-plan-phase to proceed.',
         '',
         'If unclear, AskUserQuestion("What should I focus on?")',
         '',
@@ -222,8 +222,8 @@ describe('sanitizePrompt', () => {
 
       const result = sanitizePrompt(input);
       expect(result).not.toContain('@file:');
-      expect(result).not.toContain('/gsd-');
-      expect(result).not.toContain('/gsd:');
+      expect(result).not.toContain('/gtd-');
+      expect(result).not.toContain('/gtd:');
       expect(result).not.toContain('AskUserQuestion');
       expect(result).not.toContain('SlashCommand');
       expect(result).not.toMatch(/\bSTOP\b/);

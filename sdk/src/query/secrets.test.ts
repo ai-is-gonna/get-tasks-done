@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { SECRET_CONFIG_KEYS, isSecretKey, maskSecret, maskIfSecret } from './secrets.js';
 // Parity check against the CJS module.
-import secretsCjs from '../../../get-shit-done/bin/lib/secrets.cjs';
+import secretsCjs from '../../../get-tasks-done/bin/lib/secrets.cjs';
 
 describe('Bug #2997: SDK secrets module', () => {
   it('SECRET_CONFIG_KEYS exposes the documented set (locked)', () => {

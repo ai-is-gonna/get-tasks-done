@@ -99,13 +99,13 @@ describe('command seam coverage (manifest -> generated -> adapters)', () => {
 
   it('CJS seam adapters export expected router functions', () => {
     const require = createRequire(import.meta.url);
-    const stateRouter = require('../../../get-shit-done/bin/lib/state-command-router.cjs');
-    const verifyRouter = require('../../../get-shit-done/bin/lib/verify-command-router.cjs');
-    const initRouter = require('../../../get-shit-done/bin/lib/init-command-router.cjs');
-    const phaseRouter = require('../../../get-shit-done/bin/lib/phase-command-router.cjs');
-    const phasesRouter = require('../../../get-shit-done/bin/lib/phases-command-router.cjs');
-    const validateRouter = require('../../../get-shit-done/bin/lib/validate-command-router.cjs');
-    const roadmapRouter = require('../../../get-shit-done/bin/lib/roadmap-command-router.cjs');
+    const stateRouter = require('../../../get-tasks-done/bin/lib/state-command-router.cjs');
+    const verifyRouter = require('../../../get-tasks-done/bin/lib/verify-command-router.cjs');
+    const initRouter = require('../../../get-tasks-done/bin/lib/init-command-router.cjs');
+    const phaseRouter = require('../../../get-tasks-done/bin/lib/phase-command-router.cjs');
+    const phasesRouter = require('../../../get-tasks-done/bin/lib/phases-command-router.cjs');
+    const validateRouter = require('../../../get-tasks-done/bin/lib/validate-command-router.cjs');
+    const roadmapRouter = require('../../../get-tasks-done/bin/lib/roadmap-command-router.cjs');
 
     expect(typeof stateRouter.routeStateCommand).toBe('function');
     expect(typeof verifyRouter.routeVerifyCommand).toBe('function');

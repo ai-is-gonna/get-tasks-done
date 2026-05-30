@@ -8,7 +8,7 @@
 /**
  * Tests for #2310: plan-phase chunked mode + filesystem fallback.
  *
- * Context: on Windows (and occasionally other platforms), gsd-planner's
+ * Context: on Windows (and occasionally other platforms), gtd-planner's
  * Task() call may never return even though the subagent finished writing all
  * PLAN.md files to disk. The orchestrator hangs indefinitely. Two mitigations:
  *
@@ -29,12 +29,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const PLAN_PHASE = path.join(
-  __dirname, '..', 'get-shit-done', 'workflows', 'plan-phase.md'
+  __dirname, '..', 'get-tasks-done', 'workflows', 'plan-phase.md'
 );
 
-const PLANNER_AGENT = path.join(__dirname, '..', 'agents', 'gsd-planner.md');
-const PLANNER_CHUNKED_REF = path.join(__dirname, '..', 'get-shit-done', 'references', 'planner-chunked.md');
-const CONFIG_SCHEMA = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'config-schema.cjs');
+const PLANNER_AGENT = path.join(__dirname, '..', 'agents', 'gtd-planner.md');
+const PLANNER_CHUNKED_REF = path.join(__dirname, '..', 'get-tasks-done', 'references', 'planner-chunked.md');
+const CONFIG_SCHEMA = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'config-schema.cjs');
 const CONFIGURATION_MD = path.join(__dirname, '..', 'docs', 'CONFIGURATION.md');
 
 describe('plan-phase.md — filesystem fallback (#2310)', () => {
@@ -183,13 +183,13 @@ describe('plan-phase.md — chunked mode implementation (#2310)', () => {
   });
 });
 
-describe('gsd-planner.md — references planner-chunked.md (#2310)', () => {
+describe('gtd-planner.md — references planner-chunked.md (#2310)', () => {
   const plannerContent = fs.readFileSync(PLANNER_AGENT, 'utf-8');
 
-  test('gsd-planner.md references planner-chunked.md for chunked return formats', () => {
+  test('gtd-planner.md references planner-chunked.md for chunked return formats', () => {
     assert.ok(
       plannerContent.includes('planner-chunked.md'),
-      'gsd-planner.md must reference planner-chunked.md for ## OUTLINE COMPLETE / ## PLAN COMPLETE formats'
+      'gtd-planner.md must reference planner-chunked.md for ## OUTLINE COMPLETE / ## PLAN COMPLETE formats'
     );
   });
 });

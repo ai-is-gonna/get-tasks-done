@@ -53,7 +53,7 @@ ${body}
 }
 
 beforeEach(async () => {
-  tmp = await mkdtemp(join(tmpdir(), 'gsd-deccov-'));
+  tmp = await mkdtemp(join(tmpdir(), 'gtd-deccov-'));
   phaseDir = join(tmp, '.planning', 'phases', '17-foo');
   contextPath = join(phaseDir, '17-CONTEXT.md');
 });

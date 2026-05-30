@@ -16,11 +16,11 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const PLAN_PHASE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'plan-phase.md');
+const PLAN_PHASE_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'plan-phase.md');
 
 describe('plan-phase commit_docs support (#2399)', () => {
   test('plan-phase.md exists', () => {
-    assert.ok(fs.existsSync(PLAN_PHASE_PATH), 'get-shit-done/workflows/plan-phase.md must exist');
+    assert.ok(fs.existsSync(PLAN_PHASE_PATH), 'get-tasks-done/workflows/plan-phase.md must exist');
   });
 
   test('plan-phase.md has a commit step for plan artifacts', () => {
@@ -66,12 +66,12 @@ describe('plan-phase commit_docs support (#2399)', () => {
     );
   });
 
-  test('plan-phase.md uses gsd-sdk query commit for the plan commit', () => {
+  test('plan-phase.md uses gtd-sdk query commit for the plan commit', () => {
     const content = fs.readFileSync(PLAN_PHASE_PATH, 'utf-8');
-    // Must use gsd-sdk query commit (not raw git) so commit_docs guard in gsd-tools is respected
+    // Must use gtd-sdk query commit (not raw git) so commit_docs guard in gtd-tools is respected
     assert.ok(
-      content.includes('gsd-sdk query commit') || content.includes('gsd-tools') || content.includes('gsd-sdk'),
-      'plan-phase.md plan commit step must use gsd-sdk query commit (not raw git commit)'
+      content.includes('gtd-sdk query commit') || content.includes('gtd-tools') || content.includes('gtd-sdk'),
+      'plan-phase.md plan commit step must use gtd-sdk query commit (not raw git commit)'
     );
   });
 });

@@ -3,9 +3,9 @@
  * and emit the `<agent_skills>` XML block workflows interpolate into Task() prompts.
  *
  * Ports `buildAgentSkillsBlock` semantics from
- * `get-shit-done/bin/lib/init.cjs` so the SDK path honors
+ * `get-tasks-done/bin/lib/init.cjs` so the SDK path honors
  * `config.agent_skills[agentType]` the same way the legacy
- * `gsd-tools.cjs agent-skills <type>` path does. Project-relative skills stay
+ * `gtd-tools.cjs agent-skills <type>` path does. Project-relative skills stay
  * project-root validated; `global:<name>` now resolves through runtime-aware
  * global skills dir policy rather than a Claude-only hardcoded path. Fixes #2555.
  *
@@ -13,11 +13,11 @@
  * ```typescript
  * import { agentSkills } from './skills.js';
  *
- * // With config.agent_skills = { "gsd-planner": [".claude/skills/demo-skill"] }
- * await agentSkills(['gsd-planner'], '/project');
+ * // With config.agent_skills = { "gtd-planner": [".claude/skills/demo-skill"] }
+ * await agentSkills(['gtd-planner'], '/project');
  * // { data: '<agent_skills>\nRead these user-configured skills:\n- @.claude/skills/demo-skill/SKILL.md\n</agent_skills>' }
  *
- * // No agent type → empty string (matches gsd-tools cmdAgentSkills).
+ * // No agent type → empty string (matches gtd-tools cmdAgentSkills).
  * await agentSkills([], '/project');
  * // { data: '' }
  * ```
@@ -53,7 +53,7 @@ function resolveWithinBase(target: string, baseDir: string): string | null {
 
 export const agentSkills: QueryHandler = async (args, projectDir) => {
   const agentType = (args[0] || '').trim();
-  // Match gsd-tools `cmdAgentSkills`: no agent type → empty string (JSON `""`), not a structured object.
+  // Match gtd-tools `cmdAgentSkills`: no agent type → empty string (JSON `""`), not a structured object.
   if (!agentType) {
     return { data: '' };
   }
@@ -137,7 +137,7 @@ export const agentSkills: QueryHandler = async (args, projectDir) => {
   const lines = validEntries.map((e) => `- @${e.ref}`).join('\n');
   const block = `<agent_skills>\nRead these user-configured skills:\n${lines}\n</agent_skills>`;
   // Signal the CLI dispatcher to write raw text — workflows embed the result
-  // with `$(gsd-sdk query agent-skills …)` and need the XML block verbatim, not
+  // with `$(gtd-sdk query agent-skills …)` and need the XML block verbatim, not
   // a JSON-quoted string (see cli.ts QueryResult.format handling).
   return { data: block, format: 'text' };
 };

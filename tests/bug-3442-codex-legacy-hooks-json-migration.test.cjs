@@ -7,7 +7,7 @@ const path = require('node:path');
 const migration = require(path.join(
   __dirname,
   '..',
-  'get-shit-done',
+  'get-tasks-done',
   'bin',
   'lib',
   'installer-migrations',
@@ -19,8 +19,8 @@ describe('bug #3442: codex legacy hooks.json migration consumes shared managed-h
     const configDir = '/Users/me/.codex';
     const hooksJson = {
       hooks: [
-        { command: '"/usr/local/bin/node" "/Users/me/.codex/hooks/gsd-check-update.js"' },
-        { command: '"/usr/local/bin/node" "/Users/me/.codex/hooks/gsd-update-check.js"' },
+        { command: '"/usr/local/bin/node" "/Users/me/.codex/hooks/gtd-check-update.js"' },
+        { command: '"/usr/local/bin/node" "/Users/me/.codex/hooks/gtd-update-check.js"' },
         { command: '"/usr/local/bin/node" "/Users/me/.codex/hooks/custom-hook.js"' },
       ],
     };
@@ -44,7 +44,7 @@ describe('bug #3442: codex legacy hooks.json migration consumes shared managed-h
     const configDir = '/Users/me/.codex';
     const hooksJson = {
       hooks: [
-        { command: '"/usr/local/bin/node" "/tmp/other/hooks/gsd-check-update.js"' },
+        { command: '"/usr/local/bin/node" "/tmp/other/hooks/gtd-check-update.js"' },
       ],
     };
 

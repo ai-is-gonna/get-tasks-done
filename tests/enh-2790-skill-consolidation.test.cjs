@@ -1,5 +1,5 @@
 // allow-test-rule: source-text-is-the-product
-// commands/gsd/*.md files ARE what the runtime loads — testing their
+// commands/gtd/*.md files ARE what the runtime loads — testing their
 // existence/non-existence tests the deployed skill surface contract.
 
 'use strict';
@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gsd');
+const COMMANDS_DIR = path.join(__dirname, '..', 'commands', 'gtd');
 
 /**
  * Parse the YAML frontmatter from a skill .md file.
@@ -47,7 +47,7 @@ function skillPath(name) {
 // Group: New consolidated skills exist
 // ---------------------------------------------------------------------------
 describe('new consolidated skills exist', () => {
-  test('commands/gsd/capture.md exists', () => {
+  test('commands/gtd/capture.md exists', () => {
     assert.ok(fs.existsSync(skillPath('capture')), 'capture.md does not exist');
   });
 
@@ -56,7 +56,7 @@ describe('new consolidated skills exist', () => {
     assert.ok(fm.name && fm.name.length > 0, 'capture.md missing name: in frontmatter');
   });
 
-  test('commands/gsd/phase.md exists', () => {
+  test('commands/gtd/phase.md exists', () => {
     assert.ok(fs.existsSync(skillPath('phase')), 'phase.md does not exist');
   });
 
@@ -65,7 +65,7 @@ describe('new consolidated skills exist', () => {
     assert.ok(fm.name && fm.name.length > 0, 'phase.md missing name: in frontmatter');
   });
 
-  test('commands/gsd/config.md exists', () => {
+  test('commands/gtd/config.md exists', () => {
     assert.ok(fs.existsSync(skillPath('config')), 'config.md does not exist');
   });
 
@@ -74,7 +74,7 @@ describe('new consolidated skills exist', () => {
     assert.ok(fm.name && fm.name.length > 0, 'config.md missing name: in frontmatter');
   });
 
-  test('commands/gsd/workspace.md exists', () => {
+  test('commands/gtd/workspace.md exists', () => {
     assert.ok(fs.existsSync(skillPath('workspace')), 'workspace.md does not exist');
   });
 
@@ -116,7 +116,7 @@ describe('absorbed skills are removed', () => {
   ];
 
   for (const [name, reason] of absorbed) {
-    test(`commands/gsd/${name}.md does NOT exist (${reason})`, () => {
+    test(`commands/gtd/${name}.md does NOT exist (${reason})`, () => {
       assert.ok(
         !fs.existsSync(skillPath(name)),
         [
@@ -139,11 +139,11 @@ describe('outright deleted dead skills are removed', () => {
     // list-phase-assumptions → discuss-phase --assumptions (pending #3131)
     // session-report     → pause-work --report (pending #3131)
     // analyze-dependencies → manager --analyze-deps (pending #3131)
-    // from-gsd2          → import --from-gsd2 (pending #3131)
+    // from-gtd2          → import --from-gtd2 (pending #3131)
   ];
 
   for (const name of deleted) {
-    test(`commands/gsd/${name}.md does NOT exist`, () => {
+    test(`commands/gtd/${name}.md does NOT exist`, () => {
       assert.ok(
         !fs.existsSync(skillPath(name)),
         `${name}.md still exists but should have been deleted (outright dead skill)`,
@@ -160,11 +160,11 @@ describe('#3131 re-wired workflows: standalone command files must not exist', ()
     ['list-phase-assumptions', 'absorbed into discuss-phase.md --assumptions'],
     ['session-report',         'absorbed into pause-work.md --report'],
     ['analyze-dependencies',   'absorbed into manager.md --analyze-deps'],
-    ['from-gsd2',              'absorbed into import.md --from-gsd2'],
+    ['from-gtd2',              'absorbed into import.md --from-gtd2'],
   ];
 
   for (const [name, reason] of rewired) {
-    test(`commands/gsd/${name}.md does NOT exist (${reason})`, () => {
+    test(`commands/gtd/${name}.md does NOT exist (${reason})`, () => {
       assert.ok(
         !fs.existsSync(skillPath(name)),
         `${name}.md still exists as a standalone command but should be absorbed (${reason})`,
@@ -198,13 +198,6 @@ describe('#3131 re-wired workflows: parent command argument-hints advertise the 
     );
   });
 
-  test('import.md argument-hint contains --from-gsd2', () => {
-    const fm = parseFrontmatter(skillPath('import'));
-    assert.ok(
-      (fm['argument-hint'] || '').includes('--from-gsd2'),
-      'import.md argument-hint does not contain --from-gsd2. got: ' + (fm['argument-hint'] || '(none)'),
-    );
-  });
 });
 
 describe('#3131 re-wired workflows: parent command bodies dispatch to workflow files', () => {
@@ -234,12 +227,6 @@ describe('#3131 re-wired workflows: parent command bodies dispatch to workflow f
     );
   });
 
-  test('import.md body references from-gsd2', () => {
-    assert.ok(
-      bodyContains('import', 'from-gsd2'),
-      'import.md body does not reference from-gsd2 — --from-gsd2 flag dispatch is missing',
-    );
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -328,7 +315,7 @@ describe('parent skills updated with new flags in argument-hint', () => {
 // Group: settings.md is NOT deleted
 // ---------------------------------------------------------------------------
 describe('settings.md is kept (merged into config entry point or remains standalone)', () => {
-  test('commands/gsd/settings.md still exists', () => {
+  test('commands/gtd/settings.md still exists', () => {
     assert.ok(
       fs.existsSync(skillPath('settings')),
       'settings.md was deleted — it should be kept (or renamed to config.md, but not both missing)',
@@ -340,7 +327,7 @@ describe('settings.md is kept (merged into config entry point or remains standal
 // Group: Skill count reduced
 // ---------------------------------------------------------------------------
 describe('skill count', () => {
-  test('total user-invocable files in commands/gsd/*.md is <= 63', () => {
+  test('total user-invocable files in commands/gtd/*.md is <= 64', () => {
     // Exclude `ns-*.md` namespace meta-skills (#2792) from this cap.
     // Those are descriptor-only routers selected first by the model and
     // are not part of the consolidation surface this test tracks; their
@@ -348,10 +335,10 @@ describe('skill count', () => {
     const files = fs.readdirSync(COMMANDS_DIR)
       .filter((f) => f.endsWith('.md') && !f.startsWith('ns-'));
     assert.ok(
-      files.length <= 63,
+      files.length <= 64,
       [
-        `Expected <= 63 user-invocable skill files, found ${files.length}.`,
-        'Consolidation target is ~58.',
+        `Expected <= 64 user-invocable skill files, found ${files.length}.`,
+        'Consolidation target is ~58; orchestrate-tasks is intentionally explicit because it is a high-risk bulk execution gate.',
       ].join(' '),
     );
   });

@@ -12,7 +12,7 @@ const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
+const { runGtdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
 const PLAN_TEMPLATE = (wave, truths = []) => `---
 phase: "1"
@@ -68,7 +68,7 @@ Plans:
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_TEMPLATE(2, ['API returns 200']),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -97,7 +97,7 @@ Plans:
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_TEMPLATE(1, ['API returns 200']),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const roadmap = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.md'), 'utf-8');
@@ -122,7 +122,7 @@ Plans:
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_TEMPLATE(2, [sharedTruth, 'API returns 200']),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -149,7 +149,7 @@ Plans:
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_TEMPLATE(2, ['Only in plan 2']),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const out = JSON.parse(result.output);
@@ -175,8 +175,8 @@ Plans:
       '.planning/phases/01-foundation/01-02-PLAN.md': PLAN_TEMPLATE(2),
     });
 
-    runGsdTools('roadmap annotate-dependencies 1', tmpDir);
-    const secondResult = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    runGtdTools('roadmap annotate-dependencies 1', tmpDir);
+    const secondResult = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(secondResult.success);
 
     const out = JSON.parse(secondResult.output);
@@ -192,7 +192,7 @@ Plans:
       '.planning/ROADMAP.md': `# Roadmap\n\n### Phase 1: Foundation\n**Goal:** Set up project\n`,
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success);
     const out = JSON.parse(result.output);
     assert.strictEqual(out.updated, false);
@@ -211,7 +211,7 @@ Plans:
       '.planning/phases/01-foundation/01-01-PLAN.md': PLAN_TEMPLATE(1, colonTruths),
     });
 
-    const result = runGsdTools('roadmap annotate-dependencies 1', tmpDir);
+    const result = runGtdTools('roadmap annotate-dependencies 1', tmpDir);
     assert.ok(result.success, `Command threw on colon-containing truths: ${result.error}`);
     const out = JSON.parse(result.output);
     assert.ok(typeof out.updated === 'boolean', 'should return a valid result object');
@@ -219,7 +219,7 @@ Plans:
 
   test('plan-phase.md documents annotate-dependencies step', () => {
     const planPhase = fs.readFileSync(
-      path.join(__dirname, '../get-shit-done/workflows/plan-phase.md'), 'utf-8'
+      path.join(__dirname, '../get-tasks-done/workflows/plan-phase.md'), 'utf-8'
     );
     assert.ok(planPhase.includes('annotate-dependencies'), 'plan-phase.md references annotate-dependencies command');
     assert.ok(planPhase.includes('13d'), 'plan-phase.md has step 13d');

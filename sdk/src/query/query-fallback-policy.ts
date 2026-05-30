@@ -3,7 +3,7 @@ export interface FallbackPolicyState {
 }
 
 export function describeFallbackDisabledPolicy(): string {
-  return 'CJS fallback is disabled (GSD_QUERY_FALLBACK=registered).';
+  return 'CJS fallback is disabled (GTD_QUERY_FALLBACK=registered).';
 }
 
 export function canUseCjsFallback(policy: FallbackPolicyState): boolean {

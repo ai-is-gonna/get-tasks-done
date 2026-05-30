@@ -40,7 +40,7 @@ Recent decisions affecting current work:
 
 | Phase | Summary | Rationale |
 |-------|---------|-----------|
-| 09 | Used GSDError pattern | Consistent with existing SDK errors |
+| 09 | Used GTDError pattern | Consistent with existing SDK errors |
 | 10 | Temp dir test pattern | ESM spy limitations |
 
 ## Blockers
@@ -56,7 +56,7 @@ Resume File: None
 `;
 
 const STATE_WITH_FRONTMATTER = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -85,7 +85,7 @@ let tmpDir: string;
 // ─── Setup / Teardown ──────────────────────────────────────────────────────
 
 beforeEach(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gsd-state-test-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'gtd-state-test-'));
   const planningDir = join(tmpDir, '.planning');
   const phasesDir = join(planningDir, 'phases');
 
@@ -137,7 +137,7 @@ describe('stateJson', () => {
     const result = await stateJson([], tmpDir);
     const data = result.data as Record<string, unknown>;
 
-    expect(data.gsd_state_version).toBe('1.0');
+    expect(data.gtd_state_version).toBe('1.0');
     expect(data.milestone).toBe('v3.0');
     expect(data.milestone_name).toBe('SDK-First Migration');
     expect(data.status).toBe('executing');
@@ -161,7 +161,7 @@ describe('stateJson', () => {
 
   it('preserves wider curated progress when disk scan only sees a realized subset', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: v3.0
 milestone_name: SDK-First Migration
 status: executing
@@ -197,7 +197,7 @@ ${STATE_BODY}`;
   it('preserves existing non-unknown status when body-derived is unknown', async () => {
     // Create STATE.md with frontmatter status but no Status in body
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 status: paused
 ---
 
@@ -216,7 +216,7 @@ Plan: 2 of 3
   });
 
   it('returns error object when STATE.md not found', async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), 'gsd-state-empty-'));
+    const emptyDir = await mkdtemp(join(tmpdir(), 'gtd-state-empty-'));
     await mkdir(join(emptyDir, '.planning'), { recursive: true });
 
     const result = await stateJson([], emptyDir);
@@ -228,7 +228,7 @@ Plan: 2 of 3
 
   it('normalizes status to known values', async () => {
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 ---
 
 # Project State
@@ -246,7 +246,7 @@ Status: In Progress
   it('derives percent from disk counts (ground truth)', async () => {
     // Body says 0% but disk has 4/7 summaries
     const stateContent = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 ---
 
 # Project State
@@ -328,7 +328,7 @@ describe('stateSnapshot', () => {
     expect(Array.isArray(decisions)).toBe(true);
     expect(decisions.length).toBe(2);
     expect(decisions[0].phase).toBe('09');
-    expect(decisions[0].summary).toBe('Used GSDError pattern');
+    expect(decisions[0].summary).toBe('Used GTDError pattern');
     expect(decisions[0].rationale).toBe('Consistent with existing SDK errors');
   });
 
@@ -352,7 +352,7 @@ describe('stateSnapshot', () => {
   });
 
   it('returns error when STATE.md not found', async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), 'gsd-snap-empty-'));
+    const emptyDir = await mkdtemp(join(tmpdir(), 'gtd-snap-empty-'));
     await mkdir(join(emptyDir, '.planning'), { recursive: true });
 
     const result = await stateSnapshot([], emptyDir);
@@ -383,7 +383,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
     // which stateExtractField (bold pattern) would match before the YAML line.
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'status: executing',
       'current_plan: 19.5-05',
       '---',
@@ -401,7 +401,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3265-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3265-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -417,7 +417,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
   it('returns frontmatter current_plan, not bold body value when both present', async () => {
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'status: executing',
       'current_plan: 19.5-05',
       '---',
@@ -429,7 +429,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3265b-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3265b-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -451,7 +451,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3265c-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3265c-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -469,7 +469,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
     // Frontmatter has status but no current_plan — snapshot must body-extract current_plan
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'status: planning',
       '---',
       '',
@@ -479,7 +479,7 @@ describe('stateSnapshot — bug #3265 frontmatter precedence', () => {
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3265d-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3265d-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -504,7 +504,7 @@ describe('stateJson with --ws workstream', () => {
     await mkdir(join(wsDir, 'phases'), { recursive: true });
 
     const wsState = `---
-gsd_state_version: 1.0
+gtd_state_version: 1.0
 milestone: ws-1.0
 milestone_name: Workstream Marker
 status: planning
@@ -537,7 +537,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
     // frontmatter value wins over the body's bold field.
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'current_phase: 19',
       '---',
       '',
@@ -548,7 +548,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3275a-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3275a-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -564,7 +564,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
   it('treats numeric total_phases in frontmatter as string, not missing', async () => {
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'total_phases: 7',
       '---',
       '',
@@ -575,7 +575,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3275b-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3275b-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 
@@ -591,7 +591,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
   it('treats numeric total_plans_in_phase in frontmatter as string, not missing', async () => {
     const stateContent = [
       '---',
-      'gsd_state_version: 1.0',
+      'gtd_state_version: 1.0',
       'total_plans_in_phase: 5',
       '---',
       '',
@@ -602,7 +602,7 @@ describe('stateSnapshot — CR #3275 fmScalar non-string scalar coercion', () =>
       '',
     ].join('\n');
 
-    const localDir = await mkdtemp(join(tmpdir(), 'gsd-3275c-'));
+    const localDir = await mkdtemp(join(tmpdir(), 'gtd-3275c-'));
     await mkdir(join(localDir, '.planning'), { recursive: true });
     await writeFile(join(localDir, '.planning', 'STATE.md'), stateContent);
 

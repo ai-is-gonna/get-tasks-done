@@ -1,12 +1,12 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Bug #2957: post-install message for `--claude --global` must instruct
  * users to restart Claude Code and offer the skill-name fallback, since
  * the skills-only install layout (CC 2.1.88+) leaves nothing in
- * commands/gsd/ for the slash menu to read on older configurations.
+ * commands/gtd/ for the slash menu to read on older configurations.
  *
  * Captures the call to finishInstall(runtime='claude', isGlobal=true) and
  * asserts the printed message contains both invocation paths.
@@ -25,7 +25,7 @@ function captureFinishInstallOutput(runtime, isGlobal) {
   console.log = (...args) => { lines.push(args.join(' ')); };
   try {
     installModule.finishInstall(
-      '/tmp/gsd-test-settings.json',
+      '/tmp/gtd-test-settings.json',
       {},
       null,
       false,
@@ -45,8 +45,8 @@ describe('Bug #2957: claude+global post-install message', () => {
     const output = captureFinishInstallOutput('claude', true);
 
     assert.match(output, /restart claude code/i, 'should mention restart');
-    assert.match(output, /\/gsd-new-project/, 'should still mention /gsd-new-project');
-    assert.match(output, /gsd-new-project skill/i, 'should mention the skill name fallback');
+    assert.match(output, /\/gtd-new-project/, 'should still mention /gtd-new-project');
+    assert.match(output, /gtd-new-project skill/i, 'should mention the skill name fallback');
     assert.doesNotMatch(
       output,
       /open a blank directory/i,
@@ -54,10 +54,10 @@ describe('Bug #2957: claude+global post-install message', () => {
     );
   });
 
-  test('claude+local message keeps the original /gsd-new-project instruction', () => {
+  test('claude+local message keeps the original /gtd-new-project instruction', () => {
     const output = captureFinishInstallOutput('claude', false);
 
-    assert.match(output, /\/gsd-new-project/, 'should still mention /gsd-new-project');
+    assert.match(output, /\/gtd-new-project/, 'should still mention /gtd-new-project');
     assert.doesNotMatch(output, /restart claude code/i, 'local install does not require the skills restart note');
   });
 

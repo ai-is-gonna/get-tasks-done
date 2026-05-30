@@ -1,6 +1,6 @@
 /**
  * Profile output handlers — USER-PROFILE.md, dev-preferences, CLAUDE.md sections.
- * Ported from `get-shit-done/bin/lib/profile-output.cjs` (`cmdWriteProfile`,
+ * Ported from `get-tasks-done/bin/lib/profile-output.cjs` (`cmdWriteProfile`,
  * `cmdGenerateDevPreferences`, `cmdGenerateClaudeProfile`, `cmdGenerateClaudeMd`).
  */
 
@@ -15,7 +15,7 @@ import { homedir } from 'node:os';
 import { dirname, isAbsolute, join } from 'node:path';
 
 import { loadConfig } from '../config.js';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import { detectRuntime, resolveGlobalSkillMarkdownPath } from './helpers.js';
 import { CLAUDE_INSTRUCTIONS } from './profile-questionnaire-data.js';
 import type { QueryHandler } from './utils.js';
@@ -35,7 +35,7 @@ const DIMENSION_KEYS = [
 ] as const;
 
 const CLAUDE_MD_FALLBACKS = {
-  project: 'Project not yet initialized. Run /gsd-new-project to set up.',
+  project: 'Project not yet initialized. Run /gtd-new-project to set up.',
   stack: 'Technology stack not yet documented. Will populate after codebase mapping or first phase.',
   conventions: 'Conventions not yet established. Will populate as patterns emerge during development.',
   architecture: 'Architecture not yet mapped. Follow existing patterns found in the codebase.',
@@ -46,23 +46,23 @@ const CLAUDE_MD_FALLBACKS = {
 const SKILL_SEARCH_DIRS = ['.claude/skills', '.agents/skills', '.cursor/skills', '.github/skills', '.codex/skills'];
 
 const CLAUDE_MD_WORKFLOW_ENFORCEMENT = [
-  'Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.',
+  'Before using Edit, Write, or other file-changing tools, start work through a GTD command so planning artifacts and execution context stay in sync.',
   '',
   'Use these entry points:',
-  '- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks',
-  '- `/gsd-debug` for investigation and bug fixing',
-  '- `/gsd-execute-phase` for planned phase work',
+  '- `/gtd-quick` for small fixes, doc updates, and ad-hoc tasks',
+  '- `/gtd-debug` for investigation and bug fixing',
+  '- `/gtd-export-phase-issues`, then `/gtd-work-task-issue` or `/gtd-orchestrate-tasks`, then `/gtd-work-task-issue --complete-phase <phase> --execute` for planned phase work',
   '',
-  'Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.',
+  'Do not make direct repo edits outside a GTD workflow unless the user explicitly asks to bypass it.',
 ].join('\n');
 
 const CLAUDE_MD_PROFILE_PLACEHOLDER = [
-  '<!-- GSD:profile-start -->',
+  '<!-- GTD:profile-start -->',
   '## Developer Profile',
   '',
-  '> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.',
+  '> Profile not yet configured. Run `/gtd-profile-user` to generate your developer profile.',
   '> This section is managed by `generate-claude-profile` -- do not edit manually.',
-  '<!-- GSD:profile-end -->',
+  '<!-- GTD:profile-end -->',
 ].join('\n');
 
 function safeReadFile(filePath: string): string | null {
@@ -92,8 +92,8 @@ function extractMarkdownSection(content: string, sectionName: string): string | 
 }
 
 function extractSectionContent(fileContent: string, sectionName: string): string | null {
-  const startMarker = `<!-- GSD:${sectionName}-start`;
-  const endMarker = `<!-- GSD:${sectionName}-end -->`;
+  const startMarker = `<!-- GTD:${sectionName}-start`;
+  const endMarker = `<!-- GTD:${sectionName}-end -->`;
   const startIdx = fileContent.indexOf(startMarker);
   const endIdx = fileContent.indexOf(endMarker);
   if (startIdx === -1 || endIdx === -1) return null;
@@ -103,7 +103,7 @@ function extractSectionContent(fileContent: string, sectionName: string): string
 }
 
 function buildSection(sectionName: string, sourceFile: string, content: string): string {
-  return [`<!-- GSD:${sectionName}-start source:${sourceFile} -->`, content, `<!-- GSD:${sectionName}-end -->`].join('\n');
+  return [`<!-- GTD:${sectionName}-start source:${sourceFile} -->`, content, `<!-- GTD:${sectionName}-end -->`].join('\n');
 }
 
 function updateSection(
@@ -111,8 +111,8 @@ function updateSection(
   sectionName: string,
   newContent: string,
 ): { content: string; action: string } {
-  const startMarker = `<!-- GSD:${sectionName}-start`;
-  const endMarker = `<!-- GSD:${sectionName}-end -->`;
+  const startMarker = `<!-- GTD:${sectionName}-start`;
+  const endMarker = `<!-- GTD:${sectionName}-end -->`;
   const startIdx = fileContent.indexOf(startMarker);
   const endIdx = fileContent.indexOf(endMarker);
   if (startIdx !== -1 && endIdx !== -1) {
@@ -233,7 +233,7 @@ function generateArchitectureSection(cwd: string): { content: string; source: st
 }
 
 function generateWorkflowSection(): { content: string; source: string; hasFallback: boolean } {
-  return { content: CLAUDE_MD_WORKFLOW_ENFORCEMENT, source: 'GSD defaults', hasFallback: false };
+  return { content: CLAUDE_MD_WORKFLOW_ENFORCEMENT, source: 'GTD defaults', hasFallback: false };
 }
 
 function extractSkillFrontmatter(content: string): { name: string; description: string } {
@@ -280,7 +280,7 @@ function generateSkillsSection(cwd: string): { content: string; source: string; 
 
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      if (entry.name.startsWith('gsd-')) continue;
+      if (entry.name.startsWith('gtd-')) continue;
 
       const skillMdPath = join(absDir, entry.name, 'SKILL.md');
       if (!existsSync(skillMdPath)) continue;
@@ -333,7 +333,7 @@ function cmdWriteProfileLogic(
   let analysisPath = options.input;
   if (!isAbsolute(analysisPath)) analysisPath = join(cwd, analysisPath);
   if (!existsSync(analysisPath)) {
-    throw new GSDError(`Analysis file not found: ${analysisPath}`, ErrorClassification.Validation);
+    throw new GTDError(`Analysis file not found: ${analysisPath}`, ErrorClassification.Validation);
   }
 
   let analysis: Record<string, unknown>;
@@ -341,14 +341,14 @@ function cmdWriteProfileLogic(
     analysis = JSON.parse(readFileSync(analysisPath, 'utf-8')) as Record<string, unknown>;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new GSDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
+    throw new GTDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
   }
 
   if (!analysis.dimensions || typeof analysis.dimensions !== 'object') {
-    throw new GSDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
+    throw new GTDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
   }
   if (!analysis.profile_version) {
-    throw new GSDError('Analysis JSON must contain "profile_version"', ErrorClassification.Validation);
+    throw new GTDError('Analysis JSON must contain "profile_version"', ErrorClassification.Validation);
   }
 
   let redactedCount = 0;
@@ -386,7 +386,7 @@ function cmdWriteProfileLogic(
 
   const templatePath = join(TEMPLATE_DIR, 'user-profile.md');
   if (!existsSync(templatePath)) {
-    throw new GSDError(`Template not found: ${templatePath}`, ErrorClassification.Validation);
+    throw new GTDError(`Template not found: ${templatePath}`, ErrorClassification.Validation);
   }
   let template = readFileSync(templatePath, 'utf-8');
 
@@ -507,7 +507,7 @@ export const writeProfile: QueryHandler = async (args, projectDir) => {
   const outputFlag = args.indexOf('--output');
   const outputPath = outputFlag >= 0 ? args[outputFlag + 1] : null;
   if (!inputPath) {
-    throw new GSDError('--input <analysis-json-path> is required', ErrorClassification.Validation);
+    throw new GTDError('--input <analysis-json-path> is required', ErrorClassification.Validation);
   }
   const data = cmdWriteProfileLogic(projectDir, { input: inputPath, output: outputPath ?? null });
   return { data };
@@ -522,13 +522,13 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
   const stackOpt = stackIdx >= 0 ? args[stackIdx + 1] : null;
 
   if (!analysisPath) {
-    throw new GSDError('--analysis <path> is required', ErrorClassification.Validation);
+    throw new GTDError('--analysis <path> is required', ErrorClassification.Validation);
   }
 
   let ap = analysisPath;
   if (!isAbsolute(ap)) ap = join(projectDir, ap);
   if (!existsSync(ap)) {
-    throw new GSDError(`Analysis file not found: ${ap}`, ErrorClassification.Validation);
+    throw new GTDError(`Analysis file not found: ${ap}`, ErrorClassification.Validation);
   }
 
   let analysis: Record<string, unknown>;
@@ -536,11 +536,11 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
     analysis = JSON.parse(readFileSync(ap, 'utf-8')) as Record<string, unknown>;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new GSDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
+    throw new GTDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
   }
 
   if (!analysis.dimensions || typeof analysis.dimensions !== 'object') {
-    throw new GSDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
+    throw new GTDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
   }
 
   const devPrefLabels: Record<string, string> = {
@@ -556,7 +556,7 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
 
   const templatePath = join(TEMPLATE_DIR, 'dev-preferences.md');
   if (!existsSync(templatePath)) {
-    throw new GSDError(`Template not found: ${templatePath}`, ErrorClassification.Validation);
+    throw new GTDError(`Template not found: ${templatePath}`, ErrorClassification.Validation);
   }
   let template = readFileSync(templatePath, 'utf-8');
 
@@ -591,7 +591,7 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
   let stackBlock: string;
   if (analysis.data_source === 'questionnaire') {
     stackBlock =
-      'Stack preferences not available (questionnaire-only profile). Run `/gsd-profile-user --refresh` with session data to populate.';
+      'Stack preferences not available (questionnaire-only profile). Run `/gtd-profile-user --refresh` with session data to populate.';
   } else if (stackOpt) {
     stackBlock = stackOpt;
   } else {
@@ -608,9 +608,9 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
     } catch {
       /* default runtime */
     }
-    const defaultSkillPath = resolveGlobalSkillMarkdownPath(runtime, 'gsd-dev-preferences');
+    const defaultSkillPath = resolveGlobalSkillMarkdownPath(runtime, 'gtd-dev-preferences');
     if (!defaultSkillPath) {
-      throw new GSDError(
+      throw new GTDError(
         `Runtime "${runtime}" does not use a skills directory; pass --output to choose a path explicitly.`,
         ErrorClassification.Validation,
       );
@@ -626,7 +626,7 @@ export const generateDevPreferences: QueryHandler = async (args, projectDir) => 
   return {
     data: {
       command_path: outPath,
-      command_name: '/gsd-dev-preferences',
+      command_name: '/gtd-dev-preferences',
       dimensions_included: dimensionsIncluded,
       source: String(analysis.data_source ?? 'session_analysis'),
     },
@@ -641,13 +641,13 @@ export const generateClaudeProfile: QueryHandler = async (args, projectDir) => {
   const globalFlag = args.includes('--global');
 
   if (!analysisPath) {
-    throw new GSDError('--analysis <path> is required', ErrorClassification.Validation);
+    throw new GTDError('--analysis <path> is required', ErrorClassification.Validation);
   }
 
   let ap = analysisPath;
   if (!isAbsolute(ap)) ap = join(projectDir, ap);
   if (!existsSync(ap)) {
-    throw new GSDError(`Analysis file not found: ${ap}`, ErrorClassification.Validation);
+    throw new GTDError(`Analysis file not found: ${ap}`, ErrorClassification.Validation);
   }
 
   let analysis: Record<string, unknown>;
@@ -655,11 +655,11 @@ export const generateClaudeProfile: QueryHandler = async (args, projectDir) => {
     analysis = JSON.parse(readFileSync(ap, 'utf-8')) as Record<string, unknown>;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new GSDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
+    throw new GTDError(`Failed to parse analysis JSON: ${msg}`, ErrorClassification.Validation);
   }
 
   if (!analysis.dimensions || typeof analysis.dimensions !== 'object') {
-    throw new GSDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
+    throw new GTDError('Analysis JSON must contain a "dimensions" object', ErrorClassification.Validation);
   }
 
   const profileLabels: Record<string, string> = {
@@ -701,10 +701,10 @@ export const generateClaudeProfile: QueryHandler = async (args, projectDir) => {
   }
 
   const sectionLines = [
-    '<!-- GSD:profile-start -->',
+    '<!-- GTD:profile-start -->',
     '## Developer Profile',
     '',
-    `> Generated by GSD from ${dataSource}. Run \`/gsd-profile-user --refresh\` to update.`,
+    `> Generated by GTD from ${dataSource}. Run \`/gtd-profile-user --refresh\` to update.`,
     '',
     '| Dimension | Rating | Confidence |',
     '|-----------|--------|------------|',
@@ -712,7 +712,7 @@ export const generateClaudeProfile: QueryHandler = async (args, projectDir) => {
     '',
     '**Directives:**',
     ...directiveLines,
-    '<!-- GSD:profile-end -->',
+    '<!-- GTD:profile-end -->',
   ];
 
   const sectionContent = sectionLines.join('\n');
@@ -740,8 +740,8 @@ export const generateClaudeProfile: QueryHandler = async (args, projectDir) => {
 
   if (existsSync(targetPath)) {
     let existingContent = readFileSync(targetPath, 'utf-8');
-    const startMarker = '<!-- GSD:profile-start -->';
-    const endMarker = '<!-- GSD:profile-end -->';
+    const startMarker = '<!-- GTD:profile-start -->';
+    const endMarker = '<!-- GTD:profile-end -->';
     const startIdx = existingContent.indexOf(startMarker);
     const endIdx = existingContent.indexOf(endMarker);
 
@@ -794,7 +794,7 @@ export const generateClaudeMd: QueryHandler = async (args, projectDir) => {
     conventions: '## Conventions',
     architecture: '## Architecture',
     skills: '## Project Skills',
-    workflow: '## GSD Workflow Enforcement',
+    workflow: '## GTD Workflow Enforcement',
   };
 
   const generated: Record<
@@ -866,7 +866,7 @@ export const generateClaudeMd: QueryHandler = async (args, projectDir) => {
       const heading = sectionHeadings[name];
       const body = `${heading}\n\n${gen.content}`;
       const fullSection = buildSection(name, gen.source, body);
-      const hasMarkers = fileContent.indexOf(`<!-- GSD:${name}-start`) !== -1;
+      const hasMarkers = fileContent.indexOf(`<!-- GTD:${name}-start`) !== -1;
 
       if (hasMarkers) {
         if (autoFlag) {
@@ -888,7 +888,7 @@ export const generateClaudeMd: QueryHandler = async (args, projectDir) => {
       }
     }
 
-    if (!autoFlag && fileContent.indexOf('<!-- GSD:profile-start') === -1) {
+    if (!autoFlag && fileContent.indexOf('<!-- GTD:profile-start') === -1) {
       fileContent = `${fileContent.trimEnd()}\n\n${CLAUDE_MD_PROFILE_PLACEHOLDER}\n`;
     }
 
@@ -897,8 +897,8 @@ export const generateClaudeMd: QueryHandler = async (args, projectDir) => {
 
   const finalContent = safeReadFile(outputPath);
   let profileStatus: string;
-  if (finalContent && finalContent.indexOf('<!-- GSD:profile-start') !== -1) {
-    if (action === 'created' || existingContent.indexOf('<!-- GSD:profile-start') === -1) {
+  if (finalContent && finalContent.indexOf('<!-- GTD:profile-start') !== -1) {
+    if (action === 'created' || existingContent.indexOf('<!-- GTD:profile-start') === -1) {
       profileStatus = 'placeholder_added';
     } else {
       profileStatus = 'exists';
@@ -912,7 +912,7 @@ export const generateClaudeMd: QueryHandler = async (args, projectDir) => {
   let message = `Generated ${genCount}/${totalManaged} sections.`;
   if (sectionsFallback.length > 0) message += ` Fallback: ${sectionsFallback.join(', ')}.`;
   if (sectionsSkipped.length > 0) message += ` Skipped (manually edited): ${sectionsSkipped.join(', ')}.`;
-  if (profileStatus === 'placeholder_added') message += ' Run /gsd-profile-user to unlock Developer Profile.';
+  if (profileStatus === 'placeholder_added') message += ' Run /gtd-profile-user to unlock Developer Profile.';
 
   return {
     data: {

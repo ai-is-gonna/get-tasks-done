@@ -5,7 +5,7 @@
  * hooks resolve correctly regardless of the shell's current working directory.
  *
  * The original bug: local install hook commands used bare relative paths like
- * `node .claude/hooks/gsd-context-monitor.js`. Claude Code persists the bash
+ * `node .claude/hooks/gtd-context-monitor.js`. Claude Code persists the bash
  * tool's cwd between calls, so a single `cd subdir && …` early in a session
  * permanently broke every hook for the rest of that session.
  *
@@ -19,7 +19,7 @@ const { describe, test, before } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
 
-const projection = require(path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'shell-command-projection.cjs'));
+const projection = require(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'shell-command-projection.cjs'));
 const { projectLocalHookPrefix, projectShellCommandText } = projection;
 
 describe('bug #1906: local hook commands use $CLAUDE_PROJECT_DIR', () => {
@@ -37,13 +37,13 @@ describe('bug #1906: local hook commands use $CLAUDE_PROJECT_DIR', () => {
     const prefix = projectLocalHookPrefix({ runtime: 'claude', dirName: '.claude' });
     const command = projectShellCommandText({
       runnerToken: '"/usr/local/bin/node"',
-      argTokens: [`${prefix}/hooks/gsd-context-monitor.js`],
+      argTokens: [`${prefix}/hooks/gtd-context-monitor.js`],
       runtime: 'claude',
       platform: 'linux',
     });
     assert.equal(
       command,
-      '"/usr/local/bin/node" "$CLAUDE_PROJECT_DIR"/.claude/hooks/gsd-context-monitor.js',
+      '"/usr/local/bin/node" "$CLAUDE_PROJECT_DIR"/.claude/hooks/gtd-context-monitor.js',
     );
   });
 });

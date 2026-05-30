@@ -1,5 +1,5 @@
 /**
- * Tests for gsd:plan-review-convergence command (#2306)
+ * Tests for gtd:plan-review-convergence command (#2306)
  *
  * Validates that the command source and workflow contain the key structural
  * elements required for correct cross-AI plan convergence loop behavior:
@@ -27,9 +27,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'plan-review-convergence.md');
-const WORKFLOW_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'plan-review-convergence.md');
-const SCHEMA_PATH = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'config-schema.cjs');
+const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gtd', 'plan-review-convergence.md');
+const WORKFLOW_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'plan-review-convergence.md');
+const SCHEMA_PATH = path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'config-schema.cjs');
 const CONFIG_DOC_PATH = path.join(__dirname, '..', 'docs', 'CONFIGURATION.md');
 
 // ─── Command source ────────────────────────────────────────────────────────
@@ -37,10 +37,10 @@ const CONFIG_DOC_PATH = path.join(__dirname, '..', 'docs', 'CONFIGURATION.md');
 describe('plan-review-convergence command source (#2306)', () => {
   const command = fs.readFileSync(COMMAND_PATH, 'utf8');
 
-  test('command name uses gsd: prefix (installer converts to gsd- on install)', () => {
+  test('command name uses gtd: prefix (installer converts to gtd- on install)', () => {
     assert.ok(
-      command.includes('name: gsd:plan-review-convergence'),
-      'command name must use gsd: prefix so installer converts it to gsd-plan-review-convergence'
+      command.includes('name: gtd:plan-review-convergence'),
+      'command name must use gtd: prefix so installer converts it to gtd-plan-review-convergence'
     );
   });
 
@@ -61,7 +61,7 @@ describe('plan-review-convergence command source (#2306)', () => {
 
   test('command references the workflow file via execution_context', () => {
     assert.ok(
-      command.includes('@$HOME/.claude/get-shit-done/workflows/plan-review-convergence.md'),
+      command.includes('@$HOME/.claude/get-tasks-done/workflows/plan-review-convergence.md'),
       'execution_context must reference the workflow file'
     );
   });
@@ -118,10 +118,10 @@ describe('plan-review-convergence command source (#2306)', () => {
 describe('plan-review-convergence workflow: initialization (#2306)', () => {
   const workflow = fs.readFileSync(WORKFLOW_PATH, 'utf8');
 
-  test('workflow calls gsd-tools.cjs init plan-phase for initialization', () => {
+  test('workflow calls gtd-tools.cjs init plan-phase for initialization', () => {
     assert.ok(
-      workflow.includes('gsd-tools.cjs') && workflow.includes('init') && workflow.includes('plan-phase'),
-      'workflow must initialize via gsd-tools.cjs init plan-phase'
+      workflow.includes('gtd-tools.cjs') && workflow.includes('init') && workflow.includes('plan-phase'),
+      'workflow must initialize via gtd-tools.cjs init plan-phase'
     );
   });
 
@@ -155,7 +155,7 @@ describe('plan-review-convergence workflow: config gate (#2306-v2)', () => {
   test('workflow exits with enable instructions when config key is false', () => {
     // Must tell the user how to enable the feature
     assert.ok(
-      workflow.includes('gsd config-set workflow.plan_review_convergence true') ||
+      workflow.includes('gtd config-set workflow.plan_review_convergence true') ||
       workflow.includes('config-set workflow.plan_review_convergence'),
       'workflow must show the user how to enable the feature when disabled (#2306-v2)'
     );
@@ -189,8 +189,8 @@ describe('plan-review-convergence workflow: initial planning gate (#2306)', () =
 
   test('workflow spawns isolated planning agent when no plans exist', () => {
     assert.ok(
-      workflow.includes('gsd-plan-phase'),
-      'workflow must spawn Agent → gsd-plan-phase when no plans exist'
+      workflow.includes('gtd-plan-phase'),
+      'workflow must spawn Agent → gtd-plan-phase when no plans exist'
     );
   });
 
@@ -209,8 +209,8 @@ describe('plan-review-convergence workflow: convergence loop (#2306)', () => {
 
   test('workflow spawns isolated review agent each cycle', () => {
     assert.ok(
-      workflow.includes('gsd-review'),
-      'workflow must spawn Agent → gsd-review each cycle'
+      workflow.includes('gtd-review'),
+      'workflow must spawn Agent → gtd-review each cycle'
     );
   });
 
@@ -246,15 +246,15 @@ describe('plan-review-convergence workflow: convergence loop (#2306)', () => {
     );
   });
 
-  test('review agent spawn forwards --ws via GSD_WS (symmetric with replan agent)', () => {
-    // Critical correctness bug: if GSD_WS is not forwarded to the review agent,
+  test('review agent spawn forwards --ws via GTD_WS (symmetric with replan agent)', () => {
+    // Critical correctness bug: if GTD_WS is not forwarded to the review agent,
     // the review reads from the wrong workspace while replanning reads from the correct one.
-    const reviewAgentBlock = workflow.match(/gsd-review['"`,\s][\s\S]{0,300}?GSD_WS/);
+    const reviewAgentBlock = workflow.match(/gtd-review['"`,\s][\s\S]{0,300}?GTD_WS/);
     assert.ok(
       reviewAgentBlock ||
-      (workflow.includes("'gsd-review'") && workflow.includes('{GSD_WS}') &&
-       workflow.indexOf('{GSD_WS}') < workflow.indexOf("'gsd-plan-phase'")),
-      'review agent spawn must forward {GSD_WS} — workspace flag must reach the reviewer (#2306-v2 --ws fix)'
+      (workflow.includes("'gtd-review'") && workflow.includes('{GTD_WS}') &&
+       workflow.indexOf('{GTD_WS}') < workflow.indexOf("'gtd-plan-phase'")),
+      'review agent spawn must forward {GTD_WS} — workspace flag must reach the reviewer (#2306-v2 --ws fix)'
     );
   });
 
@@ -270,14 +270,14 @@ describe('plan-review-convergence workflow: convergence loop (#2306)', () => {
   test('workflow updates STATE.md on convergence', () => {
     assert.ok(
       workflow.includes('planned-phase') || workflow.includes('state'),
-      'workflow must update STATE.md via gsd-tools.cjs when converged'
+      'workflow must update STATE.md via gtd-tools.cjs when converged'
     );
   });
 
   test('workflow spawns replan agent with --reviews flag', () => {
     assert.ok(
       workflow.includes('--reviews'),
-      'replan agent must pass --reviews so gsd-plan-phase incorporates review feedback'
+      'replan agent must pass --reviews so gtd-plan-phase incorporates review feedback'
     );
   });
 
@@ -480,12 +480,12 @@ describe('plan-review-convergence workflow: success criteria (#2306-v2)', () => 
 describe('plan-review-convergence config schema registration (#2306-v2)', () => {
   // After Cycle 5 (#3536), config-schema.cjs is a thin adapter sourcing from
   // the manifest. Use the runtime Set instead of text-parsing the source file.
-  const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
+  const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
   test('workflow.plan_review_convergence is registered in config-schema.cjs', () => {
     assert.ok(
       VALID_CONFIG_KEYS.has('workflow.plan_review_convergence'),
-      "workflow.plan_review_convergence must be registered in VALID_CONFIG_KEYS in config-schema.cjs so gsd config-set accepts it (#2306-v2)"
+      "workflow.plan_review_convergence must be registered in VALID_CONFIG_KEYS in config-schema.cjs so gtd config-set accepts it (#2306-v2)"
     );
   });
 });
@@ -542,26 +542,26 @@ describe('plan-review-convergence local model reviewer flags (#2306-local)', () 
 describe('plan-review-convergence local model config schema registration (#2306-local)', () => {
   // After Cycle 5 (#3536), config-schema.cjs is a thin adapter sourcing from
   // the manifest. Use the runtime Set instead of text-parsing the source file.
-  const { VALID_CONFIG_KEYS } = require('../get-shit-done/bin/lib/config-schema.cjs');
+  const { VALID_CONFIG_KEYS } = require('../get-tasks-done/bin/lib/config-schema.cjs');
 
   test('review.ollama_host is registered in config-schema.cjs', () => {
     assert.ok(
       VALID_CONFIG_KEYS.has('review.ollama_host'),
-      "review.ollama_host must be in VALID_CONFIG_KEYS so gsd config-set accepts it"
+      "review.ollama_host must be in VALID_CONFIG_KEYS so gtd config-set accepts it"
     );
   });
 
   test('review.lm_studio_host is registered in config-schema.cjs', () => {
     assert.ok(
       VALID_CONFIG_KEYS.has('review.lm_studio_host'),
-      "review.lm_studio_host must be in VALID_CONFIG_KEYS so gsd config-set accepts it"
+      "review.lm_studio_host must be in VALID_CONFIG_KEYS so gtd config-set accepts it"
     );
   });
 
   test('review.llama_cpp_host is registered in config-schema.cjs', () => {
     assert.ok(
       VALID_CONFIG_KEYS.has('review.llama_cpp_host'),
-      "review.llama_cpp_host must be in VALID_CONFIG_KEYS so gsd config-set accepts it"
+      "review.llama_cpp_host must be in VALID_CONFIG_KEYS so gtd config-set accepts it"
     );
   });
 });

@@ -13,9 +13,9 @@ const fs = require('fs');
 const path = require('path');
 
 const AGENTS = path.join(__dirname, '..', 'agents');
-const RESEARCHER = path.join(AGENTS, 'gsd-phase-researcher.md');
-const PLANNER = path.join(AGENTS, 'gsd-planner.md');
-const EXECUTOR = path.join(AGENTS, 'gsd-executor.md');
+const RESEARCHER = path.join(AGENTS, 'gtd-phase-researcher.md');
+const PLANNER = path.join(AGENTS, 'gtd-planner.md');
+const EXECUTOR = path.join(AGENTS, 'gtd-task-executor.md');
 
 function parseSections(md) {
   const lines = md.split('\n');
@@ -188,7 +188,7 @@ function readModel(filePath) {
   };
 }
 
-describe('gsd-phase-researcher.md — slopcheck invocation', () => {
+describe('gtd-phase-researcher.md — slopcheck invocation', () => {
   let model;
 
   before(() => {
@@ -232,7 +232,7 @@ describe('gsd-phase-researcher.md — slopcheck invocation', () => {
   });
 });
 
-describe('gsd-phase-researcher.md — Package Legitimacy Audit section in template', () => {
+describe('gtd-phase-researcher.md — Package Legitimacy Audit section in template', () => {
   let templateSections;
 
   before(() => {
@@ -277,7 +277,7 @@ describe('gsd-phase-researcher.md — Package Legitimacy Audit section in templa
   });
 });
 
-describe('gsd-phase-researcher.md — ecosystem-specific package verification', () => {
+describe('gtd-phase-researcher.md — ecosystem-specific package verification', () => {
   let model;
 
   before(() => {
@@ -293,7 +293,7 @@ describe('gsd-phase-researcher.md — ecosystem-specific package verification', 
   });
 });
 
-describe('gsd-phase-researcher.md — no npx --yes auto-download', () => {
+describe('gtd-phase-researcher.md — no npx --yes auto-download', () => {
   let model;
 
   before(() => {
@@ -311,7 +311,7 @@ describe('gsd-phase-researcher.md — no npx --yes auto-download', () => {
   });
 });
 
-describe('gsd-phase-researcher.md — WebSearch-origin package tagging', () => {
+describe('gtd-phase-researcher.md — WebSearch-origin package tagging', () => {
   let model;
 
   before(() => {
@@ -331,7 +331,7 @@ describe('gsd-phase-researcher.md — WebSearch-origin package tagging', () => {
   });
 });
 
-describe('gsd-planner.md — checkpoint gate for [ASSUMED]/[SUS] packages', () => {
+describe('gtd-planner.md — checkpoint gate for [ASSUMED]/[SUS] packages', () => {
   let model;
 
   before(() => {
@@ -369,7 +369,7 @@ describe('gsd-planner.md — checkpoint gate for [ASSUMED]/[SUS] packages', () =
   });
 });
 
-describe('gsd-planner.md — supply-chain row in threat_model template', () => {
+describe('gtd-planner.md — supply-chain row in threat_model template', () => {
   let planTemplate;
   let threatModelBlock;
 
@@ -396,7 +396,7 @@ describe('gsd-planner.md — supply-chain row in threat_model template', () => {
   });
 });
 
-describe('gsd-planner.md — no npx --yes auto-download', () => {
+describe('gtd-planner.md — no npx --yes auto-download', () => {
   test('does not invoke npx --yes inside a code block', () => {
     const model = readModel(PLANNER);
     const found = model.codeBlocks.some((block) => hasAllTokens(block, ['npx', '--yes']));
@@ -404,7 +404,7 @@ describe('gsd-planner.md — no npx --yes auto-download', () => {
   });
 });
 
-describe('gsd-executor.md — package installs excluded from RULE 3 auto-fix', () => {
+describe('gtd-task-executor.md — package installs excluded from RULE 3 auto-fix', () => {
   let model;
 
   before(() => {

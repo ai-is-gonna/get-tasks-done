@@ -3,7 +3,7 @@
 
 // Regression tests for bug #3127.
 //
-// state.begin-phase is non-idempotent: when execute-phase calls it on a phase
+// state.begin-phase is non-idempotent: when task orchestration calls it on a phase
 // that is already mid-flight (e.g. --wave N resume), the handler unconditionally
 // overwrites execution-progress fields with stale values from the last plan-phase run:
 //   - stopped_at / Last Activity Description reset to "context gathered; ready for plan-phase"
@@ -28,11 +28,11 @@ const ROOT = path.join(__dirname, '..');
 
 // Load the state.cjs module internals via the command router
 function requireStateCjs() {
-  return require(path.join(ROOT, 'get-shit-done', 'bin', 'lib', 'state.cjs'));
+  return require(path.join(ROOT, 'get-tasks-done', 'bin', 'lib', 'state.cjs'));
 }
 
 function makeTempPlanning(stateContent) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-3127-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-3127-'));
   const planningDir = path.join(dir, '.planning');
   fs.mkdirSync(planningDir, { recursive: true });
   fs.writeFileSync(path.join(planningDir, 'STATE.md'), stateContent, 'utf8');
@@ -40,7 +40,7 @@ function makeTempPlanning(stateContent) {
 }
 
 // A STATE.md that is mid-flight on Phase 5 (Plan 3 of 8 in progress)
-const MID_FLIGHT_STATE = `# GSD State
+const MID_FLIGHT_STATE = `# GTD State
 
 ## Configuration
 Current Phase: 5
@@ -67,7 +67,7 @@ stopped_at: Phase 5 Plan 02 SHIPPED — Wave 2 GREEN detailed narrative here; re
 `;
 
 // A STATE.md that is NOT yet executing (plan-phase just ran)
-const PRE_EXECUTE_STATE = `# GSD State
+const PRE_EXECUTE_STATE = `# GTD State
 
 ## Configuration
 Current Phase: 5

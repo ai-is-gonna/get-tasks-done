@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 /**
  * Bug #3017: Codex SessionStart hook still emits bare `node` after #3002.
@@ -37,7 +37,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 
 const INSTALL = require(path.join(__dirname, '..', 'bin', 'install.js'));
-const projection = require(path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'shell-command-projection.cjs'));
+const projection = require(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'shell-command-projection.cjs'));
 const { buildCodexHookBlock, rewriteLegacyCodexHookBlock, resolveNodeRunner } = INSTALL;
 const { projectCodexHookTomlCommand } = projection;
 
@@ -48,9 +48,9 @@ const { projectCodexHookTomlCommand } = projection;
  */
 function parseCodexHookBlock(block) {
   if (!block) return { ok: false, reason: 'empty' };
-  // The block always carries the "# GSD Hooks" marker, the AoT tables,
+  // The block always carries the "# GTD Hooks" marker, the AoT tables,
   // a type=command, and a command="<runner> <quoted-hook-path>" line.
-  const hasMarker = /^# GSD Hooks$/m.test(block);
+  const hasMarker = /^# GTD Hooks$/m.test(block);
   const hasEvent = /^\[\[hooks\.SessionStart\]\]$/m.test(block);
   const hasHandler = /^\[\[hooks\.SessionStart\.hooks\]\]$/m.test(block);
   const typeMatch = block.match(/^type\s*=\s*"([^"]+)"$/m);
@@ -92,12 +92,12 @@ describe('Bug #3017 / #3440: Codex hook projection seam', () => {
   test('projectCodexHookTomlCommand renders escaped command value from shared projection module', () => {
     const commandValue = projectCodexHookTomlCommand({
       absoluteRunner: '"/usr/local/bin/node"',
-      scriptPath: '/tmp/codex-test/.codex/hooks/gsd-check-update.js',
+      scriptPath: '/tmp/codex-test/.codex/hooks/gtd-check-update.js',
       platform: 'linux',
     });
     assert.equal(
       commandValue,
-      '\\"/usr/local/bin/node\\" \\"/tmp/codex-test/.codex/hooks/gsd-check-update.js\\"',
+      '\\"/usr/local/bin/node\\" \\"/tmp/codex-test/.codex/hooks/gtd-check-update.js\\"',
     );
   });
 });
@@ -114,7 +114,7 @@ describe('Bug #3017: buildCodexHookBlock emits absolute node runner', () => {
     const block = buildCodexHookBlock(targetDir, { absoluteRunner });
     const parsed = parseCodexHookBlock(block);
     assert.equal(parsed.ok, true, `parse failed: ${block}`);
-    assert.equal(parsed.hasMarker, true, '# GSD Hooks marker present');
+    assert.equal(parsed.hasMarker, true, '# GTD Hooks marker present');
     assert.equal(parsed.hasEvent, true, '[[hooks.SessionStart]] AoT entry present');
     assert.equal(parsed.hasHandler, true, '[[hooks.SessionStart.hooks]] handler entry present');
     assert.equal(parsed.type, 'command', 'handler is type=command');
@@ -124,7 +124,7 @@ describe('Bug #3017: buildCodexHookBlock emits absolute node runner', () => {
     // pass — e.g. '/Users/x/notnode/foo'.
     assert.equal(unescapeRunner(parsed.runner), expectedRunnerPath,
       `parsed runner must equal supplied absolute path: got ${parsed.runner}, want ${expectedRunnerPath}`);
-    assert.equal(parsed.hookPath, '/tmp/codex-test/.codex/hooks/gsd-check-update.js',
+    assert.equal(parsed.hookPath, '/tmp/codex-test/.codex/hooks/gtd-check-update.js',
       `hook path equality, got: ${parsed.hookPath}`);
   });
 
@@ -160,12 +160,12 @@ describe('Bug #3017: rewriteLegacyCodexHookBlock migrates bare-node on reinstall
       '[model]',
       'name = "o3"',
       '',
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
       '',
       '[[hooks.SessionStart.hooks]]',
       'type = "command"',
-      'command = "node /Users/x/.codex/hooks/gsd-check-update.js"',
+      'command = "node /Users/x/.codex/hooks/gtd-check-update.js"',
       '',
     ].join('\n');
     const expectedRunnerPath = '/usr/local/bin/node';
@@ -179,20 +179,20 @@ describe('Bug #3017: rewriteLegacyCodexHookBlock migrates bare-node on reinstall
     assert.equal(parsed.ok, true);
     assert.equal(unescapeRunner(parsed.runner), expectedRunnerPath,
       `runner must equal supplied absolute path: ${parsed.runner}`);
-    assert.equal(parsed.hookPath, '/Users/x/.codex/hooks/gsd-check-update.js');
-    // Non-GSD content (the [model] block) must be preserved verbatim.
+    assert.equal(parsed.hookPath, '/Users/x/.codex/hooks/gtd-check-update.js');
+    // Non-GTD content (the [model] block) must be preserved verbatim.
     assert.ok(result.content.includes('[model]'));
     assert.ok(result.content.includes('name = "o3"'));
   });
 
   test('decodes TOML-escaped quoted script paths before projection', () => {
     const before = [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
       '',
       '[[hooks.SessionStart.hooks]]',
       'type = "command"',
-      'command = "node \\"C:\\\\Users\\\\x\\\\.codex\\\\hooks\\\\gsd-check-update.js\\""',
+      'command = "node \\"C:\\\\Users\\\\x\\\\.codex\\\\hooks\\\\gtd-check-update.js\\""',
       '',
     ].join('\n');
     const runner = '"/usr/local/bin/node"';
@@ -202,25 +202,25 @@ describe('Bug #3017: rewriteLegacyCodexHookBlock migrates bare-node on reinstall
     assert.equal(parsed.ok, true, 'hook block must parse correctly');
     const expected = projectCodexHookTomlCommand({
       absoluteRunner: runner,
-      scriptPath: 'C:\\Users\\x\\.codex\\hooks\\gsd-check-update.js',
+      scriptPath: 'C:\\Users\\x\\.codex\\hooks\\gtd-check-update.js',
       platform: 'win32',
     });
     assert.equal(parsed.command, expected,
       'rewritten command must project from decoded Windows path (not TOML-escaped token text)');
     assert.equal(unescapeRunner(parsed.runner), '/usr/local/bin/node',
       'runner must equal supplied absolute path');
-    assert.equal(parsed.hookPath, 'C:/Users/x/.codex/hooks/gsd-check-update.js',
+    assert.equal(parsed.hookPath, 'C:/Users/x/.codex/hooks/gtd-check-update.js',
       'hook path must equal decoded Windows path after projection normalization');
   });
 
   test('does NOT touch a managed-hook entry that already uses an absolute runner', () => {
     const already = [
-      '# GSD Hooks',
+      '# GTD Hooks',
       '[[hooks.SessionStart]]',
       '',
       '[[hooks.SessionStart.hooks]]',
       'type = "command"',
-      'command = "\\"/usr/local/bin/node\\" /Users/x/.codex/hooks/gsd-check-update.js"',
+      'command = "\\"/usr/local/bin/node\\" /Users/x/.codex/hooks/gtd-check-update.js"',
       '',
     ].join('\n');
     const result = rewriteLegacyCodexHookBlock(already, '"/usr/local/bin/node"');
@@ -239,12 +239,12 @@ describe('Bug #3017: rewriteLegacyCodexHookBlock migrates bare-node on reinstall
     ].join('\n');
     const result = rewriteLegacyCodexHookBlock(userOwned, '"/usr/local/bin/node"');
     assert.equal(result.changed, false,
-      'user-authored hooks must be left alone; only managed gsd-* hooks are migrated');
+      'user-authored hooks must be left alone; only managed gtd-* hooks are migrated');
     assert.equal(result.content, userOwned);
   });
 
   test('returns content unchanged when absoluteRunner is null', () => {
-    const before = 'command = "node /path/to/gsd-check-update.js"';
+    const before = 'command = "node /path/to/gtd-check-update.js"';
     const result = rewriteLegacyCodexHookBlock(before, null);
     assert.equal(result.changed, false);
     assert.equal(result.content, before);

@@ -5,7 +5,7 @@
 // runtime loads — testing text content tests the deployed contract.
 
 /**
- * Tests for canonical artifact registry and gsd-health W019 lint (#2448).
+ * Tests for canonical artifact registry and gtd-health W019 lint (#2448).
  */
 
 const { test, describe } = require('node:test');
@@ -14,11 +14,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const { isCanonicalPlanningFile, CANONICAL_EXACT } = require('../get-shit-done/bin/lib/artifacts.cjs');
-const { cmdValidateHealth } = require('../get-shit-done/bin/lib/verify.cjs');
+const { isCanonicalPlanningFile, CANONICAL_EXACT } = require('../get-tasks-done/bin/lib/artifacts.cjs');
+const { cmdValidateHealth } = require('../get-tasks-done/bin/lib/verify.cjs');
 
 function makeTempProject(files = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2448-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2448-'));
   fs.mkdirSync(path.join(dir, '.planning', 'phases'), { recursive: true });
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(dir, rel);
@@ -47,7 +47,7 @@ describe('artifacts.cjs — isCanonicalPlanningFile', () => {
     assert.ok(isCanonicalPlanningFile('v2.3.1-MILESTONE-AUDIT.md'));
   });
 
-  test('returns true for RETROSPECTIVE.md (produced by /gsd-complete-milestone)', () => {
+  test('returns true for RETROSPECTIVE.md (produced by /gtd-complete-milestone)', () => {
     assert.strictEqual(isCanonicalPlanningFile('RETROSPECTIVE.md'), true);
   });
 
@@ -63,7 +63,7 @@ describe('artifacts.cjs — isCanonicalPlanningFile', () => {
   });
 });
 
-describe('gsd-health W019 — unrecognized .planning/ root files', () => {
+describe('gtd-health W019 — unrecognized .planning/ root files', () => {
   test('W019 fires for a non-canonical .md file at .planning/ root', () => {
     const dir = makeTempProject({
       ...BASE_FILES,
@@ -126,7 +126,7 @@ describe('gsd-health W019 — unrecognized .planning/ root files', () => {
 
   test('templates/README.md exists and documents W019', () => {
     const readme = fs.readFileSync(
-      path.join(__dirname, '../get-shit-done/templates/README.md'), 'utf-8'
+      path.join(__dirname, '../get-tasks-done/templates/README.md'), 'utf-8'
     );
     assert.ok(readme.includes('W019'), 'README.md documents W019');
     assert.ok(readme.includes('artifacts.cjs'), 'README.md references artifacts.cjs for adding new artifacts');

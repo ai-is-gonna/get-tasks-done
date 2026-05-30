@@ -23,14 +23,14 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 
-const gsdTools = path.resolve(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const gtdTools = path.resolve(__dirname, '..', 'get-tasks-done', 'bin', 'gtd-tools.cjs');
 
 describe('bug #2526: phase complete warns about unregistered REQ-IDs', () => {
   let tmpDir;
   let planningDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-2526-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-2526-'));
     planningDir = path.join(tmpDir, '.planning');
     fs.mkdirSync(planningDir, { recursive: true });
 
@@ -104,7 +104,7 @@ describe('bug #2526: phase complete warns about unregistered REQ-IDs', () => {
     let stdout = '';
     let stderr = '';
     try {
-      const result = execFileSync('node', [gsdTools, 'phase', 'complete', '1'], {
+      const result = execFileSync('node', [gtdTools, 'phase', 'complete', '1'], {
         cwd: tmpDir,
         timeout: 10000,
         encoding: 'utf-8',
@@ -181,7 +181,7 @@ describe('bug #2526: phase complete warns about unregistered REQ-IDs', () => {
     let stdout = '';
     let stderr = '';
     try {
-      const result = execFileSync('node', [gsdTools, 'phase', 'complete', '1'], {
+      const result = execFileSync('node', [gtdTools, 'phase', 'complete', '1'], {
         cwd: tmpDir,
         timeout: 10000,
         encoding: 'utf-8',
@@ -251,7 +251,7 @@ describe('bug #2526: phase complete warns about unregistered REQ-IDs', () => {
     let stdout = '';
     let stderr = '';
     try {
-      const result = execFileSync('node', [gsdTools, 'phase', 'complete', '1'], {
+      const result = execFileSync('node', [gtdTools, 'phase', 'complete', '1'], {
         cwd: tmpDir,
         timeout: 10000,
         encoding: 'utf-8',

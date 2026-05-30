@@ -1,6 +1,6 @@
 /**
  * Canonical commands exercised by `golden.integration.test.ts` (SDK dispatch vs
- * `gsd-tools.cjs` where applicable). Update when adding `describe` blocks there.
+ * `gtd-tools.cjs` where applicable). Update when adding `describe` blocks there.
  */
 
 export const GOLDEN_INTEGRATION_MAIN_FILE_CANONICALS: readonly string[] = [
@@ -13,7 +13,7 @@ export const GOLDEN_INTEGRATION_MAIN_FILE_CANONICALS: readonly string[] = [
   'frontmatter.get',
   'frontmatter.validate',
   'generate-slug',
-  'init.execute-phase',
+  'init.plan-phase',
   'init.plan-phase',
   'init.quick',
   'init.resume',

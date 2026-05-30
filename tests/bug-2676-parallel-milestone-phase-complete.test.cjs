@@ -1,6 +1,6 @@
 /**
  * Regression tests for bug #2676:
- *   `gsd-sdk query phase.complete <N>` returns is_last_phase: true
+ *   `gtd-sdk query phase.complete <N>` returns is_last_phase: true
  *   when the completed phase belongs to a milestone that is not the
  *   primary milestone recorded in STATE.md's `milestone:` field.
  *

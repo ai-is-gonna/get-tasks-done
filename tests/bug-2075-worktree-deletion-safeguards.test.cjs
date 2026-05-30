@@ -4,8 +4,8 @@
 // reclassify some entries as source-text-is-the-product during migration.
 
 /**
- * Regression tests for #2075: gsd-executor worktree merge systematically
- * deletes prior-wave committed files.
+ * Regression tests for #2075: task executor worktree isolation must not delete
+ * committed files from the integration branch.
  *
  * Three failure modes documented in issue #2075:
  *
@@ -13,20 +13,20 @@
  *   Executor agent runs `git clean` inside the worktree, removing files
  *   committed on the feature branch. git clean treats them as "untracked"
  *   from the worktree's perspective and deletes them. The executor then
- *   commits only its own deliverables; the subsequent merge brings the
+ *   commits only its own deliverables; downstream integration would bring the
  *   deletions onto the main branch.
  *
- * Failure Mode A (partially addressed in PR #1982):
- *   Worktree created from wrong branch base. Audit all worktree-spawning
- *   workflows for worktree_branch_check presence.
+ * Failure Mode A is now owned by workflows that still merge worktrees
+ * directly, such as quick.md. The task issue workflow creates isolated task
+ * branches and PRs instead of merging worker branches in-process.
  *
  * Failure Mode C:
  *   Stale content from wrong base overwrites shared files. Covered by
  *   the --hard reset in the worktree_branch_check.
  *
  * Defense-in-depth (from #1977):
- *   Post-commit deletion check: already in gsd-executor.md (--diff-filter=D).
- *   Pre-merge deletion check: already in execute-phase.md (--diff-filter=D).
+ *   Post-commit deletion check: already in gtd-task-executor.md (--diff-filter=D).
+ *   Task issue orchestration validates changed files before opening PRs.
  */
 
 'use strict';
@@ -36,15 +36,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const EXECUTOR_AGENT_PATH = path.join(__dirname, '..', 'agents', 'gsd-executor.md');
-const EXECUTE_PHASE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-phase.md');
-const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
-const DIAGNOSE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'diagnose-issues.md');
+const EXECUTOR_AGENT_PATH = path.join(__dirname, '..', 'agents', 'gtd-task-executor.md');
+const WORK_TASK_ISSUE_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'work-task-issue.md');
+const QUICK_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'quick.md');
+const DIAGNOSE_PATH = path.join(__dirname, '..', 'get-tasks-done', 'workflows', 'diagnose-issues.md');
 
 describe('bug-2075: worktree deletion safeguards', () => {
 
   describe('Failure Mode B: git clean prohibition in executor agent', () => {
-    test('gsd-executor.md explicitly prohibits git clean in worktree context', () => {
+    test('gtd-task-executor.md explicitly prohibits git clean in worktree context', () => {
       const content = fs.readFileSync(EXECUTOR_AGENT_PATH, 'utf-8');
 
       // Must have an explicit prohibition section mentioning git clean
@@ -65,17 +65,17 @@ describe('bug-2075: worktree deletion safeguards', () => {
 
       assert.ok(
         prohibitsGitClean,
-        'gsd-executor.md must explicitly prohibit git clean — running it inside a worktree deletes files committed on the feature branch (#2075 Failure Mode B)'
+        'gtd-task-executor.md must explicitly prohibit git clean — running it inside a worktree deletes files committed on the feature branch (#2075 Failure Mode B)'
       );
     });
 
-    test('gsd-executor.md git clean prohibition explains the worktree data-loss risk', () => {
+    test('gtd-task-executor.md git clean prohibition explains the worktree data-loss risk', () => {
       const content = fs.readFileSync(EXECUTOR_AGENT_PATH, 'utf-8');
 
       // The prohibition must be accompanied by a reason — not just a bare rule
       // Look for the word "worktree" near the git clean prohibition
       const gitCleanIdx = content.indexOf('git clean');
-      assert.ok(gitCleanIdx > -1, 'gsd-executor.md must mention git clean (to prohibit it)');
+      assert.ok(gitCleanIdx > -1, 'gtd-task-executor.md must mention git clean (to prohibit it)');
 
       // Extract context around the git clean mention (500 chars either side)
       const contextStart = Math.max(0, gitCleanIdx - 500);
@@ -90,30 +90,17 @@ describe('bug-2075: worktree deletion safeguards', () => {
 
       assert.ok(
         hasWorktreeRationale,
-        'The git clean prohibition in gsd-executor.md must explain why: git clean in a worktree deletes files that appear untracked but are committed on the feature branch'
+        'The git clean prohibition in gtd-task-executor.md must explain why: git clean in a worktree deletes files that appear untracked but are committed on the feature branch'
       );
     });
   });
 
   describe('Failure Mode A: worktree_branch_check audit across all worktree-spawning workflows', () => {
-    test('execute-phase.md has worktree_branch_check block with --hard reset', () => {
-      const content = fs.readFileSync(EXECUTE_PHASE_PATH, 'utf-8');
-
-      const blockMatch = content.match(/<worktree_branch_check>([\s\S]*?)<\/worktree_branch_check>/);
-      assert.ok(
-        blockMatch,
-        'execute-phase.md must contain a <worktree_branch_check> block'
-      );
-
-      const block = blockMatch[1];
-      assert.ok(
-        block.includes('reset --hard'),
-        'execute-phase.md worktree_branch_check must use git reset --hard (not --soft)'
-      );
-      assert.ok(
-        !block.includes('reset --soft'),
-        'execute-phase.md worktree_branch_check must not use git reset --soft'
-      );
+    test('work-task-issue.md delegates branch safety to isolated task worktrees and PRs', () => {
+      const content = fs.readFileSync(WORK_TASK_ISSUE_PATH, 'utf-8');
+      assert.ok(content.includes('isolated task worktree'));
+      assert.ok(content.includes('task branch'));
+      assert.ok(content.includes('ready PR'));
     });
 
     test('quick.md has worktree_branch_check block with --hard reset', () => {
@@ -152,51 +139,28 @@ describe('bug-2075: worktree deletion safeguards', () => {
   });
 
   describe('Defense-in-depth: post-commit deletion check (from #1977)', () => {
-    test('gsd-executor.md task_commit_protocol has post-commit deletion verification', () => {
+    test('gtd-task-executor.md task_commit_protocol has post-commit deletion verification', () => {
       const content = fs.readFileSync(EXECUTOR_AGENT_PATH, 'utf-8');
 
       assert.ok(
         content.includes('--diff-filter=D'),
-        'gsd-executor.md must include --diff-filter=D to detect accidental file deletions after each commit'
+        'gtd-task-executor.md must include --diff-filter=D to detect accidental file deletions after each commit'
       );
 
       // Must have a warning about unexpected deletions
       assert.ok(
         content.includes('DELETIONS') || content.includes('WARNING'),
-        'gsd-executor.md must emit a warning when a commit includes unexpected file deletions'
+        'gtd-task-executor.md must emit a warning when a commit includes unexpected file deletions'
       );
     });
   });
 
   describe('Defense-in-depth: pre-merge deletion check (from #1977)', () => {
-    test('execute-phase.md worktree merge section has pre-merge deletion check', () => {
-      const content = fs.readFileSync(EXECUTE_PHASE_PATH, 'utf-8');
-
-      const worktreeCleanupStart = content.indexOf('Worktree cleanup');
-      assert.ok(
-        worktreeCleanupStart > -1,
-        'execute-phase.md must have a worktree cleanup section'
-      );
-
-      const cleanupSection = content.slice(worktreeCleanupStart);
-
-      assert.ok(
-        cleanupSection.includes('--diff-filter=D'),
-        'execute-phase.md worktree cleanup must use --diff-filter=D to block deletion-introducing merges'
-      );
-
-      // Deletion check must appear before git merge
-      const deletionCheckIdx = cleanupSection.indexOf('--diff-filter=D');
-      const gitMergeIdx = cleanupSection.indexOf('git merge');
-      assert.ok(
-        deletionCheckIdx < gitMergeIdx,
-        '--diff-filter=D deletion check must appear before git merge in the worktree cleanup section'
-      );
-
-      assert.ok(
-        cleanupSection.includes('BLOCKED') || cleanupSection.includes('deletion'),
-        'execute-phase.md must block or warn when the worktree branch contains file deletions'
-      );
+    test('work-task-issue.md validates executor changes before PR creation', () => {
+      const content = fs.readFileSync(WORK_TASK_ISSUE_PATH, 'utf-8');
+      assert.ok(content.includes('Validate changed files'));
+      assert.ok(content.includes('validation contract'));
+      assert.ok(!content.includes('git merge'));
     });
 
     test('quick.md worktree merge section has pre-merge deletion check', () => {

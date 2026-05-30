@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - MODEL_ALIAS_MAP
+ * GTD Tools Tests - MODEL_ALIAS_MAP
  *
  * Verifies that model aliases map to current Claude model IDs.
  * Regression test for #1690: aliases were pointing to outdated model versions.
@@ -10,7 +10,7 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { MODEL_ALIAS_MAP } = require('../get-shit-done/bin/lib/core.cjs');
+const { MODEL_ALIAS_MAP } = require('../get-tasks-done/bin/lib/core.cjs');
 
 describe('MODEL_ALIAS_MAP (#1690 regression)', () => {
   test('opus maps to claude-opus-4-7', () => {

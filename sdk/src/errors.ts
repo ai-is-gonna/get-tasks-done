@@ -1,5 +1,5 @@
 /**
- * Error classification system for the GSD SDK.
+ * Error classification system for the GTD SDK.
  *
  * Provides a taxonomy of error types with semantic exit codes,
  * enabling CLI consumers and agents to distinguish between
@@ -8,9 +8,9 @@
  *
  * @example
  * ```typescript
- * import { GSDError, ErrorClassification, exitCodeFor } from './errors.js';
+ * import { GTDError, ErrorClassification, exitCodeFor } from './errors.js';
  *
- * throw new GSDError('missing required arg', ErrorClassification.Validation);
+ * throw new GTDError('missing required arg', ErrorClassification.Validation);
  * // CLI catch handler: process.exitCode = exitCodeFor(err.classification); // 10
  * ```
  */
@@ -32,16 +32,16 @@ export enum ErrorClassification {
   Interruption = 'interruption',
 }
 
-// ─── GSDError ───────────────────────────────────────────────────────────────
+// ─── GTDError ───────────────────────────────────────────────────────────────
 
 /**
- * Base error class for the GSD SDK with classification support.
+ * Base error class for the GTD SDK with classification support.
  *
  * @param message - Human-readable error description
  * @param classification - Error category for exit code mapping
  */
-export class GSDError extends Error {
-  readonly name = 'GSDError';
+export class GTDError extends Error {
+  readonly name = 'GTDError';
   readonly classification: ErrorClassification;
 
   constructor(message: string, classification: ErrorClassification) {

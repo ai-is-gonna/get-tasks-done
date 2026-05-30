@@ -16,13 +16,13 @@ const { spawnSync } = require('child_process');
 const {
   MINIMAL_SKILL_ALLOWLIST,
   PROFILES,
-} = require('../get-shit-done/bin/lib/install-profiles.cjs');
+} = require('../get-tasks-done/bin/lib/install-profiles.cjs');
 
 const INSTALL_SCRIPT = path.join(__dirname, '..', 'bin', 'install.js');
-const MANIFEST_NAME = 'gsd-file-manifest.json';
+const MANIFEST_NAME = 'gtd-file-manifest.json';
 
 describe('install-minimal-backcompat: PROFILES.core matches MINIMAL_SKILL_ALLOWLIST', () => {
-  test('PROFILES.core contains the same 7 skills as MINIMAL_SKILL_ALLOWLIST', () => {
+  test('PROFILES.core contains the same skills as MINIMAL_SKILL_ALLOWLIST', () => {
     assert.deepStrictEqual(
       [...PROFILES.core].sort(),
       [...MINIMAL_SKILL_ALLOWLIST].sort(),
@@ -33,7 +33,7 @@ describe('install-minimal-backcompat: PROFILES.core matches MINIMAL_SKILL_ALLOWL
 
 describe('install-minimal-backcompat: --minimal and --profile=core produce the same manifest skill count', () => {
   function installAndGetManifest(extraArgs) {
-    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-backcompat-'));
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-backcompat-'));
     try {
       spawnSync(
         process.execPath,
@@ -49,7 +49,7 @@ describe('install-minimal-backcompat: --minimal and --profile=core produce the s
           .map((k) => k.split('/')[1]),
       ).size;
       // Read marker
-      const markerPath = path.join(targetDir, '.gsd-profile');
+      const markerPath = path.join(targetDir, '.gtd-profile');
       const profileMarker = fs.existsSync(markerPath)
         ? fs.readFileSync(markerPath, 'utf8').trim()
         : null;
@@ -59,28 +59,28 @@ describe('install-minimal-backcompat: --minimal and --profile=core produce the s
     }
   }
 
-  test('--minimal produces mode "minimal" with exactly 7 skills', () => {
+  test('--minimal produces mode "minimal" with the core task-flow skills', () => {
     const r = installAndGetManifest(['--minimal']);
     assert.strictEqual(r.mode, 'minimal');
-    assert.strictEqual(r.skillCount, 7);
+    assert.strictEqual(r.skillCount, MINIMAL_SKILL_ALLOWLIST.length);
   });
 
-  test('--minimal writes .gsd-profile marker with "core"', () => {
+  test('--minimal writes .gtd-profile marker with "core"', () => {
     const r = installAndGetManifest(['--minimal']);
     assert.strictEqual(r.profileMarker, 'core', '--minimal should write profile marker "core"');
   });
 
-  test('default (no flags) writes .gsd-profile marker with "full"', () => {
+  test('default (no flags) writes .gtd-profile marker with "full"', () => {
     const r = installAndGetManifest([]);
     assert.strictEqual(r.profileMarker, 'full', 'default install should write profile marker "full"');
   });
 
-  test('--profile=core writes .gsd-profile marker with "core"', () => {
+  test('--profile=core writes .gtd-profile marker with "core"', () => {
     const r = installAndGetManifest(['--profile=core']);
     assert.strictEqual(r.profileMarker, 'core', '--profile=core should write profile marker "core"');
   });
 
-  test('--profile=standard writes .gsd-profile marker with "standard"', () => {
+  test('--profile=standard writes .gtd-profile marker with "standard"', () => {
     const r = installAndGetManifest(['--profile=standard']);
     assert.strictEqual(r.profileMarker, 'standard', '--profile=standard should write profile marker "standard"');
   });

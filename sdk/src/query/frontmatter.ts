@@ -1,7 +1,7 @@
 /**
  * Frontmatter parser and query handler.
  *
- * Ported from get-shit-done/bin/lib/frontmatter.cjs and state.cjs.
+ * Ported from get-tasks-done/bin/lib/frontmatter.cjs and state.cjs.
  * Provides YAML frontmatter extraction from .planning/ artifacts.
  *
  * @example
@@ -12,12 +12,12 @@
  * // { phase: '10', plan: '01' }
  *
  * const result = await frontmatterGet(['STATE.md'], '/project');
- * // { data: { gsd_state_version: '1.0', milestone: 'v3.0', ... } }
+ * // { data: { gtd_state_version: '1.0', milestone: 'v3.0', ... } }
  * ```
  */
 
 import { readFile } from 'node:fs/promises';
-import { GSDError, ErrorClassification } from '../errors.js';
+import { GTDError, ErrorClassification } from '../errors.js';
 import type { QueryHandler } from './utils.js';
 import { escapeRegex, resolvePathUnderProject } from './helpers.js';
 
@@ -62,7 +62,7 @@ export function splitInlineArray(body: string): string[] {
 // ─── parseFrontmatterYamlLines ───────────────────────────────────────────────
 
 /**
- * Parse YAML frontmatter body (between `---` fences) using the GSD stack parser.
+ * Parse YAML frontmatter body (between `---` fences) using the GTD stack parser.
  * Shared by {@link extractFrontmatterLeading} and {@link extractFrontmatter}.
  */
 function parseFrontmatterYamlLines(yaml: string): Record<string, unknown> {
@@ -155,8 +155,8 @@ function parseFrontmatterYamlLines(yaml: string): Record<string, unknown> {
 // ─── extractFrontmatterLeading ──────────────────────────────────────────────
 
 /**
- * First leading frontmatter block only — parity with `get-shit-done/bin/lib/frontmatter.cjs`
- * `extractFrontmatter` (used by `summary-extract` and `history-digest` in gsd-tools.cjs).
+ * First leading frontmatter block only — parity with `get-tasks-done/bin/lib/frontmatter.cjs`
+ * `extractFrontmatter` (used by `summary-extract` and `history-digest` in gtd-tools.cjs).
  */
 export function extractFrontmatterLeading(content: string): Record<string, unknown> {
   const match = content.match(/^---\r?\n([\s\S]+?)\r?\n---/);
@@ -223,7 +223,7 @@ export interface MustHavesBlockResult {
 /**
  * Parse a named block from must_haves in raw frontmatter YAML.
  *
- * Port of `parseMustHavesBlock` from `get-shit-done/bin/lib/frontmatter.cjs` lines 195-301.
+ * Port of `parseMustHavesBlock` from `get-tasks-done/bin/lib/frontmatter.cjs` lines 195-301.
  * Handles 3-level nesting: `must_haves > blockName > [{key: value, ...}]`.
  * Supports simple string items, structured objects with key-value pairs,
  * and nested arrays within items.
@@ -355,19 +355,19 @@ export function parseMustHavesBlock(content: string, blockName: string): MustHav
 export const frontmatterGet: QueryHandler = async (args, projectDir) => {
   const filePath = args[0];
   if (!filePath) {
-    throw new GSDError('file path required', ErrorClassification.Validation);
+    throw new GTDError('file path required', ErrorClassification.Validation);
   }
 
   // Path traversal guard: reject null bytes
   if (filePath.includes('\0')) {
-    throw new GSDError('file path contains null bytes', ErrorClassification.Validation);
+    throw new GTDError('file path contains null bytes', ErrorClassification.Validation);
   }
 
   let fullPath: string;
   try {
     fullPath = await resolvePathUnderProject(projectDir, filePath);
   } catch (err) {
-    if (err instanceof GSDError) {
+    if (err instanceof GTDError) {
       return { data: { error: err.message, path: filePath } };
     }
     throw err;

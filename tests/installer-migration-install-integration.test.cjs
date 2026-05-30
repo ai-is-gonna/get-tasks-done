@@ -7,7 +7,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GTD_TEST_MODE = '1';
 
 const { describe, test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
@@ -32,7 +32,7 @@ const RUNTIME_INSTALL_CONTRACTS = {
   codex: { surface: 'flat-skills', settings: false, packageJson: false, codexConfig: true },
   copilot: { surface: 'flat-skills', settings: false, packageJson: false, copilotInstructions: true },
   cursor: { surface: 'flat-skills', settings: false, packageJson: false },
-  gemini: { surface: 'commands-gsd', settings: true, packageJson: true },
+  gemini: { surface: 'commands-gtd', settings: true, packageJson: true },
   hermes: { surface: 'hermes-skills', settings: true, packageJson: true },
   kilo: { surface: 'flat-command', settings: false, packageJson: true },
   opencode: { surface: 'flat-command', settings: true, packageJson: true },
@@ -53,7 +53,7 @@ function writeFile(root, relPath, content) {
 
 function writeManifest(root, files) {
   fs.writeFileSync(
-    path.join(root, 'gsd-file-manifest.json'),
+    path.join(root, 'gtd-file-manifest.json'),
     JSON.stringify({
       version: '1.49.0',
       timestamp: '2026-05-10T00:00:00.000Z',
@@ -139,7 +139,7 @@ function stripAnsi(value) {
 function runInstallerCli(runtime, targetDir, options = {}) {
   const { minimal = true } = options;
   const env = { ...process.env };
-  delete env.GSD_TEST_MODE;
+  delete env.GTD_TEST_MODE;
   env.HOME = path.join(path.dirname(targetDir), 'home');
   env.USERPROFILE = env.HOME;
 
@@ -167,18 +167,18 @@ function listDirNames(root, relPath) {
   return fs.readdirSync(dir, { withFileTypes: true }).map((entry) => entry.name);
 }
 
-function assertHasGsdDirectory(root, relPath) {
+function assertHasGtdDirectory(root, relPath) {
   assert.ok(
-    listDirNames(root, relPath).some((name) => name.startsWith('gsd-')),
-    `${relPath} should contain generated GSD entries`
+    listDirNames(root, relPath).some((name) => name.startsWith('gtd-')),
+    `${relPath} should contain generated GTD entries`
   );
 }
 
-function assertNoGsdDirectoryEntries(root, relPath) {
+function assertNoGtdDirectoryEntries(root, relPath) {
   assert.equal(
-    listDirNames(root, relPath).some((name) => name.startsWith('gsd-')),
+    listDirNames(root, relPath).some((name) => name.startsWith('gtd-')),
     false,
-    `${relPath} should not contain generated GSD entries`
+    `${relPath} should not contain generated GTD entries`
   );
 }
 
@@ -187,59 +187,59 @@ function assertFreshInstallContract(runtime, targetDir) {
   assert.ok(contract, `missing runtime install contract for ${runtime}`);
 
   assert.equal(
-    fs.readFileSync(path.join(targetDir, 'get-shit-done', 'VERSION'), 'utf8'),
+    fs.readFileSync(path.join(targetDir, 'get-tasks-done', 'VERSION'), 'utf8'),
     pkg.version,
     `${runtime} should install the package VERSION`
   );
   assert.ok(
-    fs.existsSync(path.join(targetDir, 'get-shit-done', 'bin', 'gsd-tools.cjs')),
-    `${runtime} should install the GSD tool payload`
+    fs.existsSync(path.join(targetDir, 'get-tasks-done', 'bin', 'gtd-tools.cjs')),
+    `${runtime} should install the GTD tool payload`
   );
   assert.ok(
-    fs.existsSync(path.join(targetDir, 'gsd-file-manifest.json')),
+    fs.existsSync(path.join(targetDir, 'gtd-file-manifest.json')),
     `${runtime} should write the install manifest`
   );
 
-  const manifest = JSON.parse(fs.readFileSync(path.join(targetDir, 'gsd-file-manifest.json'), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(targetDir, 'gtd-file-manifest.json'), 'utf8'));
   assert.equal(manifest.version, pkg.version, `${runtime} manifest should record the package version`);
   assert.equal(manifest.mode, 'full', `${runtime} manifest should record a full install`);
   assert.ok(
-    manifest.files['get-shit-done/VERSION'],
+    manifest.files['get-tasks-done/VERSION'],
     `${runtime} manifest should track the installed VERSION file`
   );
 
   if (contract.surface === 'flat-skills') {
-    // Pre-#3562: codex was special-cased to expect zero gsd-* skill dirs
+    // Pre-#3562: codex was special-cased to expect zero gtd-* skill dirs
     // (assumption: Codex auto-discovers from workflows). That assumption
     // does not hold for Codex CLI 0.130.0 — fresh installs now materialize
     // the same flat-skills surface as the other runtimes.
-    assertHasGsdDirectory(targetDir, 'skills');
+    assertHasGtdDirectory(targetDir, 'skills');
   } else if (contract.surface === 'hermes-skills') {
-    assertHasGsdDirectory(targetDir, path.join('skills', 'gsd'));
+    assertHasGtdDirectory(targetDir, path.join('skills', 'gtd'));
     assert.ok(
-      fs.existsSync(path.join(targetDir, 'skills', 'gsd', 'DESCRIPTION.md')),
-      'Hermes should install the nested GSD category description'
+      fs.existsSync(path.join(targetDir, 'skills', 'gtd', 'DESCRIPTION.md')),
+      'Hermes should install the nested GTD category description'
     );
   } else if (contract.surface === 'flat-command') {
     assert.ok(
-      listDirNames(targetDir, 'command').some((name) => name.startsWith('gsd-') && name.endsWith('.md')),
+      listDirNames(targetDir, 'command').some((name) => name.startsWith('gtd-') && name.endsWith('.md')),
       `${runtime} should install flattened command markdown files`
     );
-  } else if (contract.surface === 'commands-gsd') {
+  } else if (contract.surface === 'commands-gtd') {
     assert.ok(
-      listDirNames(targetDir, path.join('commands', 'gsd')).length > 0,
-      `${runtime} should install commands/gsd entries`
+      listDirNames(targetDir, path.join('commands', 'gtd')).length > 0,
+      `${runtime} should install commands/gtd entries`
     );
   } else if (contract.surface === 'clinerules') {
     assert.match(
       fs.readFileSync(path.join(targetDir, '.clinerules'), 'utf8'),
-      /GSD workflows live in `get-shit-done\/workflows\/`/,
+      /GTD workflows live in `get-tasks-done\/workflows\/`/,
       'Cline should install root .clinerules guidance'
     );
   }
 
   assert.ok(
-    listDirNames(targetDir, 'agents').some((name) => name.startsWith('gsd-')),
+    listDirNames(targetDir, 'agents').some((name) => name.startsWith('gtd-')),
     `${runtime} full install should install agents`
   );
 
@@ -257,15 +257,15 @@ function assertFreshInstallContract(runtime, targetDir) {
   if (contract.codexConfig) {
     assert.match(
       fs.readFileSync(path.join(targetDir, 'config.toml'), 'utf8'),
-      /GSD Agent Configuration/,
-      'Codex should install config.toml with the GSD marker'
+      /GTD Agent Configuration/,
+      'Codex should install config.toml with the GTD marker'
     );
   }
 
   if (contract.copilotInstructions) {
     assert.match(
       fs.readFileSync(path.join(targetDir, 'copilot-instructions.md'), 'utf8'),
-      /GSD Configuration/,
+      /GTD Configuration/,
       'Copilot should install managed copilot instructions'
     );
   }
@@ -276,7 +276,7 @@ describe('installer migration install integration', { concurrency: false }, () =
   let codexHome;
 
   beforeEach(() => {
-    tmpRoot = createTempDir('gsd-install-migrations-');
+    tmpRoot = createTempDir('gtd-install-migrations-');
     codexHome = path.join(tmpRoot, '.codex');
     fs.mkdirSync(codexHome, { recursive: true });
   });
@@ -299,14 +299,14 @@ describe('installer migration install integration', { concurrency: false }, () =
     assert.match(plainOutput, /Installer migrations/);
     assert.match(plainOutput, /removed\s+hooks\/statusline\.js/);
     assert.ok(
-      plainOutput.indexOf('Installer migrations') < plainOutput.indexOf('Installed get-shit-done'),
+      plainOutput.indexOf('Installer migrations') < plainOutput.indexOf('Installed get-tasks-done'),
       'migration report should appear before package materialization'
     );
     assert.equal(fs.existsSync(path.join(codexHome, 'hooks/statusline.js')), false);
   });
 
   test('blocks install before materialization when baseline needs explicit user choice', () => {
-    writeFile(codexHome, 'hooks/gsd-retired-hook.txt', 'old gsd hook\n');
+    writeFile(codexHome, 'hooks/gtd-retired-hook.txt', 'old gtd hook\n');
 
     assert.throws(
       () => captureConsole(() =>
@@ -315,9 +315,9 @@ describe('installer migration install integration', { concurrency: false }, () =
       /installer migration blocked/
     );
 
-    assert.equal(fs.readFileSync(path.join(codexHome, 'hooks/gsd-retired-hook.txt'), 'utf8'), 'old gsd hook\n');
+    assert.equal(fs.readFileSync(path.join(codexHome, 'hooks/gtd-retired-hook.txt'), 'utf8'), 'old gtd hook\n');
     assert.equal(fs.existsSync(path.join(codexHome, 'skills')), false);
-    assert.equal(fs.existsSync(path.join(codexHome, 'get-shit-done', 'VERSION')), false);
+    assert.equal(fs.existsSync(path.join(codexHome, 'get-tasks-done', 'VERSION')), false);
   });
 
   test('rolls back applied migrations when package materialization fails for non-Codex installs', () => {
@@ -331,7 +331,7 @@ describe('installer migration install integration', { concurrency: false }, () =
     assert.throws(
       () => captureConsole(() =>
         withEnv('CLAUDE_CONFIG_DIR', claudeHome, () =>
-          withWriteFailure(path.join(claudeHome, 'get-shit-done', 'VERSION'), () => install(true, 'claude'))
+          withWriteFailure(path.join(claudeHome, 'get-tasks-done', 'VERSION'), () => install(true, 'claude'))
         )
       ),
       /injected write failure for VERSION/
@@ -341,7 +341,7 @@ describe('installer migration install integration', { concurrency: false }, () =
       fs.readFileSync(path.join(claudeHome, 'hooks/statusline.js'), 'utf8'),
       'legacy managed hook\n'
     );
-    assert.equal(fs.existsSync(path.join(claudeHome, 'gsd-install-state.json')), false);
+    assert.equal(fs.existsSync(path.join(claudeHome, 'gtd-install-state.json')), false);
   });
 
   test('rolls back applied migrations when multi-runtime finalization fails', () => {
@@ -369,7 +369,7 @@ describe('installer migration install integration', { concurrency: false }, () =
       fs.readFileSync(path.join(claudeHome, 'hooks/statusline.js'), 'utf8'),
       'legacy managed hook\n'
     );
-    assert.equal(fs.existsSync(path.join(claudeHome, 'gsd-install-state.json')), false);
+    assert.equal(fs.existsSync(path.join(claudeHome, 'gtd-install-state.json')), false);
   });
 
   test('rolls back completed runtime migrations when a later runtime install fails', () => {
@@ -389,7 +389,7 @@ describe('installer migration install integration', { concurrency: false }, () =
       () => captureConsole(() =>
         withEnv('CLAUDE_CONFIG_DIR', claudeHome, () =>
           withEnv('CODEX_HOME', codexHome, () =>
-            withWriteFailure(path.join(codexHome, 'get-shit-done', 'VERSION'), () =>
+            withWriteFailure(path.join(codexHome, 'get-tasks-done', 'VERSION'), () =>
               installModule.installAllRuntimes(['claude', 'codex'], true, false)
             )
           )
@@ -402,12 +402,12 @@ describe('installer migration install integration', { concurrency: false }, () =
       fs.readFileSync(path.join(claudeHome, 'hooks/statusline.js'), 'utf8'),
       'legacy managed hook\n'
     );
-    assert.equal(fs.existsSync(path.join(claudeHome, 'gsd-install-state.json')), false);
+    assert.equal(fs.existsSync(path.join(claudeHome, 'gtd-install-state.json')), false);
     assert.equal(
       fs.readFileSync(path.join(codexHome, 'hooks/statusline.js'), 'utf8'),
       'legacy managed hook\n'
     );
-    assert.equal(fs.existsSync(path.join(codexHome, 'gsd-install-state.json')), false);
+    assert.equal(fs.existsSync(path.join(codexHome, 'gtd-install-state.json')), false);
   });
 
   for (const runtime of SUPPORTED_RUNTIMES) {
@@ -426,11 +426,11 @@ describe('installer migration install integration', { concurrency: false }, () =
       assert.match(output, /Installing for /);
       assert.match(output, /Installer migrations/);
       assert.match(output, /removed\s+hooks\/statusline\.js/);
-      assert.match(output, /Installed get-shit-done/);
+      assert.match(output, /Installed get-tasks-done/);
       assert.match(output, /Done!/);
       assert.equal(fs.existsSync(path.join(targetDir, 'hooks/statusline.js')), false);
 
-      const installState = JSON.parse(fs.readFileSync(path.join(targetDir, 'gsd-install-state.json'), 'utf8'));
+      const installState = JSON.parse(fs.readFileSync(path.join(targetDir, 'gtd-install-state.json'), 'utf8'));
       assert.ok(
         installState.appliedMigrations.some((entry) => entry.id === '2026-05-11-legacy-orphan-files'),
         `${runtime} should track the applied cleanup migration in install state`
@@ -453,30 +453,30 @@ describe('installer migration install integration', { concurrency: false }, () =
       assert.match(output, /Installer migrations/);
       assert.match(output, /removed\s+hooks\/statusline\.js/);
       assert.equal(fs.existsSync(path.join(targetDir, 'hooks/statusline.js')), false);
-      const installState = JSON.parse(fs.readFileSync(path.join(targetDir, 'gsd-install-state.json'), 'utf8'));
+      const installState = JSON.parse(fs.readFileSync(path.join(targetDir, 'gtd-install-state.json'), 'utf8'));
       assert.ok(
         installState.appliedMigrations.some((entry) => entry.id === '2026-05-11-legacy-orphan-files'),
         'successful install should write install state for the applied cleanup migration'
       );
     });
 
-    test(`blocks ambiguous GSD-looking user-choice artifacts for ${runtime}`, () => {
+    test(`blocks ambiguous GTD-looking user-choice artifacts for ${runtime}`, () => {
       const targetDir = path.join(tmpRoot, `.${runtime}-blocked`);
       fs.mkdirSync(targetDir, { recursive: true });
-      writeFile(targetDir, 'get-shit-done/gsd-retired-tool.cjs', 'old ambiguous artifact\n');
+      writeFile(targetDir, 'get-tasks-done/gtd-retired-tool.cjs', 'old ambiguous artifact\n');
 
       const result = runInstallerCli(runtime, targetDir);
 
       assert.notEqual(result.status, 0, 'install should fail before materialization');
       const output = stripAnsi(`${result.stdout}\n${result.stderr}`);
       assert.match(output, /Installer migrations/);
-      assert.match(output, /blocked\s+get-shit-done\/gsd-retired-tool\.cjs/);
+      assert.match(output, /blocked\s+get-tasks-done\/gtd-retired-tool\.cjs/);
       assert.match(output, /installer migration blocked/);
       assert.equal(
-        fs.readFileSync(path.join(targetDir, 'get-shit-done/gsd-retired-tool.cjs'), 'utf8'),
+        fs.readFileSync(path.join(targetDir, 'get-tasks-done/gtd-retired-tool.cjs'), 'utf8'),
         'old ambiguous artifact\n'
       );
-      assert.equal(fs.existsSync(path.join(targetDir, 'get-shit-done', 'VERSION')), false);
+      assert.equal(fs.existsSync(path.join(targetDir, 'get-tasks-done', 'VERSION')), false);
     });
   }
 });

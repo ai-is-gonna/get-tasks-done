@@ -1,10 +1,10 @@
 /**
- * Regression test for #2519: @gsd-build/sdk tarball shipped without dist/
+ * Regression test for #2519: @ai-is-gonna/gtd-sdk tarball shipped without dist/
  *
  * The published 0.1.0 tarball lacked a `files` whitelist including `dist/` and
  * a `prepublishOnly` hook to build `dist/` before publish. As a result the
  * tarball contained only source and the declared `bin` target `./dist/cli.js`
- * was absent at install time, breaking every `gsd-sdk query …` call.
+ * was absent at install time, breaking every `gtd-sdk query …` call.
  *
  * This test guards sdk/package.json so future edits cannot silently drop
  * either safeguard.
