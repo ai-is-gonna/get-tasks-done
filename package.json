@@ -1,6 +1,6 @@
 {
   "name": "@ai-is-gonna/get-tasks-done",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Task-based execution control for AI-assisted development workflows.",
   "bin": {
     "get-tasks-done": "bin/install.js",
