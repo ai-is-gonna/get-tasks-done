@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, for example 0.2.0'
+        required: true
+        type: string
+      dry_run:
+        description: 'Validate only; skip commit, tag, push, publish, and GitHub release'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NODE_VERSION: 22
+  ROOT_PACKAGE: '@ai-is-gonna/get-tasks-done'
+  SDK_PACKAGE: '@ai-is-gonna/gtd-sdk'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Version must be valid SemVer, for example 0.2.0"
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set package versions
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          npm version "$VERSION" --no-git-tag-version
+          cd sdk
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: Run tests
+        run: npm run test:coverage
+
+      - name: Build publish artifacts
+        run: |
+          npm run build:hooks
+          npm run build:sdk
+
+      - name: Verify root tarball contents
+        run: bash scripts/verify-tarball-sdk-dist.sh
+
+      - name: Dry-run publish root package
+        run: npm publish --dry-run --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Dry-run publish SDK package
+        run: npm publish --dry-run --access public
+        working-directory: sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Configure git identity
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit version bump and tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          git add package.json package-lock.json sdk/package.json sdk/package-lock.json
+          git commit -m "chore: release v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin HEAD --tags
+
+      - name: Publish root package
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish SDK package
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --provenance --access public
+        working-directory: sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: gh release create "v${VERSION}" --title "v${VERSION}" --generate-notes --latest
+
+      - name: Verify npm publish
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          sleep 10
+          ROOT_PUBLISHED=$(npm view "${ROOT_PACKAGE}@${VERSION}" version 2>/dev/null || echo "NOT_FOUND")
+          SDK_PUBLISHED=$(npm view "${SDK_PACKAGE}@${VERSION}" version 2>/dev/null || echo "NOT_FOUND")
+          if [ "$ROOT_PUBLISHED" != "$VERSION" ]; then
+            echo "::error::Expected ${ROOT_PACKAGE}@${VERSION}, got ${ROOT_PUBLISHED}"
+            exit 1
+          fi
+          if [ "$SDK_PUBLISHED" != "$VERSION" ]; then
+            echo "::error::Expected ${SDK_PACKAGE}@${VERSION}, got ${SDK_PUBLISHED}"
+            exit 1
+          fi
+          echo "Verified ${ROOT_PACKAGE}@${VERSION} and ${SDK_PACKAGE}@${VERSION}"
+
+      - name: Summary
+        env:
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          echo "## Release v${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run completed. No commit, tag, publish, or GitHub release was created." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Published ${ROOT_PACKAGE}@${VERSION} and ${SDK_PACKAGE}@${VERSION}." >> "$GITHUB_STEP_SUMMARY"
+          fi

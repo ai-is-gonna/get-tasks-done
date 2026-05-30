@@ -1,0 +1,98 @@
+---
+name: Bug Report
+description: Report something that is not working correctly
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please redact usernames, private paths, project names, tokens, and API keys from logs before posting.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Run `npx @ai-is-gonna/get-tasks-done@latest --version` or `npm list -g @ai-is-gonna/get-tasks-done`.
+      placeholder: "e.g., 0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Claude Code
+        - Codex
+        - Gemini CLI
+        - OpenCode
+        - Copilot
+        - Cursor
+        - Windsurf
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - WSL
+    validations:
+      required: true
+
+  - type: input
+    id: node_version
+    attributes:
+      label: Node.js version
+      description: Run `node --version`.
+      placeholder: "e.g., v22.13.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the failure and the command or workflow you were running.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Install with `npx @ai-is-gonna/get-tasks-done@latest --help`
+        2. Run ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Paste relevant output only. Redact private data first.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include screenshots, links, or config snippets if they help explain the issue.
+    validations:
+      required: false
