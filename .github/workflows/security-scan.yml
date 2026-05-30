@@ -1,0 +1,49 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Prompt injection scan
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: bash scripts/prompt-injection-scan.sh --diff "origin/$BASE_REF"
+
+      - name: Base64 obfuscation scan
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: bash scripts/base64-scan.sh --diff "origin/$BASE_REF"
+
+      - name: Secret scan
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: bash scripts/secret-scan.sh --diff "origin/$BASE_REF"
+
+      - name: Planning directory check
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLANNING_FILES=$(git diff --name-only --diff-filter=ACMR "origin/$BASE_REF"...HEAD | grep '^\.planning/' || true)
+          if [ -n "$PLANNING_FILES" ]; then
+            echo "FAIL: .planning/ runtime data must not be committed"
+            echo "$PLANNING_FILES"
+            exit 1
+          fi

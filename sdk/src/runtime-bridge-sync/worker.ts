@@ -1,0 +1,181 @@
+/**
+ * Synckit worker for executeForCjs.
+ *
+ * Loaded by synckit's worker pool. Constructs a native-only QueryRuntimeBridge
+ * lazily (once per worker lifetime) and handles async execution, projecting
+ * results into the RuntimeBridgeSyncResult discriminated union.
+ *
+ * The bridge is configured with:
+ * - allowFallbackToSubprocess: false — keeps the worker self-contained with no
+ *   child-process spawning. Unknown commands surface as 'unknown_command' errors.
+ * - strictSdk: false — lets the transport surface 'unknown_command' rather than
+ *   throwing before dispatch.
+ */
+import { runAsWorker } from 'synckit';
+import { createRegistry } from '../query/index.js';
+import { GTDTransport } from '../gtd-transport.js';
+import { QueryExecutionPolicy } from '../query-execution-policy.js';
+import { QueryNativeDirectAdapter } from '../query-native-direct-adapter.js';
+import { QueryNativeHotpathAdapter } from '../query-native-hotpath-adapter.js';
+import { QueryRuntimeBridge } from '../query-runtime-bridge.js';
+import { GTDToolsError } from '../gtd-tools-error.js';
+import { GTDError, ErrorClassification } from '../errors.js';
+import { createQueryNativeErrorFactory } from '../query-tools-error-factory.js';
+import type { RuntimeBridgeExecuteInput } from '../query-runtime-bridge.js';
+import type { RuntimeBridgeSyncResult, SyncErrorKind } from './index.js';
+
+// ─── Lazy bridge singleton ──────────────────────────────────────────────────
+
+let bridgeInstance: QueryRuntimeBridge | null = null;
+
+function getBridge(): QueryRuntimeBridge {
+  if (bridgeInstance) return bridgeInstance;
+
+  const registry = createRegistry();
+
+  const NATIVE_TIMEOUT_MS = 30_000; // 30 s ceiling for any single handler
+  const nativeErrorFactory = createQueryNativeErrorFactory(NATIVE_TIMEOUT_MS);
+
+  // Build a per-request adapter inside dispatchNative so that projectDir and
+  // workstream from the request close over the correct values. The Phase 5.0
+  // bug was a module-scoped adapter that hardcoded projectDir = '' — any
+  // handler reading .planning/ (e.g. state.*) received an empty path and
+  // silently failed or read from the process CWD. Constructing per-request
+  // adds microseconds; correctness wins. (fix for latent bug, Phase 5.1)
+  const transport = new GTDTransport(registry, {
+    dispatchNative: (request) => {
+      const adapter = new QueryNativeDirectAdapter({
+        timeoutMs: NATIVE_TIMEOUT_MS,
+        dispatch: (registryCommand, registryArgs) =>
+          registry.dispatch(registryCommand, registryArgs, request.projectDir, request.workstream),
+        ...nativeErrorFactory,
+      });
+      return adapter.dispatchResult(
+        request.legacyCommand,
+        request.legacyArgs,
+        request.registryCommand,
+        request.registryArgs,
+      );
+    },
+    // Subprocess fallback stubs — never called because allowFallbackToSubprocess=false
+    execSubprocessJson: () =>
+      Promise.reject(new Error('Subprocess fallback disabled in sync bridge worker')),
+    execSubprocessRaw: () =>
+      Promise.reject(new Error('Subprocess fallback disabled in sync bridge worker')),
+  });
+
+  const executionPolicy = new QueryExecutionPolicy(transport);
+
+  // Hotpath adapter: construct a stub that satisfies the QueryRuntimeBridge
+  // constructor. executeForCjs does not invoke dispatchHotpath so this
+  // adapter is never actually called. We still need a valid instance because
+  // QueryRuntimeBridge requires one at construction time.
+  const stubDirectAdapter = new QueryNativeDirectAdapter({
+    timeoutMs: NATIVE_TIMEOUT_MS,
+    dispatch: () => Promise.reject(new Error('stub: hotpath direct adapter not used')),
+    ...nativeErrorFactory,
+  });
+  const hotpathAdapter = new QueryNativeHotpathAdapter(
+    () => true,
+    stubDirectAdapter,
+    () => Promise.reject(new Error('hotpath json fallback disabled')),
+    () => Promise.reject(new Error('hotpath raw fallback disabled')),
+  );
+
+  bridgeInstance = new QueryRuntimeBridge(
+    registry,
+    executionPolicy,
+    hotpathAdapter,
+    () => true, // always prefer native
+    {
+      allowFallbackToSubprocess: false,
+      strictSdk: false,
+    },
+  );
+
+  return bridgeInstance;
+}
+
+// ─── Error classification ───────────────────────────────────────────────────
+
+/**
+ * Map a caught error into the 6-kind ADR-0001 error taxonomy.
+ *
+ * GTDToolsError.classification.kind: 'timeout' | 'failure'
+ * GTDError.classification: ErrorClassification enum
+ *
+ * Mapping:
+ * - 'Subprocess fallback disabled' message → unknown_command (no native adapter for command)
+ * - GTDToolsError timeout kind → native_timeout
+ * - GTDError Validation → validation_error
+ * - GTDError Blocked → validation_error (semantic: prerequisite missing)
+ * - TypeError (programming error) → internal_error
+ * - GTDToolsError failure + TypeError cause → internal_error
+ * - GTDToolsError failure → native_failure
+ * - Unknown Error → internal_error
+ */
+function classifyError(error: unknown): { kind: SyncErrorKind; exitCode: number; message: string } {
+  if (error instanceof GTDToolsError) {
+    const { classification, exitCode, message } = error;
+
+    // Unknown command: transport throws 'Subprocess fallback disabled: command ... cannot run without native dispatch'
+    if (
+      classification.kind === 'failure' &&
+      message.includes('Subprocess fallback disabled:') &&
+      message.includes('cannot run without native dispatch')
+    ) {
+      return { kind: 'unknown_command', exitCode: exitCode ?? 1, message };
+    }
+
+    if (classification.kind === 'timeout') {
+      return { kind: 'native_timeout', exitCode: exitCode ?? 1, message };
+    }
+
+    // Check if cause is a TypeError → internal_error
+    const cause = (error as NodeJS.ErrnoException & { cause?: unknown }).cause;
+    if (cause instanceof TypeError) {
+      return { kind: 'internal_error', exitCode: exitCode ?? 1, message };
+    }
+
+    return { kind: 'native_failure', exitCode: exitCode ?? 1, message };
+  }
+
+  if (error instanceof GTDError) {
+    const { classification, message } = error;
+    if (
+      classification === ErrorClassification.Validation ||
+      classification === ErrorClassification.Blocked
+    ) {
+      return { kind: 'validation_error', exitCode: 10, message };
+    }
+    return { kind: 'internal_error', exitCode: 1, message };
+  }
+
+  if (error instanceof TypeError) {
+    const message = error.message;
+    return { kind: 'internal_error', exitCode: 1, message };
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return { kind: 'internal_error', exitCode: 1, message };
+}
+
+// ─── Worker entry point ─────────────────────────────────────────────────────
+
+runAsWorker(async (input: RuntimeBridgeExecuteInput): Promise<RuntimeBridgeSyncResult> => {
+  const bridge = getBridge();
+
+  try {
+    const data = await bridge.execute(input);
+    return { ok: true, data, exitCode: 0 };
+  } catch (error: unknown) {
+    const { kind, exitCode, message } = classifyError(error);
+    return {
+      ok: false,
+      exitCode,
+      errorKind: kind,
+      errorDetails: { message },
+      stderrLines: [],
+    };
+  }
+});

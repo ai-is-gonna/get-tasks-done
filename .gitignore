@@ -1,0 +1,72 @@
+node_modules/
+.DS_Store
+TO-DOS.md
+CLAUDE.md
+/research.claude/
+commands.html
+
+# Local test installs
+.claude/
+
+# Cursor IDE — local agents/skills bundle (never commit)
+.cursor/
+
+# Build artifacts (committed to npm, not git)
+hooks/dist/
+
+# Per-process atomic-write staging dirs used by scripts/build-hooks.js (see comment there)
+hooks/.dist-staging-*/
+
+# Coverage artifacts
+coverage/
+
+# Animation assets
+animation/
+*.gif
+
+# Internal planning documents
+reports/
+RAILROAD_ARCHITECTURE.md
+.planning/
+analysis/
+docs/GTD-MASTER-ARCHITECTURE.md
+docs/GTD-RUST-IMPLEMENTATION-GUIDE.md
+docs/GTD-SYSTEM-SPECIFICATION.md
+gaps.md
+improve.md
+philosophy.md
+
+# Installed skills
+.github/agents/gtd-*
+.github/skills/gtd-*
+.github/get-tasks-done/*
+.github/skills/get-tasks-done
+.github/copilot-instructions.md
+.bg-shell/
+
+# ── GTD baseline (auto-generated) ──
+.gtd
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+.env
+.env.*
+!.env.example
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+.cache/
+tmp/
+.worktrees
+.envrc

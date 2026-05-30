@@ -1,0 +1,70 @@
+name: Install Smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'bin/**'
+      - 'sdk/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/install-smoke.yml'
+      - '.github/workflows/release.yml'
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: install-smoke-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SDK
+        run: npm run build:sdk
+
+      - name: Pack package
+        id: pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARBALL=$(npm pack --silent | tail -1)
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure npm global bin is on PATH
+        shell: bash
+        run: echo "$(npm config get prefix)/bin" >> "$GITHUB_PATH"
+
+      - name: Install packed package globally
+        shell: bash
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          TMPDIR_ROOT=$(mktemp -d)
+          cd "$TMPDIR_ROOT"
+          npm install -g "$WORKSPACE/$TARBALL"
+          command -v get-tasks-done
+          command -v gtd-sdk
+          command -v gtd-tools
+          get-tasks-done --help
+          gtd-sdk --version || gtd-sdk --help
+          gtd-tools --version || gtd-tools --help
