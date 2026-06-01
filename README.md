@@ -1,11 +1,17 @@
 <p align="center">
   <img src="assets/gtd-logo-2000-transparent.svg" alt="Get Tasks Done logo" width="220"></br>
-  <i>Get Tasks Done keeps the useful part of spec-driven development: shared context and careful planning. Then it moves execution into task-sized GitHub issues, branches, PRs, and verification with a human in the loop.</i>
+  <i>Get Tasks Done turns AI coding agents into reviewable GitHub task workers while keeping the useful parts of spec-driven development.</i>
 </p>
 
-Get Tasks Done (GTD) is a workflow layer for AI-assisted software development. It turns product and engineering intent into local planning artifacts, exports implementation work to GitHub task issues, and keeps code changes small enough to review through isolated branches, pull requests, validation evidence, and explicit human approval. Instead of asking an agent to carry a feature in one opaque session, GTD gives the work a shape your team can inspect.
+<p align="center">
+  <img src="assets/demo.gif" alt="Get Tasks Done demo: turning a feature into GitHub task issues and focused PRs" width="900">
+</p>
 
-The project started from <a href="https://github.com/open-gsd/get-shit-done-redux" target="_blank">open-gsd/get-shit-done-redux</a> and has since been rebuilt around task issue execution, PR review, reconciliation, and verification. The design is deliberately conservative: give agents enough context, give them bounded work, and keep scope, review, merge, and final acceptance with people.
+Most AI coding workflows fail the same way: you give an agent a feature, it disappears into a long session, then comes back with a diff that is too large to trust.
+
+Get Tasks Done (GTD) is a workflow layer that turns product and software specs into local planning artifacts, exports implementation work to GitHub task issues, and keeps code changes small enough to review through pull requests, validation evidence and explicit human approval.
+
+The project started from <a href="https://github.com/open-gsd/get-shit-done-redux" target="_blank">open-gsd/get-shit-done-redux</a> and has since been rebuilt around task issue execution, PR review, reconciliation and verification.
 
 ## Quick start
 
@@ -51,9 +57,23 @@ You may swap the runtime flag for your agent:
 --all
 ```
 
-## Technical evaluation
+## Who this is for
 
-GTD is most useful for teams that already review work in GitHub and want AI agents to operate inside the same delivery controls as human contributors. It is a poor fit for unattended coding, projects without PR discipline, or prototypes where planning and careful human validation would slow the work down more than they help.
+Use GTD if you:
+
+- already review work through GitHub issues and pull requests
+- want AI agents to work on bounded tasks instead of whole features
+- care about small diffs, validation evidence, and human approval
+- are trying to use Codex, Claude Code, Cursor, Gemini, OpenCode, or similar tools on real repositories
+
+Do not use GTD if you:
+
+- want fully unattended coding
+- are building throwaway prototypes
+- do not use GitHub
+- prefer one-shot agent sessions over reviewable delivery
+
+## Technical evaluation
 
 At a system level, GTD has five moving parts:
 
@@ -69,7 +89,7 @@ Local setup writes runtime command files and project planning files. Export writ
 
 ## Planning hierarchy
 
-GTD stores work in a nested planning model. The same structure carries through local artifacts, GitHub issues, task branches, PRs, and verification.
+GTD stores work in a nested planning model, like the original get-shit-done. Now the same structure carries through local artifacts, GitHub issues, task branches, PRs, and verification.
 
 | Level | What it corresponds to |
 | --- | --- |

@@ -23,6 +23,7 @@ coverage/
 # Animation assets
 animation/
 *.gif
+!assets/demo.gif
 
 # Internal planning documents
 reports/
