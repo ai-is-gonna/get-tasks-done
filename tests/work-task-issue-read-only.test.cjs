@@ -24,7 +24,7 @@ function writePlan(tmpDir, phaseDir, filename, body) {
   fs.writeFileSync(path.join(dir, filename), body, 'utf8');
 }
 
-function samplePlan({ plan = '01', taskNames = ['Create auth module'] } = {}) {
+function samplePlan({ plan = '01', taskNames = ['Create auth module'], verification = 'npm test' } = {}) {
   const tasks = taskNames.map((taskName, index) => {
     const file = `src/task-${index + 1}.ts`;
     return `<task type="auto">
@@ -65,7 +65,7 @@ ${tasks}
 </tasks>
 
 <verification>
-npm test
+${verification}
 </verification>
 
 <success_criteria>
@@ -365,11 +365,52 @@ class FakeGitHubAdapter {
   }
 }
 
-function exportSample(tmpDir, adapter, taskNames = ['Create auth module']) {
-  writePlan(tmpDir, '01-foundation', '01-01-PLAN.md', samplePlan({ taskNames }));
+function exportSample(tmpDir, adapter, taskNames = ['Create auth module'], planOptions = {}) {
+  writePlan(tmpDir, '01-foundation', '01-01-PLAN.md', samplePlan({ taskNames, ...planOptions }));
   const result = buildWriteMode(tmpDir, { phase: '01', repo: 'owner/repo', dryRun: false }, adapter);
   assert.equal(result.ok, true);
   return JSON.parse(fs.readFileSync(path.join(tmpDir, '.planning', 'github', 'phase-01-foundation-issues.json'), 'utf8'));
+}
+
+function markSampleTaskMerged(adapter, manifest) {
+  const parentIssue = manifest.plans['01-01'].issue;
+  const childIssue = manifest.plans['01-01'].tasks['01-01-T01'].issue;
+  adapter.closeIssue(childIssue);
+  adapter.addPullRequest(childIssue, {
+    number: 94,
+    title: 'Merged task PR',
+    state: 'CLOSED',
+    mergedAt: '2026-05-17T10:00:00Z',
+    headRefName: `gtd/task-01-01-T01-${childIssue}`,
+    url: 'https://github.com/owner/repo/pull/94',
+  });
+  return { parentIssue, childIssue };
+}
+
+function executeSampleReconciliation(tmpDir, adapter, parentIssue, deps = {}) {
+  return buildExecution(tmpDir, {
+    selector: String(parentIssue),
+    phase: '01',
+    repo: 'owner/repo',
+    mode: 'execute',
+    reconcile: true,
+  }, adapter, {
+    ensureReconciliationWorktree: ({ record }) => ({
+      path: tmpDir,
+      branch: record.branch_name,
+      base_ref: 'origin/main',
+      reused: false,
+    }),
+    runGtdSdkQuery: () => ({ ok: true, status: 0, command: 'query', stdout: '{}', stderr: '' }),
+    commitReconciliationArtifacts: (worktree, record, summary) => ({
+      committed: true,
+      pushed: true,
+      files: [summary.path, '.planning/STATE.md', '.planning/ROADMAP.md', '.planning/REQUIREMENTS.md'],
+      message: `Reconcile GTD plan ${record.plan_id}`,
+    }),
+    now: () => new Date('2026-05-17T12:00:00Z'),
+    ...deps,
+  });
 }
 
 function exportCheckpointSample(tmpDir, adapter) {
@@ -1160,6 +1201,106 @@ describe('work-task-issue read-only mode', () => {
     assert.equal(sdkCalls.some((args) => args[0] === 'state.advance-plan'), true);
     assert.equal(labels.includes('gtd:reconcile-failed'), false);
     assert.equal(labels.includes('gtd:reconcile-pr-open'), true);
+  });
+
+  test('parent reconciliation skips prose plan verification without executing inline snippets', () => {
+    const adapter = new FakeGitHubAdapter();
+    const manifest = exportSample(tmpDir, adapter, ['Create auth module'], {
+      verification: 'Run `npx tsc --noEmit --pretty false` after the scaffold task. Plan 02 creates all Wave 0 test files before implementation begins.',
+    });
+    const { parentIssue } = markSampleTaskMerged(adapter, manifest);
+    let shellInvoked = false;
+
+    const result = executeSampleReconciliation(tmpDir, adapter, parentIssue, {
+      runCommand: () => {
+        shellInvoked = true;
+        throw new Error('prose plan verification must not run as a shell command');
+      },
+    });
+
+    const summaryPath = path.join(tmpDir, '.planning', 'phases', '01-foundation', '01-01-SUMMARY.md');
+    const summary = fs.readFileSync(summaryPath, 'utf8');
+    const labels = adapter.getIssue(parentIssue).labels.map((label) => label.name);
+
+    assert.equal(shellInvoked, false);
+    assert.equal(result.action, 'reconciliation_pr_opened');
+    assert.equal(result.execution.verification.ok, true);
+    assert.equal(result.execution.verification.skipped, true);
+    assert.equal(result.execution.verification.skip_reason, 'non_executable_plan_verification');
+    assert.equal(result.execution.verification.command, '');
+    assert.match(result.execution.verification.declared_verification, /npx tsc --noEmit --pretty false/);
+    assert.match(summary, /Command: not run \(non-executable declared verification\)/);
+    assert.match(summary, /Declared verification: Run `npx tsc --noEmit --pretty false` after the scaffold task/);
+    assert.match(summary, /declared plan verification was not an executable command and was skipped/);
+    assert.match(adapter.lastCreatedPr.body, /Command: not run \(non-executable declared verification\)/);
+    assert.equal(labels.includes('gtd:reconcile-failed'), false);
+    assert.equal(labels.includes('gtd:reconcile-pr-open'), true);
+  });
+
+  test('parent reconciliation executes automated plan verification blocks', () => {
+    const adapter = new FakeGitHubAdapter();
+    const manifest = exportSample(tmpDir, adapter, ['Create auth module'], {
+      verification: '<automated>npx tsc --noEmit --pretty false</automated>',
+    });
+    const { parentIssue } = markSampleTaskMerged(adapter, manifest);
+    const commands = [];
+
+    const result = executeSampleReconciliation(tmpDir, adapter, parentIssue, {
+      runCommand: (command) => {
+        commands.push(command);
+        return { status: 0, stdout: 'ok', stderr: '' };
+      },
+    });
+
+    assert.equal(result.action, 'reconciliation_pr_opened');
+    assert.deepEqual(commands, ['npx tsc --noEmit --pretty false']);
+    assert.equal(result.execution.verification.skipped, false);
+    assert.equal(result.execution.verification.command, 'npx tsc --noEmit --pretty false');
+    assert.match(result.execution.verification.declared_verification, /<automated>/);
+  });
+
+  test('parent reconciliation executes fenced shell plan verification blocks', () => {
+    const adapter = new FakeGitHubAdapter();
+    const manifest = exportSample(tmpDir, adapter, ['Create auth module'], {
+      verification: '```bash\nnpx tsc --noEmit --pretty false\n```',
+    });
+    const { parentIssue } = markSampleTaskMerged(adapter, manifest);
+    const commands = [];
+
+    const result = executeSampleReconciliation(tmpDir, adapter, parentIssue, {
+      runCommand: (command) => {
+        commands.push(command);
+        return { status: 0, stdout: 'ok', stderr: '' };
+      },
+    });
+
+    assert.equal(result.action, 'reconciliation_pr_opened');
+    assert.deepEqual(commands, ['npx tsc --noEmit --pretty false']);
+    assert.equal(result.execution.verification.skipped, false);
+    assert.equal(result.execution.verification.command, 'npx tsc --noEmit --pretty false');
+    assert.match(result.execution.verification.declared_verification, /```bash/);
+  });
+
+  test('parent reconciliation preserves legacy bare plan verification commands', () => {
+    const adapter = new FakeGitHubAdapter();
+    const manifest = exportSample(tmpDir, adapter, ['Create auth module'], {
+      verification: 'npm test',
+    });
+    const { parentIssue } = markSampleTaskMerged(adapter, manifest);
+    const commands = [];
+
+    const result = executeSampleReconciliation(tmpDir, adapter, parentIssue, {
+      runCommand: (command) => {
+        commands.push(command);
+        return { status: 0, stdout: 'ok', stderr: '' };
+      },
+    });
+
+    assert.equal(result.action, 'reconciliation_pr_opened');
+    assert.deepEqual(commands, ['npm test']);
+    assert.equal(result.execution.verification.skipped, false);
+    assert.equal(result.execution.verification.command, 'npm test');
+    assert.equal(result.execution.verification.declared_verification, 'npm test');
   });
 
   test('failed plan verification marks reconciliation failed without canonical writes', () => {
