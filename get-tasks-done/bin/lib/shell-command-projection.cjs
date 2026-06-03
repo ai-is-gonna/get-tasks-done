@@ -6,6 +6,7 @@ const fs = require('fs');
 // can intercept calls from this seam — destructured imports capture references
 // at load time and become un-mockable.
 const childProcess = require('child_process');
+const { runGitCommand } = require('./git-runner.cjs');
 
 /**
  * Shell Command Projection Module
@@ -382,14 +383,18 @@ function execGit(args, opts = {}) {
     GCM_INTERACTIVE: 'never',
     ...(opts.env || {}),
   };
-  const result = childProcess.spawnSync('git', args, {
+  const result = runGitCommand(args, {
     cwd: opts.cwd,
     env,
-    encoding: 'utf-8',
-    stdio: 'pipe',
     timeout: opts.timeout ?? 10_000,
   });
-  return _spawnResult(result, 'git');
+  return {
+    exitCode: result.exitCode,
+    stdout: result.stdout,
+    stderr: result.stderr,
+    signal: result.signal,
+    error: result.error,
+  };
 }
 
 function execNpm(args, opts = {}) {

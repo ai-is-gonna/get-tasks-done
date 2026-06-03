@@ -1,6 +1,6 @@
 'use strict';
 
-const childProcess = require('child_process');
+const { runGitCommand } = require('./git-runner.cjs');
 
 function normalizeGitHubRepo(repo) {
   const value = String(repo || '').trim();
@@ -36,16 +36,14 @@ function parseGitHubRemoteUrl(remoteUrl) {
 }
 
 function runGit(cwd, args) {
-  const result = childProcess.spawnSync('git', args, {
+  const result = runGitCommand(args, {
     cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
     timeout: 5000,
   });
   return {
-    ok: result.status === 0,
-    stdout: String(result.stdout || '').trim(),
-    stderr: String(result.stderr || '').trim(),
+    ok: result.ok,
+    stdout: result.stdout,
+    stderr: result.stderr,
     error: result.error || null,
   };
 }
