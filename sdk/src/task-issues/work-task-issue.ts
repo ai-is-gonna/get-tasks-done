@@ -14,6 +14,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as childProcess from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import {
   ERROR_REASON,
@@ -94,6 +95,7 @@ const GTD_COMPLETION_ARTIFACTS = Object.freeze([
 ]);
 
 const SUMMARY_ARTIFACT_RE = /^\.planning\/phases\/.+\/.+-SUMMARY\.md$/;
+const BUNDLED_GTD_SDK_SHIM = fileURLToPath(new URL('../../../bin/gtd-sdk.js', import.meta.url));
 
 class GitHubTaskIssueError extends Error {
   constructor(message, operation = null) {
@@ -2519,8 +2521,8 @@ function runPlanVerification(worktreePath, record, deps = {}) {
       stderr: '',
     };
   }
-  const command = declaredVerification;
-  if (!command) {
+  const command = planVerificationCommand(declaredVerification);
+  if (!declaredVerification) {
     return {
       ok: true,
       skipped: true,
@@ -2532,16 +2534,87 @@ function runPlanVerification(worktreePath, record, deps = {}) {
       stderr: '',
     };
   }
+  if (!command) {
+    return {
+      ok: true,
+      skipped: true,
+      skip_reason: 'non_executable_plan_verification',
+      command: '',
+      declared_verification: declaredVerification,
+      status: 0,
+      stdout: '',
+      stderr: '',
+    };
+  }
   const result = runShellCommand(command, worktreePath, deps);
   return {
     ok: result.status === 0,
     skipped: false,
     command,
-    declared_verification: command,
+    declared_verification: declaredVerification,
     status: result.status,
     stdout: String(result.stdout || '').trim(),
     stderr: String(result.stderr || result.error || '').trim(),
   };
+}
+
+function trimCommandBlock(text) {
+  return String(text || '').replace(/\r\n/g, '\n').trim();
+}
+
+function automatedPlanVerificationCommand(text) {
+  const match = String(text || '').match(/<automated\b[^>]*>([\s\S]*?)<\/automated>/i);
+  return match ? trimCommandBlock(match[1]) : '';
+}
+
+function fencedPlanVerificationCommand(text) {
+  const match = String(text || '').match(/^```(?:bash|sh|shell|zsh)\s*\n([\s\S]*?)\n```\s*$/i);
+  return match ? trimCommandBlock(match[1]) : '';
+}
+
+function firstShellToken(command) {
+  let text = String(command || '').trim();
+  while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(text)) {
+    const next = text.replace(/^[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\S+)\s*/, '').trim();
+    if (next === text) break;
+    text = next;
+  }
+  return (text.match(/^(\S+)/) || [])[1] || '';
+}
+
+function isBarePlanVerificationCommand(text) {
+  const command = trimCommandBlock(text);
+  if (!command || command.includes('\n') || command.includes('`')) return false;
+  if (/^(?:[-*]|\[[ xX]\]|\d+[.)]\s)/.test(command)) return false;
+  if (/[.!?]\s*$/.test(command)) return false;
+
+  const token = firstShellToken(command).replace(/^command\s+/, '');
+  if (/^(?:\.\/|\.\.\/|\/)/.test(token)) return true;
+  return new Set([
+    'bun',
+    'cargo',
+    'deno',
+    'go',
+    'make',
+    'node',
+    'npm',
+    'npx',
+    'pnpm',
+    'python',
+    'python3',
+    'pytest',
+    'tsc',
+    'yarn',
+  ]).has(token);
+}
+
+function planVerificationCommand(declaredVerification) {
+  const automated = automatedPlanVerificationCommand(declaredVerification);
+  if (automated) return automated;
+  const fenced = fencedPlanVerificationCommand(declaredVerification);
+  if (fenced) return fenced;
+  if (isBarePlanVerificationCommand(declaredVerification)) return trimCommandBlock(declaredVerification);
+  return '';
 }
 
 function isResolvedCheckpointOnlyPlan(record) {
@@ -2557,6 +2630,9 @@ function singleLine(text) {
 function verificationCommandDisplay(verification) {
   if (verification.skipped && verification.skip_reason === 'resolved_human_checkpoint_only_plan') {
     return 'not run (resolved human checkpoint-only plan)';
+  }
+  if (verification.skipped && verification.skip_reason === 'non_executable_plan_verification') {
+    return 'not run (non-executable declared verification)';
   }
   return verification.command ? `\`${verification.command}\`` : 'not declared';
 }
@@ -2574,6 +2650,8 @@ function appendVerificationDetails(lines, verification) {
 
   if (verification.skipped && verification.skip_reason === 'resolved_human_checkpoint_only_plan') {
     lines.push('- Note: resolved checkpoint issue closure satisfied plan verification.');
+  } else if (verification.skipped && verification.skip_reason === 'non_executable_plan_verification') {
+    lines.push('- Note: declared plan verification was not an executable command and was skipped.');
   } else if (verification.skipped) {
     lines.push('- Note: no plan-level verification command was declared.');
   }
@@ -2684,9 +2762,12 @@ function writeReconciliationSummary(worktreePath, record, verification, deps = {
 
 function runGtdSdkQuery(worktreePath, args, deps = {}) {
   if (deps.runGtdSdkQuery) return deps.runGtdSdkQuery(args, worktreePath);
-  const sdkPath = path.resolve(__dirname, '..', '..', '..', 'bin', 'gtd-sdk.js');
-  const useLocalShim = fs.existsSync(sdkPath);
-  const result = childProcess.spawnSync(useLocalShim ? process.execPath : 'gtd-sdk', useLocalShim ? [sdkPath, 'query', ...args] : ['query', ...args], {
+  const sdkPath = deps.sdkPath || BUNDLED_GTD_SDK_SHIM;
+  const pathExists = deps.existsSync || fs.existsSync;
+  const spawnSync = deps.spawnSync || childProcess.spawnSync;
+  const execPath = deps.execPath || process.execPath;
+  const useLocalShim = pathExists(sdkPath);
+  const result = spawnSync(useLocalShim ? execPath : 'gtd-sdk', useLocalShim ? [sdkPath, 'query', ...args] : ['query', ...args], {
     cwd: worktreePath,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -3416,6 +3497,7 @@ export {
   executorContext,
   executeReconciliationRecord,
   loadExecutionState,
+  runGtdSdkQuery,
   taskOutput,
   parentOutput,
   compareRecords,
