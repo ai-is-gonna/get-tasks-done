@@ -9812,7 +9812,6 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
     console.log(`
   ${green}Done!${reset} Restart ${program}, then in any directory either type ${cyan}${command}${reset} or ask Claude to run the ${cyan}gtd-new-project${reset} skill.
 
-  ${cyan}Join the community:${reset} https://discord.gg/mYgfVNfA2r
 `);
     return;
   }
@@ -9820,7 +9819,6 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   console.log(`
   ${green}Done!${reset} Open a blank directory in ${program} and run ${cyan}${command}${reset}.
 
-  ${cyan}Join the community:${reset} https://discord.gg/mYgfVNfA2r
 `);
 }
 
