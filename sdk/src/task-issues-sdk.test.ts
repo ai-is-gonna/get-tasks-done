@@ -8,6 +8,7 @@ import { GTDTools } from './gtd-tools.js';
 import { GTDEventType } from './types.js';
 import { createRegistry } from './query/index.js';
 import { runQueryCliCommand } from './query/query-cli-adapter.js';
+import { runGtdSdkQuery } from './task-issues/work-task-issue.js';
 
 const SAMPLE_PLAN = `---
 phase: 01
@@ -164,6 +165,56 @@ describe('SDK task issue workflow', () => {
       ok: true,
       mode: 'dry-run',
     });
+  });
+
+  it('runs canonical state updates through the bundled gtd-sdk shim when present', () => {
+    const projectDir = makeProject();
+    cleanup.push(projectDir);
+    const spawnSync = vi.fn(() => ({ status: 0, stdout: '{}', stderr: '' }));
+    const existsSync = vi.fn((candidate: string) => {
+      expect(candidate).toMatch(/bin\/gtd-sdk\.js$/);
+      return true;
+    });
+
+    const result = runGtdSdkQuery(projectDir, ['state.advance-plan', '01-01'], {
+      existsSync,
+      spawnSync,
+      execPath: '/test/node',
+    });
+
+    expect(result).toMatchObject({ ok: true, status: 0, stdout: '{}', stderr: '' });
+    expect(spawnSync).toHaveBeenCalledWith(
+      '/test/node',
+      [expect.stringMatching(/bin\/gtd-sdk\.js$/), 'query', 'state.advance-plan', '01-01'],
+      expect.objectContaining({
+        cwd: projectDir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  });
+
+  it('falls back to PATH gtd-sdk when the bundled parent shim is absent', () => {
+    const projectDir = makeProject();
+    cleanup.push(projectDir);
+    const spawnSync = vi.fn(() => ({ status: 0, stdout: '{}', stderr: '' }));
+
+    const result = runGtdSdkQuery(projectDir, ['roadmap.update-plan-progress', '01-01'], {
+      existsSync: vi.fn(() => false),
+      spawnSync,
+      execPath: '/test/node',
+    });
+
+    expect(result).toMatchObject({ ok: true, status: 0, stdout: '{}', stderr: '' });
+    expect(spawnSync).toHaveBeenCalledWith(
+      'gtd-sdk',
+      ['query', 'roadmap.update-plan-progress', '01-01'],
+      expect.objectContaining({
+        cwd: projectDir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
   });
 
   it('fails removed task workflow commands with migration guidance even when fallback is enabled', async () => {

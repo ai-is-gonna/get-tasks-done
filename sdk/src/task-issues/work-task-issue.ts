@@ -14,6 +14,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as childProcess from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import {
   ERROR_REASON,
@@ -94,6 +95,7 @@ const GTD_COMPLETION_ARTIFACTS = Object.freeze([
 ]);
 
 const SUMMARY_ARTIFACT_RE = /^\.planning\/phases\/.+\/.+-SUMMARY\.md$/;
+const BUNDLED_GTD_SDK_SHIM = fileURLToPath(new URL('../../../bin/gtd-sdk.js', import.meta.url));
 
 class GitHubTaskIssueError extends Error {
   constructor(message, operation = null) {
@@ -2760,9 +2762,12 @@ function writeReconciliationSummary(worktreePath, record, verification, deps = {
 
 function runGtdSdkQuery(worktreePath, args, deps = {}) {
   if (deps.runGtdSdkQuery) return deps.runGtdSdkQuery(args, worktreePath);
-  const sdkPath = path.resolve(__dirname, '..', '..', '..', 'bin', 'gtd-sdk.js');
-  const useLocalShim = fs.existsSync(sdkPath);
-  const result = childProcess.spawnSync(useLocalShim ? process.execPath : 'gtd-sdk', useLocalShim ? [sdkPath, 'query', ...args] : ['query', ...args], {
+  const sdkPath = deps.sdkPath || BUNDLED_GTD_SDK_SHIM;
+  const pathExists = deps.existsSync || fs.existsSync;
+  const spawnSync = deps.spawnSync || childProcess.spawnSync;
+  const execPath = deps.execPath || process.execPath;
+  const useLocalShim = pathExists(sdkPath);
+  const result = spawnSync(useLocalShim ? execPath : 'gtd-sdk', useLocalShim ? [sdkPath, 'query', ...args] : ['query', ...args], {
     cwd: worktreePath,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -3492,6 +3497,7 @@ export {
   executorContext,
   executeReconciliationRecord,
   loadExecutionState,
+  runGtdSdkQuery,
   taskOutput,
   parentOutput,
   compareRecords,
