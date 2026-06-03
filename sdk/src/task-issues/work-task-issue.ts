@@ -23,6 +23,7 @@ import {
   toPosixPath,
 } from './core.js';
 import { loadExportSource } from './export-phase-issues.js';
+import { runGitCommand } from './git-runner.js';
 import { parseWorktreePorcelain } from './worktree-safety.js';
 import { formatGtdSlashFor } from './runtime-slash.js';
 import {
@@ -921,16 +922,17 @@ function runTaskExecutor(context, deps = {}) {
 }
 
 function runGit(cwd, args, opts = {}) {
-  const result = childProcess.spawnSync('git', args, {
+  const result = runGitCommand(args, {
     cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: process.env,
+    env: opts.env,
+    timeout: opts.timeout,
+    spawnSync: opts.spawnSync,
+    commonGitPaths: opts.commonGitPaths,
   });
-  const stdout = String(result.stdout || '').trim();
-  const stderr = String(result.stderr || '').trim();
+  const stdout = result.stdout;
+  const stderr = result.stderr;
   if (result.error) {
-    throw new TaskExecutionError(result.error.message, 'git_failed', { args });
+    throw new TaskExecutionError(stderr || result.error.message, 'git_failed', { args });
   }
   if (result.status !== 0 && !opts.allowFailure) {
     throw new TaskExecutionError(stderr || `git ${args.join(' ')} exited with status ${result.status}`, 'git_failed', { args });
@@ -3424,6 +3426,7 @@ export {
   validateDiffScope,
   validateExecutorEvidence,
   validateTask,
+  runGit,
   parseArgs,
   parseSelector,
 };

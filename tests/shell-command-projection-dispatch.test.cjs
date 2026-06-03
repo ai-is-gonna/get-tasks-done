@@ -1,7 +1,8 @@
 'use strict';
 
-const { describe, test, beforeEach, afterEach } = require('node:test');
+const { describe, test, beforeEach, afterEach, mock } = require('node:test');
 const assert = require('node:assert/strict');
+const childProcess = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -24,7 +25,10 @@ describe('execGit', () => {
   let tmpDir;
 
   beforeEach(() => { tmpDir = createTempGitProject(); });
-  afterEach(() => { cleanup(tmpDir); });
+  afterEach(() => {
+    mock.restoreAll();
+    cleanup(tmpDir);
+  });
 
   test('returns { exitCode, stdout, stderr } shape', () => {
     const result = execGit(['--version']);
@@ -52,6 +56,40 @@ describe('execGit', () => {
   test('respects cwd option', () => {
     const result = execGit(['status', '--porcelain'], { cwd: tmpDir });
     assert.strictEqual(result.exitCode, 0);
+  });
+
+  test('uses GTD_GIT override before PATH git', () => {
+    const calls = [];
+    mock.method(childProcess, 'spawnSync', (program, args, opts) => {
+      calls.push({ program, args, opts });
+      return { status: 0, stdout: 'git version test\n', stderr: '', signal: null };
+    });
+
+    const result = execGit(['--version'], {
+      env: { GTD_GIT: '/custom/gtd/git', PATH: '/restricted/bin' },
+    });
+
+    assert.strictEqual(result.exitCode, 0);
+    assert.strictEqual(calls[0].program, '/custom/gtd/git');
+    assert.deepStrictEqual(calls[0].args, ['--version']);
+  });
+
+  test('returns actionable diagnostic when git cannot be spawned', () => {
+    mock.method(childProcess, 'spawnSync', (program) => {
+      const error = new Error(`spawnSync ${program} ENOENT`);
+      error.code = 'ENOENT';
+      return { status: null, stdout: '', stderr: '', signal: null, error };
+    });
+
+    const result = execGit(['status'], {
+      env: { PATH: '/restricted/bin' },
+    });
+
+    assert.strictEqual(result.exitCode, 127);
+    assert.match(result.stderr, /Git executable not found/);
+    assert.match(result.stderr, /PATH seen by gtd-sdk: \/restricted\/bin/);
+    assert.match(result.stderr, /GTD_GIT=\/opt\/homebrew\/bin\/git/);
+    assert.doesNotMatch(result.stderr, /spawnSync git ENOENT/);
   });
 });
 

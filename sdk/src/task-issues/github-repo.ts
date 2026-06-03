@@ -1,4 +1,4 @@
-import * as childProcess from 'node:child_process';
+import { runGitCommand } from './git-runner.js';
 
 export function normalizeGitHubRepo(repo: unknown): string | null {
   const value = String(repo || '').trim();
@@ -31,16 +31,14 @@ export function parseGitHubRemoteUrl(remoteUrl: unknown): string | null {
 }
 
 function runGit(cwd: string, args: string[]): { ok: boolean; stdout: string; stderr: string; error: Error | null } {
-  const result = childProcess.spawnSync('git', args, {
+  const result = runGitCommand(args, {
     cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
     timeout: 5000,
   });
   return {
-    ok: result.status === 0,
-    stdout: String(result.stdout || '').trim(),
-    stderr: String(result.stderr || '').trim(),
+    ok: result.ok,
+    stdout: result.stdout,
+    stderr: result.stderr,
     error: result.error || null,
   };
 }

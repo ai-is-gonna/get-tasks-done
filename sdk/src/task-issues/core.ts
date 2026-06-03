@@ -1,8 +1,8 @@
-import * as childProcess from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { runGitCommand } from './git-runner.js';
 import { isNestedPlanFile, isNestedSummaryFile, isRootPlanFile, isRootSummaryFile } from './plan-scan.js';
 
 export const ERROR_REASON: Readonly<Record<string, string>> = Object.freeze({
@@ -91,10 +91,8 @@ const gitIgnoredCache = new Map<string, boolean>();
 export function isGitIgnored(cwd: string, targetPath: string): boolean {
   const key = `${cwd}::${targetPath}`;
   if (gitIgnoredCache.has(key)) return gitIgnoredCache.get(key)!;
-  const result = childProcess.spawnSync('git', ['check-ignore', '-q', '--no-index', '--', targetPath], {
+  const result = runGitCommand(['check-ignore', '-q', '--no-index', '--', targetPath], {
     cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
     timeout: 5000,
   });
   const ignored = result.status === 0;
