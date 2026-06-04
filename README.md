@@ -7,7 +7,14 @@
   <img src="assets/demo.gif" alt="Get Tasks Done demo: turning a feature into GitHub task issues and focused PRs" width="900">
 </p>
 
-Most AI coding workflows fail the same way: you give an agent a feature, it disappears into a long session, then comes back with a diff that is too large to trust.
+> [!TIP]
+> ## ⚡ Try the 5-minute demo
+> Test GTD without touching your real repo.
+> Use the disposable demo app: [ai-is-gonna/get-tasks-done-demo-app](https://github.com/ai-is-gonna/get-tasks-done-demo-app)
+>
+> **Start here if you want the fastest path to a real, pre-seeded GTD workflow in under 5 minutes.** 🚀
+
+Most workflows fail the same way: you give an agent a feature and it comes back with a diff that is too large to review.
 
 Get Tasks Done (GTD) is a workflow layer that turns product and software specs into local planning artifacts, exports implementation work to GitHub task issues, and keeps code changes small enough to review through pull requests, validation evidence and explicit human approval.
 
@@ -21,20 +28,20 @@ The project started from <a href="https://github.com/open-gsd/get-shit-done-redu
    npx @ai-is-gonna/get-tasks-done@latest --codex --global
    ```
 
-2. In a GitHub-backed test repo:
+2. In a GitHub-backed repo:
 
    ```text
    $gtd-new-project
    ```
 
-3. Ask GTD to plan a small first phase:
+3. Ask GTD to plan a first phase:
 
    ```text
    $gtd-spec-phase 1
    $gtd-plan-phase 1
    ```
 
-4. Export only when the preview looks right:
+4. Export only when the plans looks right:
 
    ```text
    $gtd-export-phase-issues 1
@@ -45,17 +52,6 @@ The project started from <a href="https://github.com/open-gsd/get-shit-done-redu
    ```text
    $gtd-orchestrate-tasks the first 2 tasks
    ```
-
-You may swap the runtime flag for your agent:
-
-```bash
---claude
---codex
---gemini
---opencode
---cursor
---all
-```
 
 ## Who this is for
 
@@ -113,23 +109,23 @@ For related work, GTD can orchestrate batches while still keeping task lanes, re
 flowchart TD
     A["👤 Human + repo context"]
     B["📄 Project artifacts<br/>PROJECT / REQUIREMENTS / ROADMAP"]
-    X["🤖 /gtd-map-codebase<br/>architecture + codebase map"]
+    X["🤖 $gtd-map-codebase<br/>architecture + codebase map"]
     Y["📄 Codebase artifacts<br/>ARCHITECTURE / STRUCTURE / CONVENTIONS"]
-    C["🤖 /gtd-new-project<br/>agent prepares project memory"]
-    D["👤 /gtd-discuss-phase<br/>human decisions + constraints"]
-    R["🤖 /gtd-plan-phase --research-phase<br/>RESEARCH.md when discovery is needed"]
-    U["🤖 /gtd-ui-phase<br/>UI-SPEC.md for frontend phases"]
-    E["🤖 /gtd-plan-phase<br/>plans, tasks, acceptance criteria"]
+    C["🤖 $gtd-new-project<br/>agent prepares project memory"]
+    D["👤 $gtd-discuss-phase<br/>human decisions + constraints"]
+    R["🤖 $gtd-plan-phase --research-phase<br/>RESEARCH.md when discovery is needed"]
+    U["🤖 $gtd-ui-phase<br/>UI-SPEC.md for frontend phases"]
+    E["🤖 $gtd-plan-phase<br/>plans, tasks, acceptance criteria"]
     F{"✓ Plan check<br/>task atomicity"}
-    G["🔎 /gtd-export-phase-issues --dry-run<br/>preview issue graph"]
+    G["🔎 $gtd-export-phase-issues --dry-run<br/>preview issue graph"]
     H["GitHub issues<br/>parent plans + child tasks"]
     I{"Work mode"}
-    J["Git branch + PR<br/>/gtd-work-task-issue"]
-    K["Git task lanes + final PR<br/>/gtd-orchestrate-tasks"]
+    J["Git branch + PR<br/>$gtd-work-task-issue"]
+    K["Git task lanes + final PR<br/>$gtd-orchestrate-tasks"]
     L{"👤 Human PR review<br/>merge or request changes"}
     M["📄 Reconcile merged task work<br/>summary artifacts"]
-    N["✓ /gtd-work-task-issue --complete-phase<br/>phase completion gates"]
-    O["🔎 /gtd-verify-work<br/>human UAT + verification evidence"]
+    N["✓ $gtd-work-task-issue --complete-phase<br/>phase completion gates"]
+    O["🔎 $gtd-verify-work<br/>human UAT + verification evidence"]
     P{"✓ Verification gaps?"}
 
     A -->|"👤 input"| C
@@ -185,13 +181,7 @@ Requirements:
 - A GitHub repository with issues and pull requests enabled
 - Permission to create issues, labels, branches, pull requests, comments, and local `.planning/` files
 
-Recommended install for Codex:
-
-```bash
-npx @ai-is-gonna/get-tasks-done@latest --codex --global
-```
-
-The installer currently supports Claude Code, Codex, Gemini, Kilo, OpenCode, GitHub Copilot, Antigravity, Cursor, Windsurf, Augment, Trae, Qwen Code, Hermes Agent, CodeBuddy, and Cline.
+The installer currently supports many agents thanks to the native compatibility inherited from the original project. Codex, Claude Code and OpenCode are the most tested so far on GSD.
 
 Use installer help as the source of truth for profiles, local installs, custom config paths, and runtime-specific flags:
 
@@ -209,28 +199,7 @@ Use the SDK when a script, CI job, or dashboard needs to read GTD state or call 
 npm install @ai-is-gonna/gtd-sdk
 ```
 
-Useful read-only queries:
-
-```bash
-node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query state.json
-node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query roadmap.analyze
-node ./node_modules/@ai-is-gonna/gtd-sdk/dist/cli.js query check phase-ready 1 --pick next_step
-```
-
-Programmatic use can stay small:
-
-```typescript
-import { GTD, createRegistry } from '@ai-is-gonna/gtd-sdk';
-
-const gtd = new GTD({ projectDir: process.cwd(), sessionId: 'release-check' });
-const registry = createRegistry(gtd.eventStream, 'release-check');
-
-const ready = await registry.dispatch('check.phase-ready', ['1'], process.cwd());
-const data = ready.data as { next_step?: string };
-console.log(data.next_step);
-```
-
-For CI/CD, phase finalization can be compact once task PRs are merged:
+For example, in CI/CD, phase finalization can be compact once task PRs are merged:
 
 ```javascript
 import { execFileSync as sh } from 'node:child_process';
@@ -243,31 +212,31 @@ if (q('check.verification-status', phase).status !== 'pass') process.exit(1);
 
 ## Workflow commands
 
-Command names below use the generic `/gtd-*` form. The installer adapts the command surface for runtimes with a different invocation style.
+Command names below use the generic `$gtd-*` form. The installer adapts the command surface for runtimes with a different invocation style.
 
 Most users should follow GTD's prompts instead of memorizing this table. The commands are listed so the flow is inspectable.
 
 | Command | Outcome |
 | --- | --- |
-| `/gtd-map-codebase [--fast]` | Builds `.planning/codebase/` docs, including architecture, structure, conventions, testing, integrations, and concerns. |
-| `/gtd-new-project` | Creates project memory, requirements, roadmap, workflow config, and initial planning state. |
-| `/gtd-spec-phase <phase>` | Clarifies what a phase must deliver before implementation planning starts. |
-| `/gtd-discuss-phase <phase>` | Turns unclear product or engineering intent into decisions the planner can use. |
-| `/gtd-plan-phase --research-phase <phase>` | Writes or refreshes `RESEARCH.md` before the planner commits to an implementation approach. |
-| `/gtd-ui-phase <phase>` | Produces `UI-SPEC.md` for frontend phases and checks the design contract before planning. |
-| `/gtd-plan-phase <phase>` | Produces task-ready plans with scope, boundaries, acceptance criteria, and verification commands. |
-| `/gtd-export-phase-issues <phase> --dry-run` | Previews the GitHub issue hierarchy before writing labels, issues, dependencies, or manifests. |
-| `/gtd-export-phase-issues <phase>` | Writes parent plan issues, child task issues, labels, dependency links, and the local export manifest. |
-| `/gtd-work-task-issue --read-only --phase <phase>` | Checks which task is workable without claiming issues, creating branches, or opening PRs. |
-| `/gtd-work-task-issue [task] --phase <phase>` | Works one exported task through an isolated branch, validation, and a task PR. |
-| `/gtd-orchestrate-tasks <child-issue>...` | Coordinates a small related batch through task lanes and one final comprehensive PR. |
-| `/gtd-code-review <phase>` | Reviews phase changes for bugs, security issues, and code quality problems before final verification. |
-| `/gtd-work-task-issue --complete-phase <phase> --execute` | Runs phase completion after merged task PRs have been reconciled into summary artifacts. |
-| `/gtd-verify-work <phase>` | Runs conversational UAT, records verification evidence, and routes gaps back into planning. |
-| `/gtd-progress` | Shows project status and the next recommended command. |
-| `/gtd-config` | Views or updates project workflow configuration. |
-| `/gtd-update` | Updates installed GTD runtime files. |
-| `/gtd-help` | Shows the installed command surface for the current runtime. |
+| `$gtd-map-codebase [--fast]` | Builds `.planning/codebase/` docs, including architecture, structure, conventions, testing, integrations, and concerns. |
+| `$gtd-new-project` | Creates project memory, requirements, roadmap, workflow config, and initial planning state. |
+| `$gtd-spec-phase <phase>` | Clarifies what a phase must deliver before implementation planning starts. |
+| `$gtd-discuss-phase <phase>` | Turns unclear product or engineering intent into decisions the planner can use. |
+| `$gtd-plan-phase --research-phase <phase>` | Writes or refreshes `RESEARCH.md` before the planner commits to an implementation approach. |
+| `$gtd-ui-phase <phase>` | Produces `UI-SPEC.md` for frontend phases and checks the design contract before planning. |
+| `$gtd-plan-phase <phase>` | Produces task-ready plans with scope, boundaries, acceptance criteria, and verification commands. |
+| `$gtd-export-phase-issues <phase> --dry-run` | Previews the GitHub issue hierarchy before writing labels, issues, dependencies, or manifests. |
+| `$gtd-export-phase-issues <phase>` | Writes parent plan issues, child task issues, labels, dependency links, and the local export manifest. |
+| `$gtd-work-task-issue --read-only --phase <phase>` | Checks which task is workable without claiming issues, creating branches, or opening PRs. |
+| `$gtd-work-task-issue [task] --phase <phase>` | Works one exported task through an isolated branch, validation, and a task PR. |
+| `$gtd-orchestrate-tasks <child-issue>...` | Coordinates a small related batch through task lanes and one final comprehensive PR. |
+| `$gtd-code-review <phase>` | Reviews phase changes for bugs, security issues, and code quality problems before final verification. |
+| `$gtd-work-task-issue --complete-phase <phase> --execute` | Runs phase completion after merged task PRs have been reconciled into summary artifacts. |
+| `$gtd-verify-work <phase>` | Runs conversational UAT, records verification evidence, and routes gaps back into planning. |
+| `$gtd-progress` | Shows project status and the next recommended command. |
+| `$gtd-config` | Views or updates project workflow configuration. |
+| `$gtd-update` | Updates installed GTD runtime files. |
+| `$gtd-help` | Shows the installed command surface for the current runtime. |
 
 ## Why it works
 
