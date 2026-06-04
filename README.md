@@ -7,20 +7,22 @@
   <img src="assets/demo.gif" alt="Get Tasks Done demo: turning a feature into GitHub task issues and focused PRs" width="900">
 </p>
 
-> [!TIP]
-> ## ⚡ Try the 5-minute demo
-> Test GTD without touching your real repo.
-> Use the disposable demo app: [ai-is-gonna/get-tasks-done-demo-app](https://github.com/ai-is-gonna/get-tasks-done-demo-app)
->
-> **Start here if you want the fastest path to a real, pre-seeded GTD workflow in under 5 minutes.** 🚀
-
-Most workflows fail the same way: you give an agent a feature and it comes back with a diff that is too large to review.
+Most AI coding workflows fail the same way: you give an agent a feature and it comes back with a diff that is too large to review.
 
 Get Tasks Done (GTD) is a workflow layer that turns product and software specs into local planning artifacts, exports implementation work to GitHub task issues, and keeps code changes small enough to review through pull requests, validation evidence and explicit human approval.
 
 The project started from <a href="https://github.com/open-gsd/get-shit-done-redux" target="_blank">open-gsd/get-shit-done-redux</a> and has since been rebuilt around task issue execution, PR review, reconciliation and verification.
 
 ## Quick start
+
+### Option A: Try safely with the demo app
+Recommended if you are evaluating GTD.
+
+#### ⚡ [Go to the 5-minute demo](https://github.com/ai-is-gonna/get-tasks-done-demo-app)
+
+### Option B: Use GTD in your own repo
+
+Use this only after you understand how GTD works.
 
 1. Install GTD for Codex:
 
@@ -41,7 +43,7 @@ The project started from <a href="https://github.com/open-gsd/get-shit-done-redu
    $gtd-plan-phase 1
    ```
 
-4. Export only when the plans looks right:
+4. Export only when the plans look right:
 
    ```text
    $gtd-export-phase-issues 1
