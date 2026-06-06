@@ -13,8 +13,11 @@ const {
   buildExecution,
   buildResume,
   closingKeywordFindings,
+  finalPrBody,
   parseArgs,
   proactiveValidateTaskPr,
+  taskPrBody,
+  validateOrchestratedPrBody,
 } = require('../get-tasks-done/bin/lib/orchestrate-tasks.cjs');
 const { cleanup, createTempGitProject, createTempProject } = require('./helpers.cjs');
 
@@ -1231,6 +1234,160 @@ describe('orchestrate-tasks planning and gates', () => {
     assert.equal(resumed.action, 'final_pr_merged_synced');
     assert.equal(resumed.manifest_commit.committed, true);
     assert.equal(gitStatus(tmpDir), '');
+  });
+});
+
+describe('orchestrate-tasks PR body formatting contracts', () => {
+  test('validates canonical task and final PR body shapes', () => {
+    const record = {
+      task_id: '01-01-T01',
+      issue_number: 10,
+      task: {
+        name: 'Create module',
+        acceptance_criteria: ['Review task output.'],
+      },
+      plan: { source_path: '.planning/phases/01-foundation/01-01-PLAN.md' },
+    };
+
+    const taskBody = taskPrBody(record, {
+      ok: true,
+      checks: [{ id: 'scope', type: 'diff-scope', passed: true }],
+      manual: [],
+    }, { notes: 'Implemented deterministically.' }, '20260606-body');
+    assert.equal(validateOrchestratedPrBody('task', taskBody).ok, true);
+    assert.match(taskBody, /^<!-- gtd-orchestrate-tasks:task-pr -->\n## Task/);
+    assert.match(taskBody, /\n## Implementation Notes\nImplemented deterministically\./);
+    assert.match(taskBody, /\n## Validation\nAutomated validation passed\./);
+    assert.match(taskBody, /\n## Manual Review\n- \[ \] Review task output\./);
+    assert.match(taskBody, /\nRefs #10$/);
+
+    const finalBody = finalPrBody({
+      id: '20260606-body',
+      bulk_branch: 'gtd/orchestrate-20260606-body',
+    }, [{
+      task_id: '01-01-T01',
+      issue: 10,
+      pr: 123,
+      decision: 'accepted',
+      validation: { status: 'passed' },
+      manual_checks: ['Review task output.'],
+    }], { ok: true });
+    assert.equal(validateOrchestratedPrBody('final', finalBody).ok, true);
+    assert.match(finalBody, /^<!-- gtd-orchestrate-tasks:final-pr -->\n## GTD Bulk Orchestration/);
+    assert.match(finalBody, /\n\| Task \| Issue \| Task PR \| Decision \| Validation \|\n\|---\|---:\|---:\|---\|---\|/);
+    assert.match(finalBody, /\n## Integration Validation\n/);
+    assert.match(finalBody, /\n## Manual Review Checklist\n/);
+    assert.match(finalBody, /\nCloses #10$/);
+  });
+
+  test('rejects malformed orchestrated PR bodies', () => {
+    const malformedTask = [
+      '<!-- gtd-orchestrate-tasks:task-pr -->',
+      '## Task',
+      '',
+      '- Issue: #10',
+      '',
+      '## Validation',
+      'Automated validation passed.',
+      '',
+      'Refs #10',
+    ].join('\n');
+    const taskValidation = validateOrchestratedPrBody('task', malformedTask);
+    assert.equal(taskValidation.ok, false);
+    assert.ok(taskValidation.findings.some((finding) => finding.code === 'missing_heading'));
+
+    const malformedFinal = [
+      '<!-- gtd-orchestrate-tasks:final-pr -->',
+      '## GTD Bulk Orchestration',
+      '',
+      '## Tasks',
+      '',
+      '| Task | Issue | Task PR | Decision | Validation |',
+      '|---|---:|---:|---|---|',
+      '',
+      '## Integration Validation',
+      'Final integration checks passed.',
+      '',
+      '## Manual Review Checklist',
+      '- [ ] Review.',
+    ].join('\n');
+    const finalValidation = validateOrchestratedPrBody('final', malformedFinal);
+    assert.equal(finalValidation.ok, false);
+    assert.ok(finalValidation.findings.some((finding) => finding.code === 'missing_task_rows'));
+    assert.ok(finalValidation.findings.some((finding) => finding.code === 'missing_closing_reference'));
+  });
+
+  test('sanitizes executor notes that try to inject structural headings or markers', () => {
+    const record = {
+      task_id: '01-01-T01',
+      issue_number: 10,
+      task: { name: 'Create module', acceptance_criteria: [] },
+      plan: { source_path: '.planning/phases/01-foundation/01-01-PLAN.md' },
+    };
+    const body = taskPrBody(record, { ok: true, checks: [], manual: [] }, {
+      notes: [
+        'Implemented with `$VALUE` and a literal backslash \\.',
+        '## Validation',
+        '<!-- gtd-orchestrate-tasks:final-pr -->',
+        'Inline `code` remains markdown.',
+      ].join('\n'),
+    }, '20260606-injection');
+    const lines = body.split('\n');
+
+    assert.equal(validateOrchestratedPrBody('task', body).ok, true);
+    assert.equal(lines.filter((line) => line === '## Validation').length, 1);
+    assert.equal(lines.filter((line) => line === '<!-- gtd-orchestrate-tasks:final-pr -->').length, 0);
+    assert.ok(body.includes('> ## Validation'));
+    assert.ok(body.includes('> <!-- gtd-orchestrate-tasks:final-pr -->'));
+    assert.ok(body.includes('`$VALUE`'));
+  });
+
+  test('execution rejects invalid task PR bodies before createPullRequest is called', () => {
+    const tmpDir = createTempProject('gtd-orchestrate-body-');
+    try {
+      const adapter = new FakeGitHubAdapter();
+      const exported = exportPlans(tmpDir, adapter, 1);
+      let createPullRequestCalls = 0;
+      adapter.createPullRequest = () => {
+        createPullRequestCalls += 1;
+        throw new Error('createPullRequest must not be called for invalid bodies');
+      };
+
+      assert.throws(() => buildExecution(tmpDir, issueOpts(exported, {
+        executorBackend: 'command',
+      }), adapter, {
+        id: '20260606-invalid-body',
+        ensureBulkBranch: () => ({
+          branch: 'gtd/orchestrate-20260606-invalid-body',
+          default_branch: 'main',
+          default_ref: 'origin/main',
+          pushed: true,
+        }),
+        ensureTaskWorktree: ({ record, bulkBranch, bulkId }) => ({
+          path: tmpDir,
+          branch: `gtd/task-${record.task_id}-${bulkId}`,
+          base_ref: bulkBranch,
+        }),
+        runTaskExecutor: () => ({
+          ok: true,
+          commit: 'abcdef1234567890abcdef1234567890abcdef12',
+          notes: 'Closes #10',
+        }),
+        listChangedFiles: () => ['src/module-1.ts'],
+        runCommand: () => ({ status: 0, stdout: 'ok', stderr: '' }),
+        validateExecutorEvidence: ({ executorResult }) => validExecutorEvidence(executorResult.commit),
+        pushBranch: (worktree) => ({ pushed: true, branch: worktree.branch }),
+      }), /Invalid task PR body formatting/);
+      assert.equal(createPullRequestCalls, 0);
+    } finally {
+      cleanup(tmpDir);
+    }
+  });
+
+  test('orchestrate-tasks imports the shared GitHub CLI PR adapter', () => {
+    const source = fs.readFileSync(path.join(__dirname, '..', 'get-tasks-done', 'bin', 'lib', 'orchestrate-tasks.cjs'), 'utf8');
+    assert.match(source, /GhCliTaskIssueAdapter/);
+    assert.match(source, /new GhCliTaskIssueAdapter\(\{ cwd, repo \}\)/);
   });
 });
 
