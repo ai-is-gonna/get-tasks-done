@@ -6,9 +6,11 @@ branch and one final comprehensive PR.
 <boundary>
 The orchestrator may create or resume an orchestration manifest, create and push
 a bulk branch, claim selected child task issues, spawn `gtd-task-executor` in
-task worktrees, open task PRs into the bulk branch, comment review findings on
-task PRs, squash accepted task PRs into the bulk branch, and open one final PR
-from the bulk branch to the default branch.
+task worktrees, integrate task branches into the bulk branch, and open one final
+PR from the bulk branch to the default branch. It opens task PRs into the bulk
+branch only when multiple implementation tasks are selected; with exactly one
+implementation task, it validates and squashes that task branch directly into
+the bulk branch. Human checkpoint records do not count as implementation tasks.
 
 Forbidden:
 - Do not run a mutating `orchestrate-tasks` helper command before the Start
@@ -145,42 +147,49 @@ gtd-sdk query orchestrate-tasks 123 124 125 --repo owner/name --confirm-reviewab
    issue. Issue closure is the only hard resume signal; comments are optional
    audit evidence and must not block resume.
 9. Each lane creates/reuses a task branch from the bulk branch and spawns a
-   fresh `gtd-task-executor` context for that task. On rework, do not paste long
-   inline feedback; write exact findings to the PR and spawn a fresh executor
-   that reads those comments/reviews/checks.
-10. After an executor returns commit evidence, the orchestrator pushes the task
-   branch and opens or updates the task PR with base set to the bulk branch. The
-   body must use `Refs #issue`, not closing keywords.
+   fresh `gtd-task-executor` context for that task. The helper reports
+   `integration_mode`:
+   - `task_pr_review` when multiple implementation tasks are selected.
+   - `direct_bulk_merge` when exactly one implementation task is selected,
+     regardless of how many checkpoint records are selected.
+10. In `task_pr_review` mode, after an executor returns commit evidence, the
+    orchestrator pushes the task branch and opens or updates the task PR with
+    base set to the bulk branch. The body must use `Refs #issue`, not closing
+    keywords.
 11. Before accepting a task PR, validate the exact merge result against the
-   current bulk branch:
-   - PR base is the bulk branch.
-   - PR title/body/commits/squash message contain no task closing keywords.
-   - Diff stays in scope and avoids GTD completion artifacts.
-   - Task validation contract passes.
-   - Required GitHub checks pass, or missing task-PR CI is recorded and local
-     fallback validation passes.
-   - The result still fits the full selected task set and parent plan intent.
-12. Track findings with PR comments or reviews. The manifest stores only status,
-   decisions, and comment references.
-13. Accept by squash-merging the task PR into the bulk branch. Require changes
-   by commenting and relaunching a fresh executor. Reject unsafe or repeatedly
-   failing work and keep the child issue open.
-14. After all selected implementation tasks are accepted and all checkpoint
-   gates are resolved, run final integration validation on
-   the whole bulk branch. If the failure is not attributable to one task, stop
-   and ask for human direction.
-15. Open the comprehensive PR from the bulk branch to the default branch. This
+    current bulk branch:
+    - PR base is the bulk branch.
+    - PR title/body/commits/squash message contain no task closing keywords.
+    - Diff stays in scope and avoids GTD completion artifacts.
+    - Task validation contract passes.
+    - Required GitHub checks pass, or missing task-PR CI is recorded and local
+      fallback validation passes.
+    - The result still fits the full selected task set and parent plan intent.
+12. In `direct_bulk_merge` mode, do not open a task PR. Validate executor
+    evidence and the task validation contract locally, then squash the task
+    branch directly into the bulk branch using `Refs #issue` in merge metadata.
+13. Track findings with PR comments/reviews in `task_pr_review` mode and with
+    manifest state in `direct_bulk_merge` mode. The manifest stores only status,
+    decisions, integration mode, and compact references.
+14. Accept by integrating the task branch into the bulk branch. Require changes
+    by relaunching a fresh executor. Reject unsafe or repeatedly failing work
+    and keep the child issue open.
+15. After all selected implementation tasks are accepted and all checkpoint
+    gates are resolved, run final integration validation on
+    the whole bulk branch. If the failure is not attributable to one task, stop
+    and ask for human direction.
+16. Open the comprehensive PR from the bulk branch to the default branch. This
     PR is the only PR that contains `Closes #child_issue` lines, and those lines
     are only for accepted implementation tasks. Never close checkpoint issues
     from the final PR.
-16. When checkpoint-paused output includes `user_next_step`, present that
+17. When checkpoint-paused output includes `user_next_step`, present that
     message to the user instead of any helper command. The user-facing action is
     to complete the checkpoint issue, close it, and tell the agent to continue;
     the agent resumes the recorded orchestration internally.
-17. If an internal resume still reports `human_checkpoint_pending`, the
+18. If an internal resume still reports `human_checkpoint_pending`, the
     checkpoint issue is still open. If it reports `human_checkpoint_resolved`,
     the checkpoint issue was closed and orchestration can continue internally.
-18. After the comprehensive PR merges, resume the recorded orchestration
+19. After the comprehensive PR merges, resume the recorded orchestration
     internally. The resume sync may update compact orchestration state and child
     task labels, then print ready parent-plan reconciliation commands. Do not create
 `*-SUMMARY.md`, `.planning/STATE.md`, `.planning/ROADMAP.md`, or requirements
@@ -189,10 +198,11 @@ completion metadata from `orchestrate-tasks`; run the reported
 </execution_flow>
 
 <technical_lead_review>
-Provide technical-lead review, not just task execution. Review each PR against
-the whole selected task set: functional intent, duplicated solutions, shared
-workflow breakage, dependency assumptions, generated artifact drift, migrations,
-manual acceptance criteria, and final reviewability for one developer.
+Provide technical-lead review, not just task execution. Review each task
+integration and PR against the whole selected task set: functional intent,
+duplicated solutions, shared workflow breakage, dependency assumptions,
+generated artifact drift, migrations, manual acceptance criteria, and final
+reviewability for one developer.
 </technical_lead_review>
 
 <output_contract>
@@ -200,8 +210,9 @@ Report:
 - orchestration id and bulk branch
 - selected task issues and dependency waves
 - reviewability gate result and any user decision
-- task PR URLs and decisions
-- validation findings that remain open, linked by PR comment
+- task integration mode, task PR URLs when present, direct-merge rows when no
+  task PR was opened, and decisions
+- validation findings that remain open, linked by PR comment when available
 - final comprehensive PR URL, or the blocking reason if no final PR was opened
 - `user_next_step.message` for checkpoint pauses; do not ask the user to run
   internal helper commands
