@@ -56,9 +56,138 @@ const DEFAULT_REVIEW_THRESHOLDS = Object.freeze({
 });
 
 const CLOSING_KEYWORD_RE = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+\b/i;
+const STRUCTURAL_PR_HEADINGS = new Set([
+  '## Task',
+  '## Implementation Notes',
+  '## Validation',
+  '## Manual Review',
+  '## GTD Bulk Orchestration',
+  '## Tasks',
+  '## Integration Validation',
+  '## Manual Review Checklist',
+]);
 
 function usage() {
   return 'Usage: gtd-tools orchestrate-tasks <issue-number> [<issue-number> ...] [--repo owner/name] [--max-concurrency N] [--dry-run] [--resume <id>] [--allow-partial]';
+}
+
+function lineIndexes(lines, expected) {
+  const indexes = [];
+  lines.forEach((line, index) => {
+    if (line === expected) indexes.push(index);
+  });
+  return indexes;
+}
+
+function firstLineIndex(lines, expected) {
+  return lineIndexes(lines, expected)[0] ?? -1;
+}
+
+function lastNonEmptyLine(lines) {
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (String(lines[i] || '').trim()) return lines[i];
+  }
+  return '';
+}
+
+function validateHeadingOrder(lines, headings, findings) {
+  let previous = -1;
+  for (const heading of headings) {
+    const indexes = lineIndexes(lines, heading);
+    if (indexes.length === 0) {
+      findings.push({ code: 'missing_heading', message: `Missing required PR body heading: ${heading}` });
+      continue;
+    }
+    if (indexes.length > 1) {
+      findings.push({ code: 'duplicate_heading', message: `Duplicate PR body heading: ${heading}` });
+    }
+    if (indexes[0] <= previous) {
+      findings.push({ code: 'heading_order', message: `PR body heading is out of order: ${heading}` });
+    }
+    previous = indexes[0];
+  }
+}
+
+function validateOrchestratedPrBody(kind, body) {
+  const normalizedKind = String(kind || '').trim();
+  const text = String(body || '').replace(/\r\n?/g, '\n');
+  const lines = text.split('\n');
+  const findings = [];
+
+  if (!['task', 'final'].includes(normalizedKind)) {
+    findings.push({ code: 'invalid_kind', message: `Unknown orchestrated PR body kind: ${kind}` });
+    return { ok: false, findings };
+  }
+  if (!text.trim()) findings.push({ code: 'empty_body', message: 'PR body is empty.' });
+  if (lines.some((line) => line === '`')) {
+    findings.push({ code: 'lone_backtick_placeholder', message: 'PR body contains a lone backtick placeholder line.' });
+  }
+
+  if (normalizedKind === 'task') {
+    if (lines[0] !== '<!-- gtd-orchestrate-tasks:task-pr -->') {
+      findings.push({ code: 'missing_marker', message: 'Task PR body must start with the task orchestration marker.' });
+    }
+    validateHeadingOrder(lines, ['## Task', '## Implementation Notes', '## Validation'], findings);
+    const manualIndexes = lineIndexes(lines, '## Manual Review');
+    if (manualIndexes.length > 1) {
+      findings.push({ code: 'duplicate_heading', message: 'Duplicate PR body heading: ## Manual Review' });
+    }
+    const validationIndex = firstLineIndex(lines, '## Validation');
+    if (manualIndexes.length === 1 && validationIndex !== -1 && manualIndexes[0] <= validationIndex) {
+      findings.push({ code: 'heading_order', message: 'PR body heading is out of order: ## Manual Review' });
+    }
+    if (!/^Refs #\d+$/.test(lastNonEmptyLine(lines))) {
+      findings.push({ code: 'missing_issue_reference', message: 'Task PR body must end with Refs #<issue>.' });
+    }
+    if (hasClosingKeyword(text)) {
+      findings.push({ code: 'task_closing_keyword', message: 'Task PR body must use Refs, not closing keywords.' });
+    }
+  }
+
+  if (normalizedKind === 'final') {
+    if (lines[0] !== '<!-- gtd-orchestrate-tasks:final-pr -->') {
+      findings.push({ code: 'missing_marker', message: 'Final PR body must start with the final orchestration marker.' });
+    }
+    validateHeadingOrder(lines, ['## GTD Bulk Orchestration', '## Tasks', '## Integration Validation', '## Manual Review Checklist'], findings);
+    const tableHeader = firstLineIndex(lines, '| Task | Issue | Task PR | Decision | Validation |');
+    const tableSeparator = firstLineIndex(lines, '|---|---:|---:|---|---|');
+    if (tableHeader === -1 || tableSeparator === -1 || tableSeparator !== tableHeader + 1) {
+      findings.push({ code: 'invalid_task_table', message: 'Final PR body must include the canonical task table header and separator.' });
+    } else {
+      const integrationIndex = firstLineIndex(lines, '## Integration Validation');
+      const taskRows = lines.slice(tableSeparator + 1, integrationIndex === -1 ? lines.length : integrationIndex)
+        .filter((line) => /^\| `[^`]+` \| #\d+ \| #\d* \| [^|]+ \| [^|]+ \|$/.test(line));
+      if (taskRows.length === 0) {
+        findings.push({ code: 'missing_task_rows', message: 'Final PR body task table must contain at least one task row.' });
+      }
+    }
+    const closingRefs = lines.filter((line) => /^Closes #\d+$/.test(line));
+    if (closingRefs.length === 0) {
+      findings.push({ code: 'missing_closing_reference', message: 'Final PR body must include at least one Closes #<issue> line.' });
+    }
+  }
+
+  return { ok: findings.length === 0, findings };
+}
+
+function assertOrchestratedPrBody(kind, body) {
+  const validation = validateOrchestratedPrBody(kind, body);
+  if (!validation.ok) {
+    throw new TaskExecutionError(
+      `Invalid ${kind} PR body formatting: ${validation.findings.map((finding) => finding.message).join('; ')}`,
+      'orchestrated_pr_body_invalid',
+      validation.findings,
+    );
+  }
+  return body;
+}
+
+function sanitizePrBodySectionText(value, fallback) {
+  const text = String(value || '').trim() || fallback;
+  return text.split(/\r\n?|\n/).map((line) => {
+    if (STRUCTURAL_PR_HEADINGS.has(line) || /^<!--\s*gtd-orchestrate-tasks:/i.test(line)) return `> ${line}`;
+    return line;
+  }).join('\n');
 }
 
 function normalizeRepo(repo) {
@@ -974,7 +1103,7 @@ function taskPrBody(record, validation, executorResult, bulkId) {
     `- Orchestration: \`${bulkId}\``,
     '',
     '## Implementation Notes',
-    String(executorResult?.notes || executorResult?.summary || 'No implementation notes returned.').trim(),
+    sanitizePrBodySectionText(executorResult?.notes || executorResult?.summary, 'No implementation notes returned.'),
     '',
     '## Validation',
     validation?.ok ? 'Automated validation passed.' : 'Automated validation failed.',
@@ -989,7 +1118,7 @@ function taskPrBody(record, validation, executorResult, bulkId) {
     for (const item of manual) lines.push(`- [ ] ${item}`);
   }
   lines.push('', `Refs #${record.issue_number}`);
-  return lines.join('\n');
+  return assertOrchestratedPrBody('task', lines.join('\n'));
 }
 
 function finalPrBody(manifest, acceptedTasks, validationSummary = {}) {
@@ -1022,7 +1151,7 @@ function finalPrBody(manifest, acceptedTasks, validationSummary = {}) {
   }
   if (seen.size === 0) lines.push('- [ ] Review the combined diff and CI results.');
   for (const task of acceptedTasks) lines.push('', `Closes #${task.issue}`);
-  return lines.join('\n');
+  return assertOrchestratedPrBody('final', lines.join('\n'));
 }
 
 function hasClosingKeyword(text) {
@@ -2166,4 +2295,5 @@ export {
   proactiveValidateTaskPr,
   recommendedSubset,
   taskPrBody,
+  validateOrchestratedPrBody,
 };
