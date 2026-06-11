@@ -156,7 +156,7 @@ function validateOrchestratedPrBody(kind, body) {
     } else {
       const integrationIndex = firstLineIndex(lines, '## Integration Validation');
       const taskRows = lines.slice(tableSeparator + 1, integrationIndex === -1 ? lines.length : integrationIndex)
-        .filter((line) => /^\| `[^`]+` \| #\d+ \| #\d* \| [^|]+ \| [^|]+ \|$/.test(line));
+        .filter((line) => /^\| `[^`]+` \| #\d+ \| (?:#\d+|direct merge|) \| [^|]+ \| [^|]+ \|$/.test(line));
       if (taskRows.length === 0) {
         findings.push({ code: 'missing_task_rows', message: 'Final PR body task table must contain at least one task row.' });
       }
@@ -1062,7 +1062,12 @@ function executorPreflight(cwd, opts = {}, deps = {}) {
   };
 }
 
+function integrationModeForRecords(records) {
+  return implementationRecords(records).length > 1 ? 'task_pr_review' : 'direct_bulk_merge';
+}
+
 function agentLaneContext(record, manifest, bulk, selectedMap) {
+  const integrationMode = manifest.integration_mode || 'task_pr_review';
   return {
     task_id: record.task_id,
     issue: record.issue_number,
@@ -1071,7 +1076,8 @@ function agentLaneContext(record, manifest, bulk, selectedMap) {
     files: record.task.files || [],
     branch: taskBranchName(record, manifest.id),
     base_branch: bulk.branch,
-    pr_base: bulk.branch,
+    pr_base: integrationMode === 'task_pr_review' ? bulk.branch : null,
+    integration_mode: integrationMode,
     internal_blockers: internalBlockersFor(record, selectedMap).map((blocker) => ({
       task_id: blocker.task_id,
       issue: blocker.issue_number,
@@ -1082,12 +1088,19 @@ function agentLaneContext(record, manifest, bulk, selectedMap) {
       model: 'gpt-5.4-mini',
       reasoning_effort: 'medium',
     },
-    instructions: [
-      'Create the task branch from the bulk branch.',
-      'Implement only the assigned task and declared write scope.',
-      'Return commit evidence; the orchestrator opens the task PR against the bulk branch using Refs, not closing keywords.',
-      'Read orchestrator PR comments for rework from a fresh context.',
-    ],
+    instructions: integrationMode === 'task_pr_review'
+      ? [
+        'Create the task branch from the bulk branch.',
+        'Implement only the assigned task and declared write scope.',
+        'Return commit evidence; the orchestrator opens the task PR against the bulk branch using Refs, not closing keywords.',
+        'Read orchestrator PR comments for rework from a fresh context.',
+      ]
+      : [
+        'Create the task branch from the bulk branch.',
+        'Implement only the assigned task and declared write scope.',
+        'Return commit evidence; the orchestrator merges the task branch directly into the bulk branch without opening a task PR.',
+        'Do not use closing keywords for the task issue in branch commits or merge metadata.',
+      ],
   };
 }
 
@@ -1135,7 +1148,8 @@ function finalPrBody(manifest, acceptedTasks, validationSummary = {}) {
     '|---|---:|---:|---|---|',
   ];
   for (const task of acceptedTasks) {
-    lines.push(`| \`${task.task_id}\` | #${task.issue} | #${task.pr || ''} | ${task.decision || 'accepted'} | ${task.validation?.status || 'unknown'} |`);
+    const taskPr = task.pr ? `#${task.pr}` : (task.integration_mode === 'direct_bulk_merge' ? 'direct merge' : '');
+    lines.push(`| \`${task.task_id}\` | #${task.issue} | ${taskPr} | ${task.decision || 'accepted'} | ${task.validation?.status || 'unknown'} |`);
   }
   lines.push('', '## Integration Validation', '');
   lines.push(validationSummary.ok === false ? 'Final integration requires review.' : 'Final integration checks passed or are delegated to this PR.');
@@ -1394,8 +1408,39 @@ function pushBranch(worktree, deps = {}) {
   return { pushed: true, branch: worktree.branch };
 }
 
+function directMergeTaskBranch(cwd, record, manifest, bulk, worktree, deps = {}) {
+  const subject = `[GTD ${record.task_id}] ${record.task.name}`;
+  const body = `Refs #${record.issue_number}\n\nOrchestration: ${manifest.id}`;
+  if (deps.directMergeTaskBranch) {
+    return deps.directMergeTaskBranch({ cwd, record, manifest, bulk, worktree, subject, body });
+  }
+
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gtd-orchestrate-direct-'));
+  const bulkWorktree = path.join(tmpRoot, 'bulk');
+  try {
+    runGit(cwd, ['worktree', 'add', bulkWorktree, bulk.branch]);
+    runGit(bulkWorktree, ['merge', '--squash', worktree.branch]);
+    runGit(bulkWorktree, ['commit', '-m', subject, '-m', body]);
+    runGit(bulkWorktree, ['push', 'origin', bulk.branch]);
+    const commit = runGit(bulkWorktree, ['rev-parse', '--short', 'HEAD'], { allowFailure: true });
+    return {
+      merged: true,
+      method: 'direct_squash',
+      branch: worktree.branch,
+      bulk_branch: bulk.branch,
+      subject,
+      body,
+      commit: commit.ok ? commit.stdout : null,
+    };
+  } finally {
+    runGit(cwd, ['worktree', 'remove', '--force', bulkWorktree], { allowFailure: true });
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+}
+
 function executeTaskLane(cwd, record, manifest, bulk, adapter, deps = {}) {
   if (deps.executeTaskLane) return deps.executeTaskLane({ cwd, record, manifest, bulk, adapter });
+  const integrationMode = deps.integrationMode || manifest.integration_mode || 'task_pr_review';
   const claim = claimTask(adapter, record, manifest.id, deps);
   const worktree = ensureTaskWorktree(cwd, record, bulk.branch, manifest.id, deps);
   const context = executorContext(record, worktree, [], null);
@@ -1413,6 +1458,7 @@ function executeTaskLane(cwd, record, manifest, bulk, adapter, deps = {}) {
     return {
       status: 'changes_requested',
       decision: 'changes_requested',
+      integration_mode: integrationMode,
       claim,
       worktree,
       pushed: null,
@@ -1427,6 +1473,40 @@ function executeTaskLane(cwd, record, manifest, bulk, adapter, deps = {}) {
         evidence_gate: executorEvidence,
         local_validation: localValidation,
       },
+      executor: executorResult,
+      executor_evidence: executorEvidence,
+      changed_files: files,
+      manual_checks: record.task.acceptance_criteria || [],
+    };
+  }
+  if (integrationMode === 'direct_bulk_merge') {
+    if (!localValidation.ok) {
+      return {
+        status: 'changes_requested',
+        decision: 'changes_requested',
+        integration_mode: integrationMode,
+        claim,
+        worktree,
+        pushed: null,
+        pr: null,
+        validation: localValidation,
+        executor: executorResult,
+        executor_evidence: executorEvidence,
+        changed_files: files,
+        manual_checks: record.task.acceptance_criteria || [],
+      };
+    }
+    const merged = directMergeTaskBranch(cwd, record, manifest, bulk, worktree, deps);
+    return {
+      status: 'accepted',
+      decision: 'accepted',
+      integration_mode: integrationMode,
+      claim,
+      worktree,
+      pushed: null,
+      pr: null,
+      merged,
+      validation: localValidation,
       executor: executorResult,
       executor_evidence: executorEvidence,
       changed_files: files,
@@ -1452,6 +1532,7 @@ function executeTaskLane(cwd, record, manifest, bulk, adapter, deps = {}) {
     return {
       status: 'changes_requested',
       decision: 'changes_requested',
+      integration_mode: integrationMode,
       claim,
       worktree,
       pushed,
@@ -1472,6 +1553,7 @@ function executeTaskLane(cwd, record, manifest, bulk, adapter, deps = {}) {
   return {
     status: 'accepted',
     decision: 'accepted',
+    integration_mode: integrationMode,
     claim,
     worktree,
     pushed,
@@ -1512,6 +1594,7 @@ function buildPlan(cwd, opts, adapterOrFactory = null) {
     effective_phase: null,
     state,
     selected_records: sorted,
+    integration_mode: integrationModeForRecords(sorted),
     selection_errors: selection.errors,
     non_workable: selection.non_workable,
     internal_blocked: selection.internal_blocked,
@@ -1589,6 +1672,7 @@ function planOutput(plan, mode) {
       parallel_tasks: wave.parallel_tasks,
     })),
     reviewability: plan.reviewability,
+    integration_mode: plan.integration_mode,
     action: plan.selected_records.length === 0 ? 'report_blocking_state' : (plan.reviewability.requires_confirmation ? 'request_reviewability_direction' : 'report_orchestration_plan'),
   };
 }
@@ -1608,6 +1692,7 @@ function createManifest(plan, bulk, opts, id) {
     default_branch: bulk.default_branch,
     bulk_branch: bulk.branch,
     bulk_pr: null,
+    integration_mode: plan.integration_mode,
     selector: plan.selector,
     settings: {
       max_concurrency: plan.max_concurrency,
@@ -1628,6 +1713,7 @@ function createManifest(plan, bulk, opts, id) {
       pr: null,
       decision: null,
       validation: null,
+      integration_mode: isCheckpointRecord(record) ? null : plan.integration_mode,
       internal_blockers: internalBlockersFor(record, selectedMap).map((blocker) => blocker.task_id),
     }])),
     waves: plan.waves.map((wave) => ({
@@ -1651,6 +1737,7 @@ function taskResultsOutput(taskResults) {
     status: result.status,
     pr: result.pr || null,
     validation: result.validation || null,
+    integration_mode: result.integration_mode || null,
   }));
 }
 
@@ -1672,6 +1759,7 @@ function acceptedTasksFromManifest(plan, manifest) {
         task_id: taskId,
         issue: entry.issue,
         pr: entry.pr || null,
+        integration_mode: entry.integration_mode || null,
         decision: entry.decision || 'accepted',
         validation: { status: entry.validation?.status || 'unknown' },
         manual_checks: entry.manual_checks || record?.task?.acceptance_criteria || [],
@@ -1709,6 +1797,7 @@ function checkpointPauseResult(cwd, {
     implementation,
     pr_creation: prCreation,
     action: 'human_checkpoint_required',
+    integration_mode: manifest.integration_mode || null,
     checkpoint_gates: checkpointGates,
     user_next_step: checkpointUserNextStep(
       'human_checkpoint_required',
@@ -1726,6 +1815,7 @@ function applyTaskLaneResultToManifest(manifest, record, result, deps = {}) {
   const entry = manifest.tasks[record.task_id];
   entry.status = result.status;
   entry.pr = result.pr?.number || null;
+  entry.integration_mode = result.integration_mode || entry.integration_mode || null;
   entry.decision = result.decision;
   entry.decision_reason = result.validation?.ok ? 'Automated and bulk-level validation passed.' : 'Validation requires changes.';
   entry.validation = {
@@ -1765,6 +1855,7 @@ function rejectedTasksResult(cwd, {
     implementation,
     pr_creation: taskResults.some(({ result: taskResult }) => taskResult.pr),
     action: allowPartial ? 'request_partial_confirmation' : 'changes_requested',
+    integration_mode: manifest.integration_mode || null,
     orchestration: manifest,
     manifest_commit: manifestCommit,
     task_results: taskResultsOutput(taskResults),
@@ -1805,6 +1896,7 @@ function finalBulkPrResult(cwd, {
     implementation,
     pr_creation: true,
     action: 'final_pr_opened',
+    integration_mode: manifest.integration_mode || null,
     orchestration: manifest,
     manifest_commit: manifestCommit,
     checkpoint_gates: checkpointGatesForManifest(plan.selected_records, manifest),
@@ -1900,6 +1992,7 @@ function buildExecution(cwd, opts, adapterOrFactory = null, deps = {}) {
       implementation: false,
       pr_creation: false,
       action: 'agent_lanes_required',
+      integration_mode: manifest.integration_mode || null,
       executor,
       orchestration: manifest,
       manifest_commit: manifestCommit,
@@ -1930,6 +2023,7 @@ function buildExecution(cwd, opts, adapterOrFactory = null, deps = {}) {
       const adapter = adapterForRepo(record.scope.repo);
       const result = executeTaskLane(cwd, record, manifest, bulk, adapter, {
         ...deps,
+        integrationMode: manifest.integration_mode,
         executorCommand: executor.command || deps.executorCommand,
       });
       taskResults.push({ record, result });
@@ -2130,6 +2224,7 @@ function continueCommandExecutionFromManifest(cwd, opts, manifest, adapterOrFact
       const adapter = adapterForRepo(record.scope.repo);
       const result = executeTaskLane(cwd, record, manifest, bulk, adapter, {
         ...deps,
+        integrationMode: manifest.integration_mode,
         executorCommand: executor.command || deps.executorCommand,
       });
       taskResults.push({ record, result });

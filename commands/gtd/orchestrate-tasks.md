@@ -13,9 +13,8 @@ requires: [export-phase-issues, work-task-issue]
 
 <objective>
 Select multiple exported task issues, create one bulk branch, run task
-executors against task PRs targeting that branch, proactively review each PR as
-technical lead for the whole bulk, and open one comprehensive PR for manual
-review.
+executors, use task PR review lanes only when multiple implementation tasks are
+in scope, and open one comprehensive PR for manual review.
 </objective>
 
 <execution_context>
@@ -73,8 +72,13 @@ direction and present these choices in this order: continue with the full
 selected scope, choose a smaller explicit scope, or abort. Do not replace the
 full-scope option with the recommended subset; `recommended_subset` is advisory
 only for the smaller-scope choice. Then follow the workflow: bulk branch, task
-PR lanes, proactive validation, squash task PRs into the bulk branch, and open
-the comprehensive PR.
+execution lanes, proactive validation, task-branch integration into the bulk
+branch, and open the comprehensive PR. The helper reports `integration_mode`:
+`task_pr_review` means implementation task branches are reviewed through task
+PRs before being squashed into the bulk branch; `direct_bulk_merge` means the
+single implementation task branch is validated and squashed directly into the
+bulk branch with no task PR. Human checkpoint records never count as
+implementation tasks and never force task PR lanes.
 
 When checkpoint-paused output includes `user_next_step`, present that message to
 the user. The user-facing action is to complete and close the checkpoint issue,

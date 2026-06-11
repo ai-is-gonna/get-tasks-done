@@ -192,6 +192,57 @@ npm test
 `;
 }
 
+function singleImplementationCheckpointPlan() {
+  return `---
+phase: 01-foundation
+plan: 01
+type: execute
+wave: 1
+depends_on: []
+files_modified: [src/first.ts]
+autonomous: false
+requirements: [REQ-001]
+must_haves:
+  truths: []
+  artifacts: []
+  key_links: []
+---
+
+<objective>
+Build one implementation task and then wait for human verification.
+</objective>
+
+<tasks>
+<task type="auto">
+  <name>Create first module</name>
+  <files>src/first.ts</files>
+  <read_first>src/index.ts</read_first>
+  <boundaries>Only touch src/first.ts.</boundaries>
+  <action>Create the first implementation.</action>
+  <verify>npm test -- first</verify>
+  <done>src/first.ts contains the exported implementation.</done>
+  <acceptance_criteria>
+    - src/first.ts contains the exported implementation
+  </acceptance_criteria>
+</task>
+<task type="checkpoint:human-verify" gate="blocking">
+  <name>Verify external setup</name>
+  <what-built>The implementation task created the artifact needed by the human.</what-built>
+  <how-to-verify>Complete the external setup, then close this issue.</how-to-verify>
+  <resume-signal>Close the GitHub issue when complete.</resume-signal>
+</task>
+</tasks>
+
+<verification>
+npm test
+</verification>
+
+<success_criteria>
+- The module works after the checkpoint is resolved.
+</success_criteria>
+`;
+}
+
 function cloneIssue(issue) {
   return JSON.parse(JSON.stringify(issue));
 }
@@ -379,6 +430,16 @@ function exportCheckpointPlan(tmpDir, adapter) {
   fs.writeFileSync(path.join(tmpDir, 'src', 'first.ts'), 'export const first = 1;\n', 'utf8');
   fs.writeFileSync(path.join(tmpDir, 'src', 'second.ts'), 'export const second = 2;\n', 'utf8');
   writePlan(tmpDir, '01-foundation', '01-01-PLAN.md', checkpointPlan());
+  const result = buildWriteMode(tmpDir, { phase: '01', repo: 'owner/repo', dryRun: false }, adapter);
+  assert.equal(result.ok, true);
+  return result;
+}
+
+function exportSingleImplementationCheckpointPlan(tmpDir, adapter) {
+  fs.mkdirSync(path.join(tmpDir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(tmpDir, 'src', 'index.ts'), 'export {};\n', 'utf8');
+  fs.writeFileSync(path.join(tmpDir, 'src', 'first.ts'), 'export const first = 1;\n', 'utf8');
+  writePlan(tmpDir, '01-foundation', '01-01-PLAN.md', singleImplementationCheckpointPlan());
   const result = buildWriteMode(tmpDir, { phase: '01', repo: 'owner/repo', dryRun: false }, adapter);
   assert.equal(result.ok, true);
   return result;
@@ -793,6 +854,83 @@ describe('orchestrate-tasks planning and gates', () => {
     }]);
   });
 
+  test('single implementation task with checkpoint uses direct merge and later opens only the final PR', () => {
+    const adapter = new FakeGitHubAdapter();
+    const exported = exportSingleImplementationCheckpointPlan(tmpDir, adapter);
+    const [taskIssue, checkpointIssue] = issueNumbersFromExport(exported);
+    const directMerges = [];
+
+    const result = buildExecution(tmpDir, issueOpts(exported, {
+      executorBackend: 'command',
+      maxConcurrency: 2,
+      confirmReviewability: true,
+    }), adapter, {
+      id: '20260518-single-checkpoint',
+      ensureBulkBranch: () => ({
+        branch: 'gtd/orchestrate-20260518-single-checkpoint',
+        default_branch: 'main',
+        default_ref: 'origin/main',
+        pushed: true,
+      }),
+      ensureTaskWorktree: ({ record, bulkBranch, bulkId }) => ({
+        path: tmpDir,
+        branch: `gtd/task-${record.task_id}-${bulkId}`,
+        base_ref: bulkBranch,
+      }),
+      runTaskExecutor: () => ({
+        ok: true,
+        commit: 'abcdef1234567890abcdef1234567890abcdef12',
+        notes: 'Implemented.',
+      }),
+      listChangedFiles: () => ['src/first.ts'],
+      runCommand: () => ({ status: 0, stdout: 'ok', stderr: '' }),
+      validateExecutorEvidence: ({ executorResult }) => validExecutorEvidence(executorResult.commit),
+      pushBranch: () => {
+        throw new Error('direct merge mode must not push task branches for PR review');
+      },
+      directMergeTaskBranch: (merge) => {
+        directMerges.push(merge);
+        return {
+          merged: true,
+          method: 'direct_squash',
+          branch: merge.worktree.branch,
+          bulk_branch: merge.bulk.branch,
+          subject: merge.subject,
+          body: merge.body,
+          commit: 'merged-direct',
+        };
+      },
+    });
+
+    assert.equal(result.action, 'human_checkpoint_required');
+    assert.equal(result.integration_mode, 'direct_bulk_merge');
+    assert.equal(result.pr_creation, false);
+    assert.equal(directMerges.length, 1);
+    assert.equal(result.task_results[0].pr, null);
+    assert.equal(result.task_results[0].integration_mode, 'direct_bulk_merge');
+    assert.equal(result.orchestration.tasks['01-01-T01'].integration_mode, 'direct_bulk_merge');
+    assert.equal(result.orchestration.tasks['01-01-T02'].kind, 'checkpoint');
+    assert.equal(adapter.lastCreatedPr, undefined);
+
+    adapter.updateIssueState(checkpointIssue, 'closed');
+    const resumed = buildResume(tmpDir, {
+      resume: '20260518-single-checkpoint',
+      repo: 'owner/repo',
+    }, adapter, {
+      executeTaskLane: () => {
+        throw new Error('accepted direct-merged task must not execute again after checkpoint closure');
+      },
+    });
+
+    assert.equal(resumed.action, 'final_pr_opened');
+    assert.equal(resumed.integration_mode, 'direct_bulk_merge');
+    assert.match(resumed.final_pr.body, new RegExp(`\\| \`01-01-T01\` \\| #${taskIssue} \\| direct merge \\| accepted \\| passed \\|`));
+    assert.match(resumed.final_pr.body, new RegExp(`Closes #${taskIssue}`));
+    assert.doesNotMatch(resumed.final_pr.body, new RegExp(`Closes #${checkpointIssue}`));
+    const taskPrs = [...adapter.prs.values()].filter((pr) => pr.body.includes('gtd-orchestrate-tasks:task-pr'));
+    assert.equal(taskPrs.length, 0);
+  });
+
   test('resume stays blocked while a human checkpoint issue is open', () => {
     const adapter = new FakeGitHubAdapter();
     const exported = exportCheckpointPlan(tmpDir, adapter);
@@ -888,9 +1026,10 @@ describe('orchestrate-tasks planning and gates', () => {
     assert.doesNotMatch(resumed.final_pr.body, new RegExp(`Closes #${checkpointIssue}`));
   });
 
-  test('command backend opens a ready task PR only with valid executor commit evidence', () => {
+  test('command backend direct-merges a single implementation task without opening a task PR', () => {
     const adapter = new FakeGitHubAdapter();
     const exported = exportPlans(tmpDir, adapter, 1);
+    const directMerges = [];
 
     const result = buildExecution(tmpDir, issueOpts(exported, {
       executorBackend: 'command',
@@ -915,23 +1054,39 @@ describe('orchestrate-tasks planning and gates', () => {
       listChangedFiles: () => ['src/module-1.ts'],
       runCommand: () => ({ status: 0, stdout: 'ok', stderr: '' }),
       validateExecutorEvidence: ({ executorResult }) => validExecutorEvidence(executorResult.commit),
-      pushBranch: (worktree) => ({ pushed: true, branch: worktree.branch }),
-      simulateMerge: () => ({ ok: true, worktree: tmpDir, changed_files: ['src/module-1.ts'] }),
+      pushBranch: () => {
+        throw new Error('direct merge must not push a task branch for a PR');
+      },
+      directMergeTaskBranch: (merge) => {
+        directMerges.push(merge);
+        return {
+          merged: true,
+          method: 'direct_squash',
+          branch: merge.worktree.branch,
+          bulk_branch: merge.bulk.branch,
+          subject: merge.subject,
+          body: merge.body,
+          commit: 'merged-direct',
+        };
+      },
     });
 
     const taskPr = [...adapter.prs.values()].find((pr) => pr.body.includes('gtd-orchestrate-tasks:task-pr'));
     assert.equal(result.action, 'final_pr_opened');
-    assert.ok(taskPr, 'task PR should be opened before final PR');
-    assert.equal(taskPr.isDraft, false);
-    assert.doesNotMatch(taskPr.body, /Closes #/);
+    assert.equal(result.integration_mode, 'direct_bulk_merge');
+    assert.equal(taskPr, undefined);
+    assert.equal(directMerges.length, 1);
+    assert.match(directMerges[0].body, new RegExp(`Refs #${issueNumbersFromExport(exported)[0]}`));
+    assert.equal(result.task_results[0].pr, null);
+    assert.equal(result.task_results[0].integration_mode, 'direct_bulk_merge');
     assert.equal(result.task_results[0].status, 'accepted');
+    assert.match(result.final_pr.body, /\| `01-01-T01` \| #\d+ \| direct merge \| accepted \| passed \|/);
   });
 
-  test('command backend allows short executor commit after evidence normalizes it to full SHA', () => {
+  test('command backend opens task PRs when multiple implementation tasks are selected', () => {
     const adapter = new FakeGitHubAdapter();
-    const exported = exportPlans(tmpDir, adapter, 1);
+    const exported = exportPlans(tmpDir, adapter, 2);
     const fullCommit = 'abcdef1234567890abcdef1234567890abcdef12';
-    const shortCommit = fullCommit.slice(0, 12);
 
     const result = buildExecution(tmpDir, issueOpts(exported, {
       executorBackend: 'command',
@@ -950,10 +1105,10 @@ describe('orchestrate-tasks planning and gates', () => {
       }),
       runTaskExecutor: () => ({
         ok: true,
-        commit: shortCommit,
+        commit: fullCommit.slice(0, 12),
         notes: 'Implemented.',
       }),
-      listChangedFiles: () => ['src/module-1.ts'],
+      listChangedFiles: (worktree) => worktree.branch.includes('01-02-T01') ? ['src/module-2.ts'] : ['src/module-1.ts'],
       listPullRequestCommits: () => [{
         oid: fullCommit,
         messageHeadline: 'Implement task',
@@ -962,17 +1117,27 @@ describe('orchestrate-tasks planning and gates', () => {
       runCommand: () => ({ status: 0, stdout: 'ok', stderr: '' }),
       validateExecutorEvidence: () => validExecutorEvidence(fullCommit),
       pushBranch: (worktree) => ({ pushed: true, branch: worktree.branch }),
-      simulateMerge: () => ({ ok: true, worktree: tmpDir, changed_files: ['src/module-1.ts'] }),
+      simulateMerge: ({ headBranch }) => ({
+        ok: true,
+        worktree: tmpDir,
+        changed_files: headBranch.includes('01-02-T01') ? ['src/module-2.ts'] : ['src/module-1.ts'],
+      }),
     });
 
     assert.equal(result.action, 'final_pr_opened');
+    assert.equal(result.integration_mode, 'task_pr_review');
+    assert.equal(result.task_results.length, 2);
     assert.equal(result.task_results[0].status, 'accepted');
-    assert.equal(result.task_results[0].validation.ok, true);
+    assert.equal(result.task_results[0].integration_mode, 'task_pr_review');
+    const taskPrs = [...adapter.prs.values()].filter((pr) => pr.body.includes('gtd-orchestrate-tasks:task-pr'));
+    assert.equal(taskPrs.length, 2);
+    assert.ok(taskPrs.every((pr) => !/Closes #/.test(pr.body)));
   });
 
-  test('command backend opens a draft task PR when validation fails but commit evidence is valid', () => {
+  test('command backend opens no task PR and does not direct-merge when single-task validation fails', () => {
     const adapter = new FakeGitHubAdapter();
     const exported = exportPlans(tmpDir, adapter, 1);
+    let directMergeCalled = false;
 
     const result = buildExecution(tmpDir, issueOpts(exported, {
       executorBackend: 'command',
@@ -997,14 +1162,22 @@ describe('orchestrate-tasks planning and gates', () => {
       listChangedFiles: () => ['src/module-1.ts'],
       runCommand: () => ({ status: 1, stdout: '', stderr: 'failed' }),
       validateExecutorEvidence: ({ executorResult }) => validExecutorEvidence(executorResult.commit),
-      pushBranch: (worktree) => ({ pushed: true, branch: worktree.branch }),
-      simulateMerge: () => ({ ok: true, worktree: tmpDir, changed_files: ['src/module-1.ts'] }),
+      pushBranch: () => {
+        throw new Error('direct merge mode must not push task branches for failed validation');
+      },
+      directMergeTaskBranch: () => {
+        directMergeCalled = true;
+        throw new Error('failed validation must not direct-merge');
+      },
     });
 
     assert.equal(result.action, 'changes_requested');
-    assert.equal(result.pr_creation, true);
-    assert.equal(result.task_results[0].pr.isDraft, true);
+    assert.equal(result.pr_creation, false);
+    assert.equal(result.task_results[0].pr, null);
+    assert.equal(result.task_results[0].integration_mode, 'direct_bulk_merge');
     assert.equal(result.task_results[0].validation.ok, false);
+    assert.equal(directMergeCalled, false);
+    assert.equal(adapter.lastCreatedPr, undefined);
   });
 
   test('command backend opens no task PR when executor commit evidence is invalid', () => {
@@ -1271,13 +1444,23 @@ describe('orchestrate-tasks PR body formatting contracts', () => {
       decision: 'accepted',
       validation: { status: 'passed' },
       manual_checks: ['Review task output.'],
+    }, {
+      task_id: '01-01-T02',
+      issue: 11,
+      pr: null,
+      integration_mode: 'direct_bulk_merge',
+      decision: 'accepted',
+      validation: { status: 'passed' },
+      manual_checks: [],
     }], { ok: true });
     assert.equal(validateOrchestratedPrBody('final', finalBody).ok, true);
     assert.match(finalBody, /^<!-- gtd-orchestrate-tasks:final-pr -->\n## GTD Bulk Orchestration/);
     assert.match(finalBody, /\n\| Task \| Issue \| Task PR \| Decision \| Validation \|\n\|---\|---:\|---:\|---\|---\|/);
+    assert.match(finalBody, /\| `01-01-T02` \| #11 \| direct merge \| accepted \| passed \|/);
     assert.match(finalBody, /\n## Integration Validation\n/);
     assert.match(finalBody, /\n## Manual Review Checklist\n/);
-    assert.match(finalBody, /\nCloses #10$/);
+    assert.match(finalBody, /\nCloses #10\n/);
+    assert.match(finalBody, /\nCloses #11$/);
   });
 
   test('rejects malformed orchestrated PR bodies', () => {
@@ -1346,7 +1529,7 @@ describe('orchestrate-tasks PR body formatting contracts', () => {
     const tmpDir = createTempProject('gtd-orchestrate-body-');
     try {
       const adapter = new FakeGitHubAdapter();
-      const exported = exportPlans(tmpDir, adapter, 1);
+      const exported = exportPlans(tmpDir, adapter, 2);
       let createPullRequestCalls = 0;
       adapter.createPullRequest = () => {
         createPullRequestCalls += 1;
@@ -1373,7 +1556,7 @@ describe('orchestrate-tasks PR body formatting contracts', () => {
           commit: 'abcdef1234567890abcdef1234567890abcdef12',
           notes: 'Closes #10',
         }),
-        listChangedFiles: () => ['src/module-1.ts'],
+        listChangedFiles: (worktree) => worktree.branch.includes('01-02-T01') ? ['src/module-2.ts'] : ['src/module-1.ts'],
         runCommand: () => ({ status: 0, stdout: 'ok', stderr: '' }),
         validateExecutorEvidence: ({ executorResult }) => validExecutorEvidence(executorResult.commit),
         pushBranch: (worktree) => ({ pushed: true, branch: worktree.branch }),
